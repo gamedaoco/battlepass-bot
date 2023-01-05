@@ -1,4 +1,4 @@
-import { Client, IntentsBitField, Events } from 'discord.js';
+import { Client, Guild, IntentsBitField, Events } from 'discord.js';
 
 import { config } from '../config';
 import { logger } from '../logger';
@@ -26,8 +26,11 @@ async function main() {
 
 	discordApi.once(Events.ClientReady, async c => {
 		logger.debug('Discord client ready');
-		let guildId = '1039620289778159816';  // todo: move this to config and create a list?
-		await getHistoricalEvents(discordApi, guildId);
+		discordApi.guilds.cache.map(async (guild: Guild) => {
+			const guildId = guild.id;
+			logger.debug('Collecting historical events for %s guild', guildId);
+			await getHistoricalEvents(discordApi, guildId);
+		});
 		discordApi.on('messageCreate', onMessage);
 		discordApi.on('messageDelete', onMessageDeleted);
 	});

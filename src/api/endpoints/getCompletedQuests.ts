@@ -18,7 +18,7 @@ export async function getCompletedQuests(request: Request, response: Response) {
 		where: 
 			validation.value.since ?
 				{
-					updatedAt: {
+					createdAt: {
 						[Op.gte]: validation.value.since
 					}
 				} :
