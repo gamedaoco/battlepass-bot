@@ -2,19 +2,20 @@ import { ApiPromise } from '@polkadot/api';
 import * as dotenv from 'dotenv';
 dotenv.config()
 
-import { config } from '../config';
+import { config, validateConfigs } from '../config';
 import { logger } from '../logger';
-import { sequelize, ChainStatus } from '../db';
+import { sequelize, initDB, ChainStatus } from '../db';
 import { connectToNode, listenNewEvents, getActiveBattlePasses } from './chain';
 import { getLastBlockTimestamp, processBattlepasses } from '../indexer/indexer';
 
 
 async function main() {
-	// if (!await initDB()) {
-	// 	logger.error('Failed to connect to database.');
-	// 	return -1;
-	// }
-	// await sequelize.sync();
+	validateConfigs('chain');
+	if (!await initDB()) {
+		logger.error('Failed to connect to database.');
+		return -1;
+	}
+	await sequelize.sync();
 	let [status, created] = await ChainStatus.findOrCreate({ defaults: {blockNumber: 0}, where: {} });
 	let lastBlock =  await getLastBlockTimestamp();
 	if (lastBlock == null) {

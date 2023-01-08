@@ -113,7 +113,7 @@ async function getIdentity(discordId: string, cache: Map<string, Identity>): Pro
 
 export function discordMessageToActivity(msg: Message, identity: Identity): ActivityRecord {
 	return {
-		identityId: identity.id,
+		IdentityId: identity.id,
 		guildId: msg.guild === null ? '0' : msg.guild.id,
 		channelId: msg.channel instanceof TextChannel ? msg.channel.id : null,
 		activityId: msg.id,

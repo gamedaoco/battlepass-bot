@@ -1,4 +1,4 @@
-import { config } from './config';
+import { config, validateConfigs } from './config';
 import { logger } from './logger';
 import { getActiveBattlePasses, processBattlepassQuests } from './chain/chain';
 import { getBattlepassUsers } from './indexer/indexer';
@@ -21,6 +21,7 @@ async function iteration() {
 }
 
 async function main() {
+	validateConfigs('aggregation');
 	await iteration();
 }
 

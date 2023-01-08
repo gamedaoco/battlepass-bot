@@ -1,6 +1,6 @@
 import express from 'express';
 
-import { config } from '../config';
+import { config, validateConfigs } from '../config';
 import { logger } from '../logger';
 import { initDB, sequelize } from '../db';
 import { router } from './endpoints';
@@ -13,6 +13,7 @@ app.use('/api', router);
 
 
 async function main() {
+	validateConfigs('api');
 	if (!await initDB()) {
 		logger.error('Failed to connect to database.');
 		return -1;

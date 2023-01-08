@@ -1,6 +1,6 @@
 import { Client, Guild, IntentsBitField, Events } from 'discord.js';
 
-import { config } from '../config';
+import { config, validateConfigs } from '../config';
 import { logger } from '../logger';
 import { sequelize, initDB } from '../db';
 import { onMessage, onMessageDeleted } from './live';
@@ -16,6 +16,7 @@ export function getClient() {
 }
 
 async function main() {
+	validateConfigs('discord');
 	if (!await initDB()) {
 		logger.error('Failed to connect to database.');
 		return -1;

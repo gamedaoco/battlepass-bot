@@ -90,14 +90,17 @@ async function getUsersActivity(users: Array<string>, startDate: Date, endDate: 
 			model: Identity,
 			required: true,
 			where: {
-				discord: users
+				address: users,
+				discord: {
+					[Op.not]: null
+				}
 			}
 		}],
 		attributes: [
-			'identityId',
+			'IdentityId',
 			'guildId',
-			'channelName',
-			[sequelize.fn('date', sequelize.col('createdAt')), 'date'],
+			'channelId',
+			[sequelize.fn('date', sequelize.col('DiscordActivity.createdAt')), 'date'],
 			[sequelize.fn('count', '*'), 'messagesCnt']
 		],
 		where: {
@@ -109,13 +112,13 @@ async function getUsersActivity(users: Array<string>, startDate: Date, endDate: 
 		},
 		group: [
 			'date',
-			'identityId',
+			'IdentityId',
 			'guildId',
-			'channelName'
+			'channelId'
 		],
 		order: [
 			'date',
-			'identityId'
+			'IdentityId'
 		]
 	});
 }
@@ -123,24 +126,24 @@ async function getUsersActivity(users: Array<string>, startDate: Date, endDate: 
 async function getCompletedQuests(questIds: Array<number>) {
 	return await CompletedQuest.findAll({
 		attributes: [
-			'questId',
-			'identityId',
-			[sequelize.fn('date', sequelize.col('createdAt')), 'date'],
+			'QuestId',
+			'IdentityId',
+			[sequelize.fn('date', sequelize.col('CompletedQuest.createdAt')), 'date'],
 			[sequelize.fn('count', '*'), 'cnt']
 		],
 		where: {
 			QuestId: questIds
 		},
 		group: [
-			'questId',
-			'identityId',
+			'QuestId',
+			'IdentityId',
 			'date'
 		]
 	});
 }
 
 export async function processBattlepassQuests(battlepass: Battlepass, users: Array<string>) {
-	let startDate = battlepass.startDate || new Date(), endDate = battlepass.startDate || new Date();
+	let startDate = battlepass.startDate || new Date(), endDate = battlepass.endDate || new Date();
 	let usersActivity = await getUsersActivity(users, startDate, endDate);
 	let quests = await getBattlePassQuests(battlepass.chainId);
 	logger.debug('Processing battlepass %s with %s quests and %s users', battlepass.chainId, quests.length, users.length);
@@ -155,25 +158,25 @@ export async function processBattlepassQuests(battlepass: Battlepass, users: Arr
 		channel.push(q);
 	});
 	// [questId, identityId, date]: how many times quest completed
-	let completedQuestsMap = new Map<[number, number, any], any>();
+	let completedQuestsMap = new Map<string, any>();
 	completedQuests.map(q => {
-		completedQuestsMap.set([q.QuestId, q.IdentityId, q.get('date')], q.get('cnt'));
+		completedQuestsMap.set(getMapKey([q.QuestId, q.IdentityId, q.get('date')]), q.get('cnt'));
 	});
 	// [guildId, identityId, date]: number of messages for that date
-	let totalMessages = new Map<[string, number, any], number>();
+	let totalMessages = new Map<string, number>();
 	let completedQuestsToCreate = new Array<CompletedQuest>();
 	for (let item of usersActivity) {
-		let identityId: number = item.identityId;
+		let identityId: number = item.IdentityId;
 		let guildId: string = item.guildId;
 		let channelId: string | null = item.channelId;
 		let date: any = item.get('date');
 		let messagesCnt: any = item.get('messagesCnt');
 
-		let userTotalMessages = totalMessages.get([guildId, identityId, date]);
-		if(userTotalMessages == undefined) {
+		let userTotalMessages = totalMessages.get(getMapKey([guildId, identityId, date]));
+		if (userTotalMessages == undefined) {
 			userTotalMessages = 0;
 		}
-		totalMessages.set([guildId, identityId, date], userTotalMessages + 1);
+		totalMessages.set(getMapKey([guildId, identityId, date]), userTotalMessages + 1);
 
 		let channelQuests = questsByChannel.get(channelId);
 		if (channelQuests == undefined) {
@@ -187,14 +190,14 @@ export async function processBattlepassQuests(battlepass: Battlepass, users: Arr
 	if (generalQuests != undefined) {
 		for (let quest of generalQuests) {
 			for (let [key, messagesCnt] of totalMessages) {
-				let [guildId, identityId, date] = key;
+				let [guildId, identityId, date] = JSON.parse(key);
 				processQuest(quest, messagesCnt, identityId, guildId, date, completedQuestsMap, completedQuestsToCreate);
 			}
 		}
 	}
 	if (completedQuestsToCreate.length) {
-		await CompletedQuest.bulkCreate(completedQuestsToCreate);
 		logger.info('Saving %s completed quests', completedQuestsToCreate.length);
+		await CompletedQuest.bulkCreate(completedQuestsToCreate);
 	}
 	if (!battlepass.active) {
 		battlepass.finalized = true;
@@ -204,30 +207,34 @@ export async function processBattlepassQuests(battlepass: Battlepass, users: Arr
 
 function processQuest(
 	quest: Quest, messagesCnt: number, identityId: number, guildId: string,
-	date: Date, completedQuestsMap: Map<[number, number, any], number>,
+	date: Date, completedQuestsMap: Map<string, number>,
 	completedQuestsToCreate: Array<Object>
 ) {
-	let completedBefore = completedQuestsMap.get([quest.id, identityId, date]) || 0;
+	let completedBefore = completedQuestsMap.get(getMapKey([quest.id, identityId, date])) || 0;
 	if ((!quest.repeat && completedBefore >= 1) || (quest.repeat && (quest.maxDaily || 1) <= completedBefore)) {
 		return;
 	}
 	if (quest.repeat) {
 		let newCompleted = Math.max(Math.floor(messagesCnt / quest.quantity), quest.maxDaily || 1);
 		if (newCompleted > completedBefore) {
-			completedQuestsMap.set([quest.id, identityId, date], newCompleted);
+			completedQuestsMap.set(getMapKey([quest.id, identityId, date]), newCompleted);
 			let entity = {
 				guildId,
-				identityId,
-				questId: quest.id
+				IdentityId: identityId,
+				QuestId: quest.id
 			};
 			completedQuestsToCreate.push(...Array(newCompleted - completedBefore).fill(entity));
 		}
 	} else {
-		completedQuestsMap.set([quest.id, identityId, date], 1);
+		completedQuestsMap.set(getMapKey([quest.id, identityId, date]), 1);
 		completedQuestsToCreate.push({
 			guildId,
-			identityId,
-			questId: quest.id
+			IdentityId: identityId,
+			QuestId: quest.id
 		});
 	}
+}
+
+function getMapKey(key: Array<any>) {
+	return JSON.stringify(key);
 }

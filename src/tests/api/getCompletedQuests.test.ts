@@ -1,6 +1,5 @@
 import { describe, expect, test, it, beforeEach, beforeAll } from '@jest/globals';
 import request = require('supertest');
-import assert = require("assert")
 
 import truncate from '../truncate';
 import { initDB, sequelize, Identity, Battlepass, Quest, CompletedQuest } from '../../db';
@@ -169,32 +168,28 @@ describe('Get completed quests', () => {
       .set('Accept', 'application/json')
       .expect(200)
       .then(async (response: any) => {
-        assert(response.body.success === true);
-        assert(response.body.quests.length === 4);
-        assert(
-          response.body.quests[0].questId === 1 &&
-          response.body.quests[0].discord === '111111111111111' &&
-          response.body.quests[0].count === 1 &&
-          response.body.quests[0].points === 1000
-        );
-        assert(
-          response.body.quests[1].questId === 1 &&
-          response.body.quests[1].discord === '222222222222222' &&
-          response.body.quests[1].count === 1 &&
-          response.body.quests[1].points === 1000
-        );
-        assert(
-          response.body.quests[2].questId === 2 &&
-          response.body.quests[2].discord === '111111111111111' &&
-          response.body.quests[2].count === 3 &&
-          response.body.quests[2].points === 1500
-        );
-        assert(
-          response.body.quests[3].questId === 2 &&
-          response.body.quests[3].discord === '222222222222222' &&
-          response.body.quests[3].count === 1 &&
-          response.body.quests[3].points === 500
-        );
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.quests.length).toBe(4);
+
+        expect(response.body.quests[0].questId).toBe(1);
+        expect(response.body.quests[0].discord).toBe('111111111111111');
+        expect(response.body.quests[0].count).toBe(1);
+        expect(response.body.quests[0].points).toBe(1000);
+
+        expect(response.body.quests[1].questId).toBe(1);
+        expect(response.body.quests[1].discord).toBe('222222222222222');
+        expect(response.body.quests[1].count).toBe(1);
+        expect(response.body.quests[1].points).toBe(1000);
+
+        expect(response.body.quests[2].questId).toBe(2);
+        expect(response.body.quests[2].discord).toBe('111111111111111');
+        expect(response.body.quests[2].count).toBe(3);
+        expect(response.body.quests[2].points).toBe(1500);
+
+        expect(response.body.quests[3].questId).toBe(2);
+        expect(response.body.quests[3].discord).toBe('222222222222222');
+        expect(response.body.quests[3].count).toBe(1);
+        expect(response.body.quests[3].points).toBe(500);
       });
   });
 

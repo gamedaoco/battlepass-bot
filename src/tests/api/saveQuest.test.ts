@@ -1,6 +1,5 @@
 import { describe, expect, test, it, beforeEach, beforeAll } from '@jest/globals';
 import request = require('supertest');
-import assert = require("assert")
 
 import truncate from '../truncate';
 import { initDB, sequelize, Battlepass } from '../../db';
@@ -42,13 +41,12 @@ describe('Save new quest', () => {
       .set('Accept', 'application/json')
       .expect(201)
       .then((response: any) => {
-        console.log(JSON.stringify(response.body));
-        assert(response.body.success === true);
-        assert(response.body.quest.repeat === false);
-        assert(response.body.quest.source === 'discord');
-        assert(response.body.quest.type === 'post');
-        assert(response.body.quest.quantity === 100);
-        assert(response.body.quest.points === 5000);
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.quest.repeat).toBeFalsy();
+        expect(response.body.quest.source).toBe('discord');
+        expect(response.body.quest.type).toBe('post');
+        expect(response.body.quest.quantity).toBe(100);
+        expect(response.body.quest.points).toBe(5000);
       });
   });
 
@@ -75,13 +73,13 @@ describe('Save new quest', () => {
       .set('Accept', 'application/json')
       .expect(201)
       .then((response: any) => {
-        assert(response.body.success === true);
-        assert(response.body.quest.repeat === true);
-        assert(response.body.quest.maxDaily === 10);
-        assert(response.body.quest.source === 'discord');
-        assert(response.body.quest.type === 'post');
-        assert(response.body.quest.quantity === 100);
-        assert(response.body.quest.points === 5000);
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.quest.repeat).toBeTruthy();
+        expect(response.body.quest.maxDaily).toBe(10);
+        expect(response.body.quest.source).toBe('discord');
+        expect(response.body.quest.type).toBe('post');
+        expect(response.body.quest.quantity).toBe(100);
+        expect(response.body.quest.points).toBe(5000);
       });
   });
 });

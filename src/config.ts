@@ -1,19 +1,29 @@
-// [
-// 	'DISCORD_BOT_KEY',
-// 	'GRAPH_URL',
-// 	'CHAIN_RPC_URL'
-// ].forEach((name) => {
-// 	if (!process.env[name]) {
-// 		throw new Error(`Required env variable not specified ${name}`);
-// 	}
-// })
-
-// todo: validate configs based on started service (api does not need discord key etc)
+export function validateConfigs(service: 'aggregation'| 'api' | 'chain' | 'discord') {
+	let requiredEnvVariables = new Array<string>();
+	switch (service) {
+		case 'aggregation':
+			// no required variables
+			break;
+		case 'api':
+			// no required variables
+			break;
+		case 'chain': 
+			requiredEnvVariables.push(...['GRAPH_URL', 'CHAIN_RPC_URL']);
+			break;
+		case 'discord':
+			requiredEnvVariables.push('DISCORD_BOT_KEY');
+			break;
+	}
+	requiredEnvVariables.forEach(name => {
+		if (!process.env[name]) {
+			throw new Error(`Required env variable not specified ${name}`);
+		}
+	});
+}
 
 export const config = {
 	discord: {
 		botKey: process.env.DISCORD_BOT_KEY,
-		guildIds: []
 	},
 	logging: {
 		level: process.env.LOGGING_LEVEL || 'debug',

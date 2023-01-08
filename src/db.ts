@@ -67,7 +67,7 @@ export class DiscordActivity extends Model<InferAttributes<DiscordActivity>, Inf
 	declare activityId: string;
 	declare activityType: string;
 	declare createdAt: CreationOptional<Date>;
-	declare identityId: ForeignKey<Identity['id']>;
+	declare IdentityId: ForeignKey<Identity['id']>;
 }
 DiscordActivity.init(
 	{

@@ -1,5 +1,5 @@
 export interface ActivityRecord {
-	identityId: number;
+	IdentityId: number;
 	guildId: string;
 	channelId: string | null;
 	activityId: string;

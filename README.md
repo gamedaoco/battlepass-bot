@@ -9,25 +9,39 @@ Service consists of few components, which are required for it to properly operat
 
 
 ## Running the service
+Before running make sure all required configs are provided.
+
+### Directly on server
 Make sure to compile the project before executing any of the commands (or tests) via `npx tsc`.
 * `npm run-script discord` - starts service, which keeps track of discord activity;
 * `npm run-script chain` - starts service, which keeps track of on-chain activity and battlepass status changes;
 * `npm run-script api` - starts API server;
 * `npm run-script service` - starts aggregations service, which keeps track of completed quests;
 
+### With docker-compose
+1. Build image to use
+   ```bash
+   docker build . -t battlepass-bot:local
+   ```
+2. Update docker-compose with env variables `DISCORD_BOT_KEY`, `GRAPH_URL`, `CHAIN_RPC_URL`
+3. Run compose services
+   ```bash
+   docker-compose up
+   ```
 
 ## Configuration
-All settings provided with env variables.
+All settings provided with env variables.  
+Variables, market with `*` are required and service wouldn't operate properly without them.  
 There are few categories of configs, which are applied to one/multiple processes of the service.
 #### General
 * `LOGGING_LEVEL` - specify which log level to use, all logs which are lower will be ignored. Possible options are `debug`, `info`, `warn`, `error`;
 * `LOGGING_JSON` - should logs be stored in JSON format or not. Useful 
 * `DATABASE_URL` - access to database, e.g. `postgres://user:pass@example.com:5432/dbname`;
 #### Discord
-* `DISCORD_BOT_KEY` - bot key to connect to discord guild and track progress. Bot should be added to guild before that.
+* `*DISCORD_BOT_KEY` - bot key to connect to discord guild and track progress. Bot should be added to guild before that.
 #### Chain
-* `CHAIN_RPC_URL` - chain node URL. It will be used to track chain events, such as battlepass status updates or user activities.
-* `GRAPH_URL` - graph URL. It will be used to fetch initial battlepass objects.
+* `*CHAIN_RPC_URL` - chain node URL. It will be used to track chain events, such as battlepass status updates or user activities.
+* `*GRAPH_URL` - graph URL. It will be used to fetch initial battlepass objects.
 #### Aggregation
 * `QUEST_CHECK_FREQUENCY` - how often completed quests should be evaluated. Default value is `60`, meaning every minute.
 #### API
@@ -212,3 +226,4 @@ Response example:
   ]
 }
 ```
+

@@ -1,6 +1,5 @@
 import { describe, expect, test, it, beforeEach, beforeAll } from '@jest/globals';
 import request = require('supertest');
-import assert = require("assert")
 
 import truncate from '../truncate';
 import { initDB, sequelize, Identity } from '../../db';
@@ -27,11 +26,11 @@ describe('Save new identity', () => {
       .set('Accept', 'application/json')
       .expect(201)
       .then((response: any) => {
-        assert(response.body.success === true);
-        assert(response.body.identity.id === 1);
-        assert(response.body.identity.discord === validDiscord);
-        assert(!response.body.identity.twitter);
-        assert(!response.body.identity.address);
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.identity.id).toBe(1);
+        expect(response.body.identity.discord).toBe(validDiscord);
+        expect(response.body.identity.twitter).toBeUndefined();
+        expect(response.body.identity.address).toBeUndefined();
       });
   });
 
@@ -44,11 +43,11 @@ describe('Save new identity', () => {
       .set('Accept', 'application/json')
       .expect(200)
       .then((response: any) => {
-        assert(response.body.success === true);
-        assert(response.body.identity.id === existing.id);
-        assert(response.body.identity.discord === validDiscord);
-        assert(!response.body.identity.twitter);
-        assert(!response.body.identity.address);
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.identity.id).toBe(existing.id);
+        expect(response.body.identity.discord).toBe(validDiscord);
+        expect(response.body.identity.twitter).toBeUndefined();
+        expect(response.body.identity.address).toBeUndefined();
       });
   });
 
@@ -62,11 +61,11 @@ describe('Save new identity', () => {
       .set('Accept', 'application/json')
       .expect(200)
       .then((response: any) => {
-        assert(response.body.success === true);
-        assert(response.body.identity.id === existing.id);
-        assert(response.body.identity.discord === validDiscord);
-        assert(response.body.identity.address === address);
-        assert(!response.body.identity.twitter);
+        expect(response.body.success).toBeTruthy();
+        expect(response.body.identity.id).toBe(existing.id);
+        expect(response.body.identity.discord).toBe(validDiscord);
+        expect(response.body.identity.address).toBe(address);
+        expect(response.body.identity.twitter).toBeUndefined();
       });
   });
 
@@ -79,8 +78,9 @@ describe('Save new identity', () => {
         .set('Accept', 'application/json')
         .expect(400)
         .then((response: any) => {
-          assert(response.body.success === false);
-          assert(response.body.error);
+          expect(response.body.success).toBeFalsy();
+          expect(response.body.error).not.toBeNull();
+          expect(response.body.error).toBeDefined();
         });
     });
   });

@@ -20,7 +20,6 @@ export async function getPoints(request: Request, response: Response) {
 			[sequelize.col('Identity.address'), 'address'],
 			[sequelize.fn('count', '*'), 'quests'],
 			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
-			// [sequelize.fn('max', sequelize.col('CompletedQuest.createdAt')), 'createdAt'], // todo: remove
 		],
 		group: ['Identity.id'],
 		having: 
