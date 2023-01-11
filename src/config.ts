@@ -40,7 +40,8 @@ export const config = {
 		rpcUrl: process.env.CHAIN_RPC_URL || ''
 	},
 	api: {
-		port: parseInt(process.env.API_PORT || '8080')
+		port: parseInt(process.env.API_PORT || '8080'),
+		secretKey: process.env.API_SECRET_KEY || ''
 	},
 	general: {
 		checkFrequency: parseInt(process.env.QUEST_CHECK_FREQUENCY || '60')

@@ -46,6 +46,7 @@ There are few categories of configs, which are applied to one/multiple processes
 * `QUEST_CHECK_FREQUENCY` - how often completed quests should be evaluated. Default value is `60`, meaning every minute.
 #### API
 * `API_PORT` - which port to use to run API on, e.g. `8080`.
+* `API_SECRET_KEY` - secret key to use to access the API. If not specified, API will be accessible without auth.
 
 
 ## Testing
@@ -227,3 +228,11 @@ Response example:
 }
 ```
 
+### Generating API token
+Once API secret key is provided (via `API_SECRET_KEY` config), you will need to generate JWT token, which can be used in order to access the API.
+It can be done by running the script:
+```bash
+npm run-script generate-api-key
+```
+Note that env variable should be specified before executing.
+Output will contain token value, which can be used in requests to the API in form of header `Authorization: Bearer ...`.

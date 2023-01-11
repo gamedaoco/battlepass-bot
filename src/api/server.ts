@@ -4,12 +4,19 @@ import { config, validateConfigs } from '../config';
 import { logger } from '../logger';
 import { initDB, sequelize } from '../db';
 import { router } from './endpoints';
+import { auth } from './tokenAuth';
 
 
 export const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/api', router);
+if (config.api.secretKey) {
+	logger.debug('Securing API with bearer token');
+	app.use('/api', auth, router);
+} else {
+	logger.debug('API not secure');
+	app.use('/api', router);
+}
 
 
 async function main() {
@@ -22,4 +29,4 @@ async function main() {
 	app.listen(config.api.port, () => logger.info('Listening on %s port', config.api.port));
 }
 
-// main().catch(error => logger.error(error));  // todo: make it work with tests
+main().catch(error => logger.error(error));  // todo: make it work with tests
