@@ -9,11 +9,13 @@ import { Battlepass } from '../db';
 function getBattlepassesQuery(fromBlock: number) {
 	return gql`
 	query Battlepasses {
-		battlepass(where: {_or: {active_from_block: {_gt: ${fromBlock}}, active_to_block: {_gt: ${fromBlock}}}}) {
+		battlepass(where: {_or: {created_at_block: {_gt: ${fromBlock}}, updated_at_block: {_gt: ${fromBlock}}}}) {
   		id
   		active_from_block
   		active_to_block
-  		org_id
+  		organization {
+  			id
+  		}
 		}
 	}
 `;
@@ -76,7 +78,7 @@ async function getBattlepasses(
 	resp.battlepass.forEach((bp: any) => {
 		let item = {
 			chainId: bp.id,
-			orgId: bp.org_id,
+			orgId: bp.organization.id,
 			startDate: calculateBlockDate(knownDate, knownBlock, bp.active_from_block),
 			endDate: bp.active_to_block ? calculateBlockDate(knownDate, knownBlock, bp.active_to_block) : null,
 		};
