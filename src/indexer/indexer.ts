@@ -24,8 +24,10 @@ function getBattlepassesQuery(fromBlock: number) {
 function getUsersQuery(battlePassId: string) {
 	return gql`
 	query Users {
-  	battlepass_nft(where: {battlepass_id: {_eq: "${battlePassId}"}}) {
-    	owner_id
+  	battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
+    	owner {
+    		address
+    	}
   	}
 	}
 	`;
@@ -98,7 +100,7 @@ export async function getBattlepassUsers(battlePassId: string): Promise<Array<st
 	}
 	let res = new Array<string>();
 	resp.battlepass_nft.forEach((nft: any) => {
-		res.push(nft.owner_id);
+		res.push(nft.owner.address);
 	});
 	return res;
 }
