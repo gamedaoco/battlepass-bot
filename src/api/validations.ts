@@ -5,14 +5,17 @@ export const IdentitySchema = Joi.object({
   discord: Joi.string()
     .alphanum()
     .min(10)
-    .max(20),
+    .max(20)
+    .allow(null),
   twitter: Joi.string()
     .alphanum()
     .min(10)
-    .max(20),
+    .max(20)
+    .allow(null),
   address: Joi.string()
     .alphanum()
     .length(48)
+    .allow(null)
 }).or('discord', 'twitter', 'address');
 
 
@@ -29,7 +32,8 @@ export const QuestSchema = Joi.object({
     .valid('post', 'reaction'),
   channelId: Joi.string()
     .min(10)
-    .max(50),
+    .max(50)
+    .allow(null),
   quantity: Joi.number()
     .integer()
     .required(),
@@ -38,6 +42,7 @@ export const QuestSchema = Joi.object({
     .required(),
   maxDaily: Joi.number()
     .integer()
+    .allow(null)
 }).with('maxDaily', 'daily');
 
 

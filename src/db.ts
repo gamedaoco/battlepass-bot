@@ -97,10 +97,6 @@ DiscordActivity.init(
 	    }
   },
   {
-  	// indexes: [{
-  	// 	unique: false,
-  	// 	fields: ['identityId']
-  	// }],
     sequelize
   }
 );
