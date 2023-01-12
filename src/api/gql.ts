@@ -44,12 +44,26 @@ const resolvers = {
 				logger.debug('Invalid quest request %s', input.error);
 				return null;
 			}
-			return await saveQuest(
+			let quest = await saveQuest(
 				input.value.battlepass, input.value.daily,
 				input.value.source, input.value.type,
 				input.value.channelId, input.value.quantity,
 				input.value.points, input.value.maxDaily
 			);
+			if (!quest) {
+				return null;
+			} else {
+				return {
+					battlepass: input.value.battlepass,
+					daily: quest.repeat,
+					source: quest.source,
+					type: quest.type,
+					channelId: quest.channelId,
+					quantity: quest.quantity,
+					points: quest.points,
+					maxDaily: quest.maxDaily
+				};
+			}
 		}
 	}
 };
