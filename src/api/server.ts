@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 
 import { config, validateConfigs } from '../config';
 import { logger } from '../logger';
@@ -11,6 +12,7 @@ import { applyApolloServer } from './gql';
 export const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors());
 applyApolloServer(app);
 if (config.api.secretKey) {
 	logger.debug('Securing API with bearer token');
@@ -31,4 +33,4 @@ async function main() {
 	app.listen(config.api.port, () => logger.info('Listening on %s port', config.api.port));
 }
 
-// main().catch(error => logger.error(error));  // todo: make it work with tests
+main().catch(error => logger.error(error));  // todo: make it work with tests
