@@ -14,11 +14,11 @@ app.use(express.urlencoded({ extended: true }));
 applyApolloServer(app);
 if (config.api.secretKey) {
 	logger.debug('Securing API with bearer token');
-	app.use('/api', auth, router);
+	app.use(auth);
 } else {
 	logger.debug('API not secure');
-	app.use('/api', router);
 }
+app.use('/api', router);
 
 
 async function main() {

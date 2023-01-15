@@ -248,6 +248,27 @@ Identity.hasMany(CompletedQuest);
 CompletedQuest.belongsTo(Quest);
 Quest.hasMany(CompletedQuest);
 
+export class BattlepassParticipant extends Model<InferAttributes<BattlepassParticipant>, InferCreationAttributes<BattlepassParticipant>> {
+	declare id: CreationOptional<number>;
+	declare IdentityId: ForeignKey<Identity['id']>;
+	declare BattlepassId: ForeignKey<Battlepass['id']>;
+}
+BattlepassParticipant.init(
+	{
+		id: {
+      type: DataTypes.INTEGER.UNSIGNED,
+      autoIncrement: true,
+      primaryKey: true
+    },
+	},
+	{sequelize}
+);
+
+BattlepassParticipant.belongsTo(Identity);
+Identity.hasMany(BattlepassParticipant);
+BattlepassParticipant.belongsTo(Battlepass);
+Battlepass.hasMany(BattlepassParticipant);
+
 
 export async function initDB(): Promise<boolean> {
 	try {

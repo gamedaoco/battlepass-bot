@@ -138,6 +138,39 @@ Response example:
 }
 ```
 
+#### Add battlepass participant
+Allows to add users to existing battlepass if they don't have chain address specified.  
+In this case, they need to provide either discord or twitter handle.  
+Endpoint: `/api/participant`.  
+Method: `POST`.  
+Format: `json`.  
+Request data: 
+* `battlepass` - battlepass id (hash), as stored on the chain;
+* `discord` - user discord handle, optional;
+* `twitter` - user twitter handle, optional.
+
+Request example:
+```json
+{
+  "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
+  "discord": "333333333333",
+  "twitter": "444444444444"
+}
+```
+
+Response example:
+```json
+ {
+    "success": true,
+    "identity": {
+      "id": 1,
+      "discord": "333333333333",
+      "twitter": "444444444444",
+      "updatedAt": "2023-01-01T00:05:10.000Z",
+      "createdAt": "2023-01-01T00:05:10.000Z"
+    }
+}
+```
 
 #### Get completed quests
 Request list of all completed quests for given battlepass.  

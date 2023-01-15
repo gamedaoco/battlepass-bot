@@ -3,8 +3,8 @@ import express from 'express';
 import { ApolloServer, gql } from 'apollo-server-express';
 
 import { logger } from '../logger';
-import { IdentitySchema, PointUpdatesSchema, QuestUpdatesSchema, QuestSchema } from './validations';
-import { getPoints, getCompletedQuests, saveIdentity, saveQuest } from './controllers';
+import { IdentitySchema, PointUpdatesSchema, QuestUpdatesSchema, QuestSchema, AddParticipantSchema } from './validations';
+import { getPoints, getCompletedQuests, saveIdentity, saveQuest, addBattlepassParticipant } from './controllers';
 
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString());
@@ -63,6 +63,20 @@ const resolvers = {
 					points: quest.points,
 					maxDaily: quest.maxDaily
 				};
+			}
+		},
+		participant: async (parent: any, args: any) => {
+			let input = AddParticipantSchema.validate(args);
+			if (input.error) {
+				logger.debug('Invalid participant request %s', input.error);
+				return null;
+			}
+			let res = await addBattlepassParticipant(input.value.battlepass, input.value.discord, input.value.twitter);
+			if (res !== null) {
+				let [identity, created] = res;
+				return identity;
+			} else {
+				return null;
 			}
 		}
 	}

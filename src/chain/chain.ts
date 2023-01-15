@@ -84,13 +84,17 @@ async function getBattlePassQuests(battlePassId: string): Promise<Array<Quest>> 
 	});
 }
 
-async function getUsersActivity(users: Array<string>, startDate: Date, endDate: Date): Promise<Array<DiscordActivity>> {
+async function getUsersActivity(chainUsers: Array<string>, participantIds: Array<number>, startDate: Date, endDate: Date): Promise<Array<DiscordActivity>> {
 	return await DiscordActivity.findAll({
 		include: [{
 			model: Identity,
 			required: true,
+			attributes: [],
 			where: {
-				address: users,
+				[Op.or]: [
+					{address: chainUsers},
+					{id: participantIds}
+				],
 				discord: {
 					[Op.not]: null
 				}
@@ -142,11 +146,14 @@ async function getCompletedQuests(questIds: Array<number>) {
 	});
 }
 
-export async function processBattlepassQuests(battlepass: Battlepass, users: Array<string>) {
+export async function processBattlepassQuests(battlepass: Battlepass, chainUsers: Array<string>, participantIds: Array<number>) {
 	let startDate = battlepass.startDate || new Date(), endDate = battlepass.endDate || new Date();
-	let usersActivity = await getUsersActivity(users, startDate, endDate);
+	let usersActivity = await getUsersActivity(chainUsers, participantIds, startDate, endDate);
 	let quests = await getBattlePassQuests(battlepass.chainId);
-	logger.debug('Processing battlepass %s with %s quests and %s users', battlepass.chainId, quests.length, users.length);
+	logger.debug(
+		'Processing battlepass %s with %s quests and %s users',
+		battlepass.chainId, quests.length, chainUsers.length + participantIds.length
+	);
 	let completedQuests = await getCompletedQuests(quests.map(quest => quest.id));
 	let questsByChannel = new Map<string | null, Array<Quest>>();
 	quests.map(q => {
@@ -176,7 +183,7 @@ export async function processBattlepassQuests(battlepass: Battlepass, users: Arr
 		if (userTotalMessages == undefined) {
 			userTotalMessages = 0;
 		}
-		totalMessages.set(getMapKey([guildId, identityId, date]), userTotalMessages + 1);
+		totalMessages.set(getMapKey([guildId, identityId, date]), userTotalMessages + messagesCnt);
 
 		let channelQuests = questsByChannel.get(channelId);
 		if (channelQuests == undefined) {
@@ -215,7 +222,7 @@ function processQuest(
 		return;
 	}
 	if (quest.repeat) {
-		let newCompleted = Math.max(Math.floor(messagesCnt / quest.quantity), quest.maxDaily || 1);
+		let newCompleted = Math.min(Math.floor(messagesCnt / quest.quantity), quest.maxDaily || 1);
 		if (newCompleted > completedBefore) {
 			completedQuestsMap.set(getMapKey([quest.id, identityId, date]), newCompleted);
 			let entity = {

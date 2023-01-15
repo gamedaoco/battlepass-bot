@@ -2,7 +2,7 @@ export function validateConfigs(service: 'aggregation'| 'api' | 'chain' | 'disco
 	let requiredEnvVariables = new Array<string>();
 	switch (service) {
 		case 'aggregation':
-			// no required variables
+			requiredEnvVariables.push('GRAPH_URL');
 			break;
 		case 'api':
 			// no required variables

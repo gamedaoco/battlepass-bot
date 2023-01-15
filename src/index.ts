@@ -1,5 +1,8 @@
+import { Op } from 'sequelize';
+
 import { config, validateConfigs } from './config';
 import { logger } from './logger';
+import { BattlepassParticipant, Identity } from './db';
 import { getActiveBattlePasses, processBattlepassQuests } from './chain/chain';
 import { getBattlepassUsers } from './indexer/indexer';
 
@@ -13,8 +16,24 @@ async function iteration() {
 	}
 	for (let [bpId, battlepass] of battlepasses) {
 		const users = await getBattlepassUsers(bpId);
+		const participantIds = (await BattlepassParticipant.findAll({
+			where: {
+				BattlepassId: bpId
+			},
+			attributes: ['IdentityId'],
+			include: [{
+				model: Identity,
+				required: true,
+				attributes: [],
+				where: {
+					address: {
+						[Op.is]: null
+					}
+				}
+			}]
+		})).map(item => item.IdentityId);
 		if(users != null) {
-			await processBattlepassQuests(battlepass, users);
+			await processBattlepassQuests(battlepass, users, participantIds);
 		}
 	}
 	setTimeout(iteration, config.general.checkFrequency * 1000);

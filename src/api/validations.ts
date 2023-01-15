@@ -67,3 +67,19 @@ export const PointUpdatesSchema = Joi.object({
     .alphanum()
     .length(48)
 });
+
+export const AddParticipantSchema = Joi.object({
+  battlepass: Joi.string()
+    .required()
+    .length(66),
+  discord: Joi.string()
+    .alphanum()
+    .min(10)
+    .max(20)
+    .allow(null),
+  twitter: Joi.string()
+    .alphanum()
+    .min(10)
+    .max(20)
+    .allow(null),
+}).or('discord', 'twitter');

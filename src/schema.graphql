@@ -47,5 +47,6 @@ type Query {
 
 type Mutation {
 	identity(discord: String, twitter: String, address: String): Identity
+	participant(battlepass: String!, discord: String, twitter: String): Identity
 	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): Quest
 }
