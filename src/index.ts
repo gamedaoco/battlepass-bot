@@ -18,7 +18,7 @@ async function iteration() {
 		const users = await getBattlepassUsers(bpId);
 		const participantIds = (await BattlepassParticipant.findAll({
 			where: {
-				BattlepassId: bpId
+				BattlepassId: battlepass.id
 			},
 			attributes: ['IdentityId'],
 			include: [{
