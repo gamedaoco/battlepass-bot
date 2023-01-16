@@ -1,10 +1,13 @@
 version: "3.7"
+
 services:
+
   db:
     image: postgres:12-alpine
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: battlepass_dev
+
   api:
     image: battlepass-bot:local
     command:
@@ -19,6 +22,7 @@ services:
       - 8080:8080
     depends_on:
       - db
+
   discord:
     image: battlepass-bot:local
     command:
@@ -32,6 +36,7 @@ services:
     depends_on:
       - db
       - api
+
   chain:
     image: battlepass-bot:local
     command:
@@ -46,6 +51,7 @@ services:
     depends_on:
       - db
       - api
+
   aggregation:
     image: battlepass-bot:local
     command:

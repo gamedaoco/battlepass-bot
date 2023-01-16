@@ -1,24 +1,23 @@
-import jwt, { Secret, JwtPayload } from 'jsonwebtoken';
-import { Request, Response, NextFunction } from 'express';
+import jwt, { Secret, JwtPayload } from 'jsonwebtoken'
+import { Request, Response, NextFunction } from 'express'
 
-import { config } from '../config';
-
+import { config } from '../config'
 
 export function auth(req: Request, res: Response, next: NextFunction) {
- try {
-   const token = req.header('Authorization')?.replace('Bearer ', '');
+	try {
+		const token = req.header('Authorization')?.replace('Bearer ', '')
 
-   if (!token) {
-     throw new Error();
-   }
+		if (!token) {
+			throw new Error()
+		}
 
-   jwt.verify(token, config.api.secretKey);
+		jwt.verify(token, config.api.secretKey)
 
-   next();
- } catch (err) {
-   res.status(401).send({
-    success: false,
-    error: 'Not Authorized'
-   });
- }
-};
+		next()
+	} catch (err) {
+		res.status(401).send({
+			success: false,
+			error: 'Not Authorized',
+		})
+	}
+}
