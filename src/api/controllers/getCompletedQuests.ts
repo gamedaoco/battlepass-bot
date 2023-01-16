@@ -1,7 +1,6 @@
-import { Op } from 'sequelize';
+import { Op } from 'sequelize'
 
-import { sequelize, Quest, CompletedQuest, Identity, Battlepass } from '../../db';
-
+import { sequelize, Quest, CompletedQuest, Identity, Battlepass } from '../../db'
 
 export async function getCompletedQuests(battlepass: string, since: Date | null, address: string | null) {
 	let params: any = {
@@ -13,31 +12,31 @@ export async function getCompletedQuests(battlepass: string, since: Date | null,
 			[sequelize.fn('count', '*'), 'count'],
 			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
 		],
-		group: [
-			'questId', 'Identity.id'
-		],
+		group: ['questId', 'Identity.id'],
 		include: [
 			{
 				model: Quest,
 				required: true,
 				attributes: [],
-				include: [{
-					model: Battlepass,
-					required: true,
-					attributes: [],
-					where: {chainId: battlepass}
-				}],
+				include: [
+					{
+						model: Battlepass,
+						required: true,
+						attributes: [],
+						where: { chainId: battlepass },
+					},
+				],
 			},
 			{
 				model: Identity,
 				required: true,
-				where: address ? {address} : {},
-				attributes: []
-			}
-		]
-	};
-	if (since) {
-		params['where'] = { createdAt: { [Op.gte]: since } };
+				where: address ? { address } : {},
+				attributes: [],
+			},
+		],
 	}
-	return await CompletedQuest.findAll(params);
+	if (since) {
+		params['where'] = { createdAt: { [Op.gte]: since } }
+	}
+	return await CompletedQuest.findAll(params)
 }

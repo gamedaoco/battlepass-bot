@@ -1,19 +1,22 @@
-import { Battlepass, Quest } from '../../db';
-
+import { Battlepass, Quest } from '../../db'
 
 export async function saveQuest(
 	battlepass: string,
-	daily: boolean, source: string, type: string,
-	channelId: string | null, quantity: number,
-	points: number, maxDaily: number | null
+	daily: boolean,
+	source: string,
+	type: string,
+	channelId: string | null,
+	quantity: number,
+	points: number,
+	maxDaily: number | null,
 ): Promise<Quest | null> {
 	let bp = await Battlepass.findOne({
 		where: {
-			chainId: battlepass
-		}
-	});
+			chainId: battlepass,
+		},
+	})
 	if (bp == null) {
-		return null;
+		return null
 	}
 	let quest = await Quest.create({
 		BattlepassId: bp.id,
@@ -23,7 +26,7 @@ export async function saveQuest(
 		channelId: channelId,
 		quantity: quantity,
 		points: points,
-		maxDaily: maxDaily
-	});
-	return quest;
+		maxDaily: maxDaily,
+	})
+	return quest
 }
