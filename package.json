@@ -9,6 +9,7 @@
     "dev:discord": "npx nodemon src/discord/index.ts",
     "dev:chain": "npx nodemon src/chain/index.ts",
     "dev:api": "npx nodemon src/api/server.ts",
+    "dev:db": "docker run --name battlepass-dev -e POSTGRES_PASSWORD=postgres123 -d postgres",
     "service": "node lib/index.js",
     "discord": "node lib/discord/index.js",
     "chain": "node lib/chain/index.js",
@@ -17,7 +18,7 @@
     "format": "prettier --parser babel-ts --write --check src/**/*.{ts,tsx}",
     "format:verify": "prettier --parser babel-ts --check src/**/*.{ts,tsx}",
     "format:staged": "pretty-quick --staged --pattern --check 'src/**/*.{ts,tsx}'",
-    "test": "jest --maxWorkers=1 ./lib/tests"
+    "test": "npx jest --detectOpenHandles --maxWorkers=1 ./src/tests"
   },
   "author": "",
   "license": "ISC",
