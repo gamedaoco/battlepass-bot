@@ -1,6 +1,7 @@
 import { Op } from 'sequelize'
 
-import { Identity, Battlepass, BattlepassParticipant } from '../../db'
+import { logger } from '../../logger'
+import { Identity, Battlepass, BattlepassParticipant, DiscordActivity } from '../../db'
 
 export async function addBattlepassParticipant(
 	battlepass: string,
@@ -38,9 +39,33 @@ export async function addBattlepassParticipant(
 		existingUser.discord = discord
 		await existingUser.save()
 	}
-	let record = await BattlepassParticipant.create({
-		IdentityId: existingUser.id,
-		BattlepassId: bp.id,
+	await BattlepassParticipant.findOrCreate({
+		where: {
+			IdentityId: existingUser.id,
+			BattlepassId: bp.id,
+		}
 	})
+	let createActivity = true
+	if (!created && discord) {
+		let existingActivity = await DiscordActivity.count({
+			where: {
+				IdentityId: existingUser.id,
+				activityType: 'connect'
+			}
+		})
+		if (existingActivity) {
+			createActivity = false
+		}
+	}
+	if (createActivity && discord) {
+		await DiscordActivity.create({
+			IdentityId: existingUser.id,
+			activityType: 'connect',
+			guildId: '',
+			channelId: null,
+			activityId: ''
+		})
+		logger.debug('Created discord connect activity for user %s', discord);
+	}
 	return [existingUser, created]
 }

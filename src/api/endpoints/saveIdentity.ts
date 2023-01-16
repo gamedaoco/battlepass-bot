@@ -2,11 +2,12 @@ import { Request, Response } from 'express'
 import { Op } from 'sequelize'
 
 import { logger } from '../../logger'
-import { IdentitySchema } from '../validations'
+import { CreateIdentitySchema } from '../validations'
 import { saveIdentity } from '../controllers'
 
+
 export async function saveIdentityView(request: Request, response: Response) {
-	let validation = IdentitySchema.validate(request.body)
+	let validation = CreateIdentitySchema.validate(request.body);
 	if (validation.error !== undefined || validation.value === undefined) {
 		return response.status(400).send({
 			success: false,

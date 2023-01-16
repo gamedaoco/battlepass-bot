@@ -5,6 +5,7 @@ import truncate from '../truncate'
 import { initDB, sequelize, Identity, Battlepass, Quest, CompletedQuest } from '../../db'
 import { app } from '../../api/server'
 
+
 describe('Get earned points', () => {
 	beforeAll(async () => {
 		await initDB()

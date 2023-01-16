@@ -1,11 +1,12 @@
 import { Request, Response } from 'express'
 
 import { logger } from '../../logger'
-import { QuestSchema } from '../validations'
+import { CreateQuestSchema } from '../validations'
 import { saveQuest } from '../controllers'
 
+
 export async function saveQuestView(request: Request, response: Response) {
-	let validation = QuestSchema.validate(request.body)
+	let validation = CreateQuestSchema.validate(request.body)
 	if (validation.error != undefined || validation.value === undefined) {
 		return response.status(400).send({
 			success: false,

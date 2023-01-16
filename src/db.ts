@@ -121,25 +121,32 @@ Identity.init(
 		id: {
 			type: DataTypes.INTEGER.UNSIGNED,
 			autoIncrement: true,
-			primaryKey: true,
+			primaryKey: true
 		},
 		address: {
 			type: DataTypes.CHAR(48),
-			allowNull: true,
+			allowNull: true
 		},
 		discord: {
 			type: DataTypes.STRING(20),
-			allowNull: true,
+			allowNull: true
 		},
 		twitter: {
 			type: DataTypes.STRING(20),
 			allowNull: true,
-		},
+		}
 	},
 	{
 		sequelize,
-	},
-)
+		indexes: [{
+			unique: false,
+			fields: ['address']
+		}]
+	}
+);
+
+Identity.hasMany(DiscordActivity);
+DiscordActivity.belongsTo(Identity);
 
 Identity.hasMany(DiscordActivity)
 DiscordActivity.belongsTo(Identity)
@@ -160,22 +167,22 @@ Quest.init(
 		id: {
 			type: DataTypes.INTEGER.UNSIGNED,
 			autoIncrement: true,
-			primaryKey: true,
+			primaryKey: true
 		},
 		repeat: {
 			type: DataTypes.BOOLEAN,
 		},
 		source: {
 			type: DataTypes.ENUM,
-			values: ['discord', 'twitter', 'gamedao'],
+			values: ['discord', 'twitter', 'gamedao']
 		},
 		type: {
 			type: DataTypes.ENUM,
-			values: ['post', 'reaction'],
+			values: ['connect', 'join', 'post', 'reaction']
 		},
 		channelId: {
 			type: DataTypes.STRING(50),
-			allowNull: true,
+			allowNull: true
 		},
 		quantity: {
 			type: DataTypes.INTEGER.UNSIGNED,
@@ -185,7 +192,7 @@ Quest.init(
 		},
 		maxDaily: {
 			type: DataTypes.INTEGER.UNSIGNED,
-			allowNull: true,
+			allowNull: true
 		},
 	},
 	{

@@ -6,45 +6,42 @@ import { BattlepassParticipant, Identity } from './db'
 import { getActiveBattlePasses, processBattlepassQuests } from './chain/chain'
 import { getBattlepassUsers } from './indexer/indexer'
 
-async function iteration() {
-	const battlepasses = await getActiveBattlePasses()
+
+export async function iteration(again: boolean) {
+	const battlepasses = await getActiveBattlePasses();
 	if (battlepasses.size) {
 		logger.debug('Iteration with %s battlepasses', battlepasses.size)
 	} else {
 		logger.debug('Iteration')
 	}
 	for (let [bpId, battlepass] of battlepasses) {
-		const users = await getBattlepassUsers(bpId)
-		const participantIds = (
-			await BattlepassParticipant.findAll({
-				where: {
-					BattlepassId: battlepass.id,
-				},
-				attributes: ['IdentityId'],
-				include: [
-					{
-						model: Identity,
-						required: true,
-						attributes: [],
-						where: {
-							address: {
-								[Op.is]: null,
-							},
-						},
-					},
-				],
-			})
-		).map((item) => item.IdentityId)
-		if (users != null) {
-			await processBattlepassQuests(battlepass, users, participantIds)
+		const chainAddresses = await getBattlepassUsers(bpId);
+		const nonChainIdentities = (await BattlepassParticipant.findAll({
+			where: { BattlepassId: battlepass.id },
+			attributes: ['IdentityId']
+		})).map(item => item.IdentityId);
+		const battlepassesIdentities = (await Identity.findAll({
+			where: {
+				[Op.or]: [
+					{ address: chainAddresses },
+					{ id: nonChainIdentities }
+				]
+			},
+			attributes: ['id']
+		})).map(item => item.id);
+
+		if (battlepassesIdentities.length) {
+			await processBattlepassQuests(battlepass, battlepassesIdentities);
 		}
 	}
-	setTimeout(iteration, config.general.checkFrequency * 1000)
+	if (again) {
+		setTimeout(iteration, config.general.checkFrequency * 1000);
+	}
 }
 
 async function main() {
-	validateConfigs('aggregation')
-	await iteration()
+	validateConfigs('aggregation');
+	await iteration(true);
 }
 
 main().catch((error) => logger.error(error))

@@ -36,12 +36,15 @@ enum Source {
 }
 
 enum ActivityType {
+	connect
+	join
 	post
 	reaction
 }
 
 type Query {
 	points(battlepass: String!, since: String, address: String): [PointRecord]
+	quests(battlepass: String!): [Quest]
 	completedQuests(battlepass: String!, since: String, address: String): [CompletedQuest]
 }
 

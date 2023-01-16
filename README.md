@@ -35,7 +35,7 @@ Variables, market with `*` are required and service wouldn't operate properly wi
 There are few categories of configs, which are applied to one/multiple processes of the service.
 #### General
 * `LOGGING_LEVEL` - specify which log level to use, all logs which are lower will be ignored. Possible options are `debug`, `info`, `warn`, `error`;
-* `LOGGING_JSON` - should logs be stored in JSON format or not. Useful 
+* `LOGGING_JSON` - should logs be stored in JSON format or not. Useful for storing and analyzing logs with additional tools.
 * `DATABASE_URL` - access to database, e.g. `postgres://user:pass@example.com:5432/dbname`;
 #### Discord
 * `*DISCORD_BOT_KEY` - bot key to connect to discord guild and track progress. Bot should be added to guild before that.
@@ -47,6 +47,7 @@ There are few categories of configs, which are applied to one/multiple processes
 #### API
 * `API_PORT` - which port to use to run API on, e.g. `8080`.
 * `API_SECRET_KEY` - secret key to use to access the API. If not specified, API will be accessible without auth.
+* `API_GRAPHQL_UI` - add UI features for GraphQL.
 
 
 ## Testing
@@ -126,8 +127,8 @@ Response example:
   "success": true,
   "quest": {
     "id": 1,
-    "BattlepassId": 1,
-    "repeat": false,
+    "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
+    "daily": false,
     "source": "discord",
     "type": "post",
     "quantity": 100,
@@ -169,6 +170,34 @@ Response example:
       "updatedAt": "2023-01-01T00:05:10.000Z",
       "createdAt": "2023-01-01T00:05:10.000Z"
     }
+}
+```
+
+#### Get quests
+Request list of all quests for given battlepass.  
+Endpoint: `/api/quests`.  
+Method: `GET`.  
+Params:
+* `battlepass` - chain id (hash) of the battlepass, required.
+
+Request example: 
+```
+/api/quest?battlepass=111111111111111111111111111111111111111111111111111111111111111111
+```
+
+Response example:
+```json
+{
+  "success":true,
+  "quest":{
+    "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
+    "daily":true,
+    "source":"discord",
+    "type":"post",
+    "quantity":100,
+    "points":5000,
+    "maxDaily":10
+  }
 }
 ```
 

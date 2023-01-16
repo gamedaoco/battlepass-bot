@@ -1,6 +1,4 @@
-import { ApiPromise } from '@polkadot/api'
-import * as dotenv from 'dotenv'
-dotenv.config()
+import { ApiPromise } from '@polkadot/api';
 
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
