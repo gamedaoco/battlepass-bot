@@ -1,0 +1,52 @@
+type PointRecord {
+	discord: String
+	address: String
+	quests: Int!
+	points: Int!
+}
+
+type CompletedQuest {
+	discord: String
+	address: String
+	questId: Int!
+	points: Int!
+}
+
+type Quest {
+	battlepass: String!
+	daily: Boolean!
+	source: Source!
+	type: ActivityType!
+	channelId: String
+	quantity: Int!
+	points: Int!
+	maxDaily: Int
+}
+
+type Identity {
+	discord: String
+	twitter: String
+	address: String
+}
+
+enum Source {
+	discord
+	twitter
+	gamedao
+}
+
+enum ActivityType {
+	post
+	reaction
+}
+
+type Query {
+	points(battlepass: String!, since: String, address: String): [PointRecord]
+	completedQuests(battlepass: String!, since: String, address: String): [CompletedQuest]
+}
+
+type Mutation {
+	identity(discord: String, twitter: String, address: String): Identity
+	participant(battlepass: String!, discord: String, twitter: String): Identity
+	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): Quest
+}

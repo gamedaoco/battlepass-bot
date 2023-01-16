@@ -1,0 +1,60 @@
+version: "3.7"
+services:
+  db:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: battlepass_dev
+  api:
+    image: battlepass-bot:local
+    command:
+      - npm
+      - run-script
+      - api
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      API_PORT: 8080
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+  discord:
+    image: battlepass-bot:local
+    command:
+      - npm
+      - run-script
+      - discord
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      DISCORD_BOT_KEY: 
+    depends_on:
+      - db
+      - api
+  chain:
+    image: battlepass-bot:local
+    command:
+      - npm
+      - run-script
+      - chain
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      GRAPH_URL: 
+      CHAIN_RPC_URL: 
+    depends_on:
+      - db
+      - api
+  aggregation:
+    image: battlepass-bot:local
+    command:
+      - npm
+      - run-script
+      - service
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+    depends_on:
+      - db
+      - api
