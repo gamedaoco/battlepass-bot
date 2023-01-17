@@ -23,18 +23,33 @@ export async function getHistoricalEvents(client: Client, guildId: string) {
 		logger.error('Discord guild with given ID not found.')
 		return
 	}
+	let newActivities = new Array<ActivityRecord>()
+	let p = Promise.resolve()
 	await guild.channels.fetch().then(async (channels) => {
-		channels.forEach(async (channel) => {
+		await channels.forEach(async (channel) => {
 			if (channel instanceof TextChannel && channel.type == ChannelType.GuildText) {
-				await syncChannelMessages(channel)
+				p = p.then(() => syncChannelMessages(channel, newActivities))
 			} else {
 				logger.debug('Skip channel %s syncing', (channel || 'null').toString())
 			}
-		})
+		});
 	})
+	p.then(async () => {
+		if (!newActivities.length) {
+			logger.info('No new messages synced')
+			return
+		}
+		logger.info('Fetched %s new discord activities', newActivities.length)
+		try {
+			await DiscordActivity.bulkCreate(newActivities)
+		} catch (error) {
+			logger.error('Failed to save new discord activities')
+			logger.error(error)
+		}
+	});
 }
 
-async function syncChannelMessages(channel: TextChannel) {
+async function syncChannelMessages(channel: TextChannel, newActivities: ActivityRecord[]) {
 	if (channel === null) {
 		logger.debug('Sync channel is empty')
 		return
@@ -56,7 +71,6 @@ async function syncChannelMessages(channel: TextChannel) {
 	if (lastActivity) {
 		options.after = lastActivity.activityId
 	}
-	let messages: Array<ActivityRecord> = []
 	let fetching = true
 	let minMessageDate = new Date() // todo: config value to specify messages old to fetch
 	minMessageDate.setDate(minMessageDate.getDate() - 2)
@@ -73,8 +87,8 @@ async function syncChannelMessages(channel: TextChannel) {
 				if (lastActivity) {
 					for (let msg of pageCollection.values()) {
 						options.after = msg.id
-						let identity = await getIdentity(msg.author.id, identityCache)
-						messages.push(discordMessageToActivity(msg, identity))
+						let identity = await getIdentity(msg, identityCache, newActivities)
+						newActivities.push(discordMessageToActivity(msg, identity))
 					}
 				} else {
 					for (let msg of pageCollection.values()) {
@@ -87,8 +101,8 @@ async function syncChannelMessages(channel: TextChannel) {
 							options.before = msg.id
 							lastMessageDate = msg.createdAt
 						}
-						let identity = await getIdentity(msg.author.id, identityCache)
-						messages.push(discordMessageToActivity(msg, identity))
+						let identity = await getIdentity(msg, identityCache, newActivities)
+						newActivities.push(discordMessageToActivity(msg, identity))
 					}
 				}
 			})
@@ -98,26 +112,33 @@ async function syncChannelMessages(channel: TextChannel) {
 				fetching = false
 			})
 	}
-
-	if (!messages.length) {
-		logger.info('No new messages synced')
-		return
-	}
-	logger.info('Fetched %s synced messages', messages.length)
-	try {
-		await DiscordActivity.bulkCreate(messages)
-	} catch (error) {
-		logger.error('Failed to save synced messages')
-		logger.error(error)
-	}
 }
 
-async function getIdentity(discordId: string, cache: Map<string, Identity>): Promise<Identity> {
+async function getIdentity(discordMessage: Message, cache: Map<string, Identity>, newActivities: ActivityRecord[]): Promise<Identity> {
+	let discordId = discordMessage.author.id;
 	let identity: Identity | undefined = cache.get(discordId)
 	if (identity instanceof Identity) {
 		return identity
 	}
 	identity = await Identity.create({ discord: discordId })
+	newActivities.push(...[
+		{
+			IdentityId: identity.id,
+			guildId: '',
+			channelId: null,
+			activityId: '',
+			activityType: 'connect',
+			createdAt: new Date(),
+		},
+		{
+			IdentityId: identity.id,
+			guildId: discordMessage.guild?.id || '',
+			channelId: null,
+			activityId: '',
+			activityType: 'join',
+			createdAt: discordMessage.member?.joinedAt || new Date(),
+		}
+	])
 	cache.set(discordId, identity)
 	return identity
 }

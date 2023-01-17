@@ -45,6 +45,7 @@ export async function getCompletedQuests(battlepass: string, since: Date | null,
 			address: r.get('address'),
 			questId: r.get('questId'),
 			points: r.get('points'),
+			count: r.get('count'),
 		}
 	})
 }

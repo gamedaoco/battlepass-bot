@@ -21,6 +21,10 @@ export async function iteration(again: boolean) {
 				attributes: ['IdentityId'],
 			})
 		).map((item) => item.IdentityId)
+		if ((!chainAddresses || !chainAddresses.length) && !nonChainIdentities.length) {
+			// means there are no participants in the battlepass
+			continue;
+		}
 		const battlepassesIdentities = (
 			await Identity.findAll({
 				where: {
@@ -35,7 +39,12 @@ export async function iteration(again: boolean) {
 		}
 	}
 	if (again) {
-		setTimeout(iteration, config.general.checkFrequency * 1000)
+		setTimeout(
+			async () => {
+				await iteration(true)
+			},
+			config.general.checkFrequency * 1000
+		)
 	}
 }
 
