@@ -40,5 +40,13 @@ export async function getPoints(battlepass: string, since: Date | null, address:
 			[Op.gte]: since,
 		})
 	}
-	return await CompletedQuest.findAll(params)
+	let res = await CompletedQuest.findAll(params)
+	return res.map(r => {
+		return {
+			discord: r.get('discord'),
+			address: r.get('address'),
+			quests: r.get('quests'),
+			points: r.get('points')
+		}
+	})
 }

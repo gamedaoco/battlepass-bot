@@ -2,6 +2,7 @@ import {
 	Client,
 	Guild,
 	Channel,
+	ChannelType,
 	TextChannel,
 	Events,
 	GatewayIntentBits,
@@ -16,16 +17,17 @@ import { logger } from '../logger'
 import { DiscordActivity, Identity } from '../db'
 import { ActivityRecord } from './interfaces'
 
+
 export async function getHistoricalEvents(client: Client, guildId: string) {
 	let guild: Guild | undefined = client.guilds.cache.find((item: Guild) => item.id == guildId)
 	if (guild === undefined) {
 		logger.error('Discord guild with given ID not found.')
 		return
 	}
-	await guild.channels.fetch().then((channels) => {
-		channels.forEach((channel) => {
-			if (channel instanceof TextChannel) {
-				syncChannelMessages(channel)
+	await guild.channels.fetch().then(async (channels) => {
+		channels.forEach(async (channel) => {
+			if (channel instanceof TextChannel && channel.type == ChannelType.GuildText) {
+				await syncChannelMessages(channel);
 			} else {
 				logger.debug('Skip channel %s syncing', (channel || 'null').toString())
 			}

@@ -61,7 +61,7 @@ export async function getLastBlockTimestamp(): Promise<[number, Date] | null> {
 }
 
 export function calculateBlockDate(knownDate: Date, knownBlock: number, block: number) {
-	let offsetSecs = (knownBlock - block) * config.chain.blockTime
+	let offsetSecs = (block - knownBlock) * config.chain.blockTime
 	return new Date(knownDate.getTime() + 1000 * offsetSecs)
 }
 

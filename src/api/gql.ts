@@ -1,16 +1,27 @@
 import * as fs from 'fs'
 import express from 'express'
-import { ApolloServer, gql } from 'apollo-server-express'
 
+import { ApolloServer, gql } from 'apollo-server-express'
+import { ApolloServerPlugin } from 'apollo-server-plugin-base'
+import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
+
+import { config } from '../config'
 import { logger } from '../logger'
 import {
-	IdentitySchema,
-	PointUpdatesSchema,
-	QuestUpdatesSchema,
-	QuestSchema,
+	CreateIdentitySchema,
+	PointUpdatesSchema, QuestUpdatesSchema,
+	CreateQuestSchema,
 	AddParticipantSchema,
-} from './validations'
-import { getPoints, getCompletedQuests, saveIdentity, saveQuest, addBattlepassParticipant } from './controllers'
+	QuestsSchema
+} from './validations';
+import {
+	getPoints,
+	getCompletedQuests,
+	getQuests,
+	saveIdentity,
+	saveQuest,
+	addBattlepassParticipant
+} from './controllers'
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
 
@@ -32,10 +43,18 @@ const resolvers = {
 			}
 			return await getCompletedQuests(input.value.battlepass, input.value.since, input.value.address)
 		},
+		quests: async (parent: any, args: any) => {
+			let input = QuestsSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid quests request %s', input.error)
+				return null
+			}
+			return await getQuests(input.value.battlepass)
+		}
 	},
 	Mutation: {
 		identity: async (parent: any, args: any) => {
-			let input = IdentitySchema.validate(args)
+			let input = CreateIdentitySchema.validate(args);
 			if (input.error) {
 				logger.debug('Invalid identity request %s', input.error)
 				return null
@@ -44,35 +63,17 @@ const resolvers = {
 			return identity
 		},
 		quest: async (parent: any, args: any) => {
-			let input = QuestSchema.validate(args)
+			let input = CreateQuestSchema.validate(args);
 			if (input.error) {
 				logger.debug('Invalid quest request %s', input.error)
 				return null
 			}
-			let quest = await saveQuest(
-				input.value.battlepass,
-				input.value.daily,
-				input.value.source,
-				input.value.type,
-				input.value.channelId,
-				input.value.quantity,
-				input.value.points,
-				input.value.maxDaily,
+			return await saveQuest(
+				input.value.battlepass, input.value.daily,
+				input.value.source, input.value.type,
+				input.value.channelId, input.value.quantity,
+				input.value.points, input.value.maxDaily
 			)
-			if (!quest) {
-				return null
-			} else {
-				return {
-					battlepass: input.value.battlepass,
-					daily: quest.repeat,
-					source: quest.source,
-					type: quest.type,
-					channelId: quest.channelId,
-					quantity: quest.quantity,
-					points: quest.points,
-					maxDaily: quest.maxDaily,
-				}
-			}
 		},
 		participant: async (parent: any, args: any) => {
 			let input = AddParticipantSchema.validate(args)
@@ -91,9 +92,26 @@ const resolvers = {
 	},
 }
 
-const server = new ApolloServer({ typeDefs, resolvers })
+function getServer(): ApolloServer {
+	let plugins = new Array<ApolloServerPlugin>();
+	if (config.api.gqlUi) {
+		plugins.push(
+			ApolloServerPluginLandingPageLocalDefault({
+				embed: true
+			})
+		);
+	}
+	const server = new ApolloServer({
+		typeDefs,
+		resolvers,
+		introspection: true,
+		plugins: plugins
+	})
+	return server
+}
 
 export async function applyApolloServer(expressApp: express.Express) {
+	const server = getServer()
 	await server.start()
-	server.applyMiddleware({ app: expressApp })
+	server.applyMiddleware({app: expressApp})
 }

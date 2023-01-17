@@ -34,19 +34,20 @@ describe('Save new quest', () => {
 				source: 'discord',
 				type: 'post',
 				quantity: 100,
-				points: 5000,
+				points: 5000
 			})
 			.set('Accept', 'application/json')
 			.expect(201)
 			.then((response: any) => {
-				expect(response.body.success).toBeTruthy()
-				expect(response.body.quest.repeat).toBeFalsy()
-				expect(response.body.quest.source).toBe('discord')
-				expect(response.body.quest.type).toBe('post')
-				expect(response.body.quest.quantity).toBe(100)
-				expect(response.body.quest.points).toBe(5000)
-			})
-	})
+				expect(response.body.success).toBeTruthy();
+				expect(response.body.quest.daily).toBeFalsy();
+				expect(response.body.quest.source).toBe('discord');
+				expect(response.body.quest.type).toBe('post');
+				expect(response.body.quest.quantity).toBe(100);
+				expect(response.body.quest.points).toBe(5000);
+				expect(response.body.quest.battlepass).toBe(battlepass.chainId);
+			});
+	});
 
 	test('New daily quest', async () => {
 		let battlepass = await Battlepass.create({
@@ -66,18 +67,19 @@ describe('Save new quest', () => {
 				source: 'discord',
 				type: 'post',
 				quantity: 100,
-				points: 5000,
-			})
+				points: 5000
+			 })
 			.set('Accept', 'application/json')
 			.expect(201)
 			.then((response: any) => {
-				expect(response.body.success).toBeTruthy()
-				expect(response.body.quest.repeat).toBeTruthy()
-				expect(response.body.quest.maxDaily).toBe(10)
-				expect(response.body.quest.source).toBe('discord')
-				expect(response.body.quest.type).toBe('post')
-				expect(response.body.quest.quantity).toBe(100)
-				expect(response.body.quest.points).toBe(5000)
-			})
-	})
-})
+				expect(response.body.success).toBeTruthy();
+				expect(response.body.quest.daily).toBeTruthy();
+				expect(response.body.quest.maxDaily).toBe(10);
+				expect(response.body.quest.source).toBe('discord');
+				expect(response.body.quest.type).toBe('post');
+				expect(response.body.quest.quantity).toBe(100);
+				expect(response.body.quest.points).toBe(5000);
+				expect(response.body.quest.battlepass).toBe(battlepass.chainId);
+			});
+	});
+});

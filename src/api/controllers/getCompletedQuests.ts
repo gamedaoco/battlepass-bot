@@ -38,5 +38,13 @@ export async function getCompletedQuests(battlepass: string, since: Date | null,
 	if (since) {
 		params['where'] = { createdAt: { [Op.gte]: since } }
 	}
-	return await CompletedQuest.findAll(params)
+	let res = await CompletedQuest.findAll(params)
+	return res.map(r => {
+		return {
+			discord: r.get('discord'),
+			address: r.get('address'),
+			questId: r.get('questId'),
+			points: r.get('points')
+		}
+	})
 }
