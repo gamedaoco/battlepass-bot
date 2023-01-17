@@ -28,7 +28,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 Battlepass.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -80,7 +80,7 @@ export class DiscordActivity extends Model<InferAttributes<DiscordActivity>, Inf
 DiscordActivity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -119,7 +119,7 @@ export class Identity extends Model<InferAttributes<Identity>, InferCreationAttr
 Identity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -167,7 +167,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 Quest.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -187,13 +187,13 @@ Quest.init(
 			allowNull: true,
 		},
 		quantity: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		points: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		maxDaily: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: true,
 		},
 	},
@@ -212,12 +212,12 @@ export class ChainStatus extends Model<InferAttributes<ChainStatus>, InferCreati
 ChainStatus.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
 		blockNumber: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
 	},
@@ -237,7 +237,7 @@ export class CompletedQuest extends Model<InferAttributes<CompletedQuest>, Infer
 CompletedQuest.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -273,7 +273,7 @@ export class BattlepassParticipant extends Model<
 BattlepassParticipant.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},

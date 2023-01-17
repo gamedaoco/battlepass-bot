@@ -1,19 +1,33 @@
 {
-  "compilerOptions": {
-    "module": "commonjs",
-    "target": "es2020",
-    "outDir": "lib",
-    "rootDir": "src",
-    "strict": true,
-    "declaration": false,
-    "sourceMap": true,
-    "esModuleInterop": true,
-    "experimentalDecorators": true,
-    "emitDecoratorMetadata": true,
-    "skipLibCheck": true,
-    "resolveJsonModule": true,
-    "allowJs": false
+  "extends": "ts-node/node16/tsconfig.json",
+  "ts-node": {
+    "transpileOnly": true,
+    "files": true,
   },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "compilerOptions": {
+    // // "target": "es5",
+    // // "module": "es6",
+    // // "moduleResolution": "node",
+    // "sourceMap": true,
+    // "emitDecoratorMetadata": true,
+    // "experimentalDecorators": true,
+    // "allowJs": true,
+    // "noUnusedLocals": true,
+    // "jsx": "react",
+    // "lib": ["es2015", "dom", "esnext"],
+    // "noImplicitAny": true,
+    // "suppressImplicitAnyIndexErrors": true,
+    // "allowSyntheticDefaultImports": true,
+    // "pretty": true,
+    // "removeComments": true,
+    // "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*.ts",
+    "typings/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ]
 }
