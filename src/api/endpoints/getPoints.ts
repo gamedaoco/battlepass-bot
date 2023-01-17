@@ -4,7 +4,6 @@ import { logger } from '../../logger'
 import { PointUpdatesSchema } from '../validations'
 import { getPoints } from '../controllers'
 
-
 export async function getPointsView(request: Request, response: Response) {
 	let validation = PointUpdatesSchema.validate(request.query)
 	if (validation.error != undefined || validation.value === undefined) {

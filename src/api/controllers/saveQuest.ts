@@ -1,6 +1,5 @@
 import { Battlepass, Quest } from '../../db'
 
-
 export async function saveQuest(
 	battlepass: string,
 	daily: boolean,
@@ -9,7 +8,7 @@ export async function saveQuest(
 	channelId: string | null,
 	quantity: number,
 	points: number,
-	maxDaily: number | null
+	maxDaily: number | null,
 ): Promise<object | null> {
 	let bp = await Battlepass.findOne({
 		where: {
@@ -27,8 +26,8 @@ export async function saveQuest(
 		channelId: channelId,
 		quantity: quantity,
 		points: points,
-		maxDaily: maxDaily
-	});
+		maxDaily: maxDaily,
+	})
 	return {
 		battlepass,
 		daily: quest.repeat,
@@ -37,6 +36,6 @@ export async function saveQuest(
 		channelId: quest.channelId,
 		quantity: quest.quantity,
 		points: quest.points,
-		maxDaily: quest.maxDaily
-	};
+		maxDaily: quest.maxDaily,
+	}
 }

@@ -5,7 +5,6 @@ import truncate from '../truncate'
 import { initDB, sequelize, Identity, Battlepass, DiscordActivity } from '../../db'
 import { app } from '../../api/server'
 
-
 describe('Save new identity', () => {
 	beforeAll(async () => {
 		await initDB()
@@ -40,10 +39,10 @@ describe('Save new identity', () => {
 				expect(response.body.identity.discord).toBe('333333333333')
 				expect(response.body.identity.twitter).toBeUndefined()
 
-				let activities = await DiscordActivity.findAll();
-				expect(activities.length).toBe(1);
-				expect(activities[0].activityType).toBe('connect');
-				expect(activities[0].IdentityId).toBe(response.body.identity.id);
+				let activities = await DiscordActivity.findAll()
+				expect(activities.length).toBe(1)
+				expect(activities[0].activityType).toBe('connect')
+				expect(activities[0].IdentityId).toBe(response.body.identity.id)
 			})
 	})
 

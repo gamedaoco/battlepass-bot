@@ -1,4 +1,4 @@
-import { ApiPromise } from '@polkadot/api';
+import { ApiPromise } from '@polkadot/api'
 
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'

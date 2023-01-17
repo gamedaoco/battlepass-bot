@@ -1,12 +1,10 @@
 import * as Joi from 'joi'
 
-
 export const CreateIdentitySchema = Joi.object({
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
-	address: Joi.string().alphanum().length(48).allow(null)
-}).or('discord', 'twitter', 'address');
-
+	address: Joi.string().alphanum().length(48).allow(null),
+}).or('discord', 'twitter', 'address')
 
 export const CreateQuestSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
@@ -16,9 +14,8 @@ export const CreateQuestSchema = Joi.object({
 	channelId: Joi.string().min(10).max(50).allow(null),
 	quantity: Joi.number().integer().required(),
 	points: Joi.number().integer().required(),
-	maxDaily: Joi.number().integer().allow(null)
-}).with('maxDaily', 'daily');
-
+	maxDaily: Joi.number().integer().allow(null),
+}).with('maxDaily', 'daily')
 
 export const QuestUpdatesSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
@@ -36,8 +33,8 @@ export const AddParticipantSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
-}).or('discord', 'twitter');
+}).or('discord', 'twitter')
 
 export const QuestsSchema = Joi.object({
-	battlepass: Joi.string().required().length(66)
-});
+	battlepass: Joi.string().required().length(66),
+})

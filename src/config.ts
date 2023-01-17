@@ -1,9 +1,8 @@
-import * as dotenv from 'dotenv';
+import * as dotenv from 'dotenv'
 dotenv.config()
 
-
-export function validateConfigs(service: 'aggregation'| 'api' | 'chain' | 'discord') {
-	let requiredEnvVariables = new Array<string>();
+export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord') {
+	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
 			requiredEnvVariables.push('GRAPH_URL')
@@ -46,7 +45,7 @@ export const config = {
 	api: {
 		port: parseInt(process.env.API_PORT || '8080'),
 		secretKey: process.env.API_SECRET_KEY || '',
-		gqlUi: !!process.env.API_GRAPHQL_UI
+		gqlUi: !!process.env.API_GRAPHQL_UI,
 	},
 	general: {
 		checkFrequency: parseInt(process.env.QUEST_CHECK_FREQUENCY || '60'),

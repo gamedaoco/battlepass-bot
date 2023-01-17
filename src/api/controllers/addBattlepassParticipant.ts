@@ -43,15 +43,15 @@ export async function addBattlepassParticipant(
 		where: {
 			IdentityId: existingUser.id,
 			BattlepassId: bp.id,
-		}
+		},
 	})
 	let createActivity = true
 	if (!created && discord) {
 		let existingActivity = await DiscordActivity.count({
 			where: {
 				IdentityId: existingUser.id,
-				activityType: 'connect'
-			}
+				activityType: 'connect',
+			},
 		})
 		if (existingActivity) {
 			createActivity = false
@@ -63,9 +63,9 @@ export async function addBattlepassParticipant(
 			activityType: 'connect',
 			guildId: '',
 			channelId: null,
-			activityId: ''
+			activityId: '',
 		})
-		logger.debug('Created discord connect activity for user %s', discord);
+		logger.debug('Created discord connect activity for user %s', discord)
 	}
 	return [existingUser, created]
 }

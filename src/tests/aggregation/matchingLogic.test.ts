@@ -1,5 +1,5 @@
 import { describe, expect, test, it, beforeEach, beforeAll } from '@jest/globals'
-import assert = require("assert")
+import assert = require('assert')
 
 import truncate from '../truncate'
 import {
@@ -10,10 +10,9 @@ import {
 	BattlepassParticipant,
 	Quest,
 	CompletedQuest,
-	DiscordActivity
+	DiscordActivity,
 } from '../../db'
 import { processBattlepassQuests } from '../../chain/chain'
-
 
 describe('Quests matching logic', () => {
 	beforeAll(async () => {
@@ -46,7 +45,7 @@ describe('Quests matching logic', () => {
 				channelId: null,
 				quantity: 1,
 				points: 3000,
-				BattlepassId: bp.id
+				BattlepassId: bp.id,
 			},
 			{
 				repeat: false,
@@ -55,18 +54,18 @@ describe('Quests matching logic', () => {
 				channelId: null,
 				quantity: 1,
 				points: 3000,
-				BattlepassId: bp.id
+				BattlepassId: bp.id,
 			},
 			{
 				repeat: false,
-			    source: 'discord',
-			    type: 'post',
-			    channelId: null,
-			    quantity: 2,
-			    points: 1000,
-			    BattlepassId: bp.id
-			}
-		]);
+				source: 'discord',
+				type: 'post',
+				channelId: null,
+				quantity: 2,
+				points: 1000,
+				BattlepassId: bp.id,
+			},
+		])
 		let [activity1, activity2, activity3, activity4] = await DiscordActivity.bulkCreate([
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -74,7 +73,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'connect',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				IdentityId: identity1.id
+				IdentityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -82,7 +81,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'join',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				IdentityId: identity1.id
+				IdentityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -90,7 +89,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:00Z'),
-				IdentityId: identity1.id
+				IdentityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -99,29 +98,29 @@ describe('Quests matching logic', () => {
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:56:00Z'),
 				IdentityId: identity1.id,
-			}
-		]);
+			},
+		])
 
-		await processBattlepassQuests(bp, [identity1.id]);
-		let completedQuests = await CompletedQuest.findAll();
-		expect(completedQuests.length).toBe(3);
+		await processBattlepassQuests(bp, [identity1.id])
+		let completedQuests = await CompletedQuest.findAll()
+		expect(completedQuests.length).toBe(3)
 
-		expect(completedQuests[0].QuestId).toBe(quest1.id);
-		expect(completedQuests[0].IdentityId).toBe(identity1.id);
-		expect(completedQuests[0].guildId).toBe(activity1.guildId);
+		expect(completedQuests[0].QuestId).toBe(quest1.id)
+		expect(completedQuests[0].IdentityId).toBe(identity1.id)
+		expect(completedQuests[0].guildId).toBe(activity1.guildId)
 
-		expect(completedQuests[1].QuestId).toBe(quest2.id);
-		expect(completedQuests[1].IdentityId).toBe(identity1.id);
-		expect(completedQuests[1].guildId).toBe(activity2.guildId);
+		expect(completedQuests[1].QuestId).toBe(quest2.id)
+		expect(completedQuests[1].IdentityId).toBe(identity1.id)
+		expect(completedQuests[1].guildId).toBe(activity2.guildId)
 
-		expect(completedQuests[2].QuestId).toBe(quest3.id);
-		expect(completedQuests[2].IdentityId).toBe(identity1.id);
-		expect(completedQuests[2].guildId).toBe(activity3.guildId);
+		expect(completedQuests[2].QuestId).toBe(quest3.id)
+		expect(completedQuests[2].IdentityId).toBe(identity1.id)
+		expect(completedQuests[2].guildId).toBe(activity3.guildId)
 
-		await processBattlepassQuests(bp, [identity1.id]);
-		let newCompletedQuestsCount = await CompletedQuest.count();
-		expect(newCompletedQuestsCount).toBe(completedQuests.length);
-	});
+		await processBattlepassQuests(bp, [identity1.id])
+		let newCompletedQuestsCount = await CompletedQuest.count()
+		expect(newCompletedQuestsCount).toBe(completedQuests.length)
+	})
 
 	test('Inactive battlepass, single quest, single user', async () => {
 		let bp = await Battlepass.create({
@@ -162,10 +161,10 @@ describe('Quests matching logic', () => {
 			IdentityId: identity1.id,
 		})
 
-		await processBattlepassQuests(bp, [identity1.id]);
-		let completedQuests = await CompletedQuest.findAll();
-		expect(completedQuests.length).toBe(0);
-	});
+		await processBattlepassQuests(bp, [identity1.id])
+		let completedQuests = await CompletedQuest.findAll()
+		expect(completedQuests.length).toBe(0)
+	})
 
 	test('Daily quest', async () => {
 		let bp = await Battlepass.create({
@@ -182,11 +181,11 @@ describe('Quests matching logic', () => {
 		})
 		let identity2 = await Identity.create({
 			discord: ''.padEnd(15, '4'),
-		});
+		})
 		await BattlepassParticipant.create({
 			BattlepassId: bp.id,
-			IdentityId: identity2.id
-		});
+			IdentityId: identity2.id,
+		})
 		let quest1 = await Quest.create({
 			repeat: true,
 			source: 'discord',
@@ -264,21 +263,21 @@ describe('Quests matching logic', () => {
 			},
 		])
 
-		await processBattlepassQuests(bp, [identity1.id, identity2.id]);
-		let completedQuests = await CompletedQuest.findAll();
-		expect(completedQuests.length).toBe(3);
-		expect(completedQuests[0].IdentityId).toBe(identity1.id);
-		expect(completedQuests[0].QuestId).toBe(quest1.id);
-		expect(completedQuests[0].guildId).toBe(''.padEnd(15, '4'));
-		expect(completedQuests[1].IdentityId).toBe(identity1.id);
-		expect(completedQuests[1].QuestId).toBe(quest1.id);
-		expect(completedQuests[1].guildId).toBe(''.padEnd(15, '4'));
-		expect(completedQuests[2].IdentityId).toBe(identity2.id);
-		expect(completedQuests[2].QuestId).toBe(quest1.id);
-		expect(completedQuests[2].guildId).toBe(''.padEnd(15, '4'));
+		await processBattlepassQuests(bp, [identity1.id, identity2.id])
+		let completedQuests = await CompletedQuest.findAll()
+		expect(completedQuests.length).toBe(3)
+		expect(completedQuests[0].IdentityId).toBe(identity1.id)
+		expect(completedQuests[0].QuestId).toBe(quest1.id)
+		expect(completedQuests[0].guildId).toBe(''.padEnd(15, '4'))
+		expect(completedQuests[1].IdentityId).toBe(identity1.id)
+		expect(completedQuests[1].QuestId).toBe(quest1.id)
+		expect(completedQuests[1].guildId).toBe(''.padEnd(15, '4'))
+		expect(completedQuests[2].IdentityId).toBe(identity2.id)
+		expect(completedQuests[2].QuestId).toBe(quest1.id)
+		expect(completedQuests[2].guildId).toBe(''.padEnd(15, '4'))
 
-		await processBattlepassQuests(bp, [identity1.id, identity2.id]);
-		let newCompletedQuestsCount = await CompletedQuest.count();
-		expect(newCompletedQuestsCount).toBe(completedQuests.length);
-	});
-});
+		await processBattlepassQuests(bp, [identity1.id, identity2.id])
+		let newCompletedQuestsCount = await CompletedQuest.count()
+		expect(newCompletedQuestsCount).toBe(completedQuests.length)
+	})
+})

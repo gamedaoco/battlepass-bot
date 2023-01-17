@@ -1,6 +1,5 @@
 import { Quest, Battlepass } from '../../db'
 
-
 export async function getQuests(battlepass: string) {
 	const quests = await Quest.findAll({
 		include: [
@@ -9,12 +8,12 @@ export async function getQuests(battlepass: string) {
 				required: true,
 				attributes: [],
 				where: {
-					chainId: battlepass
-				}
-			}
-		]
+					chainId: battlepass,
+				},
+			},
+		],
 	})
-	return quests.map(quest => {
+	return quests.map((quest) => {
 		return {
 			battlepass,
 			daily: quest.repeat,
@@ -23,7 +22,7 @@ export async function getQuests(battlepass: string) {
 			channelId: quest.channelId,
 			quantity: quest.quantity,
 			points: quest.points,
-			maxDaily: quest.maxDaily
+			maxDaily: quest.maxDaily,
 		}
 	})
 }

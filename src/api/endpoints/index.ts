@@ -7,7 +7,6 @@ import { getPointsView } from './getPoints'
 import { addBattlepassParticipantView } from './addBattlepassParticipant'
 import { getQuestsView } from './getQuests'
 
-
 export const router = Router()
 router.post('/identity', saveIdentityView)
 router.post('/quest', saveQuestView)

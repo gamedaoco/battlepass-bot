@@ -9,18 +9,19 @@ import { config } from '../config'
 import { logger } from '../logger'
 import {
 	CreateIdentitySchema,
-	PointUpdatesSchema, QuestUpdatesSchema,
+	PointUpdatesSchema,
+	QuestUpdatesSchema,
 	CreateQuestSchema,
 	AddParticipantSchema,
-	QuestsSchema
-} from './validations';
+	QuestsSchema,
+} from './validations'
 import {
 	getPoints,
 	getCompletedQuests,
 	getQuests,
 	saveIdentity,
 	saveQuest,
-	addBattlepassParticipant
+	addBattlepassParticipant,
 } from './controllers'
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
@@ -50,11 +51,11 @@ const resolvers = {
 				return null
 			}
 			return await getQuests(input.value.battlepass)
-		}
+		},
 	},
 	Mutation: {
 		identity: async (parent: any, args: any) => {
-			let input = CreateIdentitySchema.validate(args);
+			let input = CreateIdentitySchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid identity request %s', input.error)
 				return null
@@ -63,16 +64,20 @@ const resolvers = {
 			return identity
 		},
 		quest: async (parent: any, args: any) => {
-			let input = CreateQuestSchema.validate(args);
+			let input = CreateQuestSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid quest request %s', input.error)
 				return null
 			}
 			return await saveQuest(
-				input.value.battlepass, input.value.daily,
-				input.value.source, input.value.type,
-				input.value.channelId, input.value.quantity,
-				input.value.points, input.value.maxDaily
+				input.value.battlepass,
+				input.value.daily,
+				input.value.source,
+				input.value.type,
+				input.value.channelId,
+				input.value.quantity,
+				input.value.points,
+				input.value.maxDaily,
 			)
 		},
 		participant: async (parent: any, args: any) => {
@@ -93,19 +98,19 @@ const resolvers = {
 }
 
 function getServer(): ApolloServer {
-	let plugins = new Array<ApolloServerPlugin>();
+	let plugins = new Array<ApolloServerPlugin>()
 	if (config.api.gqlUi) {
 		plugins.push(
 			ApolloServerPluginLandingPageLocalDefault({
-				embed: true
-			})
-		);
+				embed: true,
+			}),
+		)
 	}
 	const server = new ApolloServer({
 		typeDefs,
 		resolvers,
 		introspection: true,
-		plugins: plugins
+		plugins: plugins,
 	})
 	return server
 }
@@ -113,5 +118,5 @@ function getServer(): ApolloServer {
 export async function applyApolloServer(expressApp: express.Express) {
 	const server = getServer()
 	await server.start()
-	server.applyMiddleware({app: expressApp})
+	server.applyMiddleware({ app: expressApp })
 }

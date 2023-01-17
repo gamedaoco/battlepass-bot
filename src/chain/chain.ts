@@ -6,7 +6,6 @@ import { logger } from '../logger'
 import { Battlepass, Quest, CompletedQuest, DiscordActivity, Identity, ChainStatus, sequelize } from '../db'
 import { calculateBlockDate } from '../indexer/indexer'
 
-
 export async function connectToNode(): Promise<ApiPromise> {
 	const provider = new WsProvider(config.chain.rpcUrl)
 	const api = await ApiPromise.create({ provider })
@@ -57,51 +56,52 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 }
 
 export async function getActiveBattlePasses(): Promise<Map<string, Battlepass>> {
-	let map = new Map<string, Battlepass>();
+	let map = new Map<string, Battlepass>()
 	let query = await Battlepass.findAll({
 		where: {
-			[Op.or]: [
-				{active: true},
-				{active: false, finalized: false},
-			]
-		}
-	});
-	query.map(item => {
-		map.set(item.chainId, item);
-	});
-	return map;
+			[Op.or]: [{ active: true }, { active: false, finalized: false }],
+		},
+	})
+	query.map((item) => {
+		map.set(item.chainId, item)
+	})
+	return map
 }
 
 async function getBattlePassQuests(battlePassId: string): Promise<Quest[]> {
 	return await Quest.findAll({
 		where: {
-			source: 'discord'
+			source: 'discord',
 		},
-		include: [{
-			model: Battlepass,
-			required: true,
-			attributes: [],
-			where: {
-				chainId: battlePassId
-			}
-		}]
-	});
+		include: [
+			{
+				model: Battlepass,
+				required: true,
+				attributes: [],
+				where: {
+					chainId: battlePassId,
+				},
+			},
+		],
+	})
 }
 
 async function getBasicUsersActivity(identities: number[]): Promise<DiscordActivity[]> {
 	return await DiscordActivity.findAll({
-		include: [{
-			model: Identity,
-			required: true,
-			attributes: [],
-			where: {
-				id: identities
-			}
-		}],
+		include: [
+			{
+				model: Identity,
+				required: true,
+				attributes: [],
+				where: {
+					id: identities,
+				},
+			},
+		],
 		where: {
 			activityType: ['connect', 'join'],
-		}
-	});
+		},
+	})
 }
 
 async function getUsersActivity(identities: number[], startDate: Date, endDate: Date): Promise<DiscordActivity[]> {
@@ -119,7 +119,7 @@ async function getUsersActivity(identities: number[], startDate: Date, endDate: 
 				[Op.lte]: endDate,
 			},
 			activityType: 'post',
-			IdentityId: identities
+			IdentityId: identities,
 		},
 		group: ['date', 'IdentityId', 'guildId', 'channelId'],
 		order: ['date', 'IdentityId'],
@@ -128,125 +128,123 @@ async function getUsersActivity(identities: number[], startDate: Date, endDate: 
 
 async function getCompletedQuests(questIds: number[]) {
 	return await CompletedQuest.findAll({
-		attributes: [
-			'QuestId',
-			'IdentityId',
-			[sequelize.fn('count', '*'), 'cnt']
-		],
+		attributes: ['QuestId', 'IdentityId', [sequelize.fn('count', '*'), 'cnt']],
 		where: {
 			QuestId: questIds,
 		},
-		group: [
-			'QuestId',
-			'IdentityId'
-		]
-	});
+		group: ['QuestId', 'IdentityId'],
+	})
 }
 
 function getCompletedQuestsForUser(identityId: number, quest: Quest, userActivity: any[], completedBefore: number) {
 	if (!quest.repeat && completedBefore) {
-		return [];
+		return []
 	}
-	let maxPerDay = quest.quantity;
+	let maxPerDay = quest.quantity
 	if (quest.repeat) {
-		maxPerDay *= (quest.maxDaily || 1);
+		maxPerDay *= quest.maxDaily || 1
 	}
-	let totalActivity = 0;
+	let totalActivity = 0
 	for (let activity of userActivity) {
 		if (activity.get('IdentityId') != identityId) {
-			continue;
+			continue
 		}
 		if (quest.channelId && activity.get('channelId') != quest.channelId) {
-			continue;
+			continue
 		}
-		totalActivity += Math.min(maxPerDay, activity.get('messagesCnt'));
+		totalActivity += Math.min(maxPerDay, activity.get('messagesCnt'))
 	}
-	let completedCount = Math.floor(totalActivity / quest.quantity);
+	let completedCount = Math.floor(totalActivity / quest.quantity)
 	if (!quest.repeat && completedCount > 1) {
-		completedCount = 1;
+		completedCount = 1
 	}
 	if (!completedCount || completedCount <= completedBefore) {
-		return [];
+		return []
 	}
 	let record = {
 		IdentityId: identityId,
 		QuestId: quest.id,
-		guildId: userActivity[0].guildId
-	};
-	return Array(completedCount - completedBefore).fill(record);
+		guildId: userActivity[0].guildId,
+	}
+	return Array(completedCount - completedBefore).fill(record)
 }
 
-function processBasicQuests(basicQuests: Quest[], basicAcitivity: DiscordActivity[], alreadyCompletedQuests: CompletedQuest[]): Array<any> {
-	let newCompletedQuests = new Array<object>();
+function processBasicQuests(
+	basicQuests: Quest[],
+	basicAcitivity: DiscordActivity[],
+	alreadyCompletedQuests: CompletedQuest[],
+): Array<any> {
+	let newCompletedQuests = new Array<object>()
 
-	let alreadyCompletedQuestsMap = new Set<String>();
-	alreadyCompletedQuests.map(i => {
-		let key = `${i.QuestId}-${i.IdentityId}`;
-		alreadyCompletedQuestsMap.add(key);
-	});
+	let alreadyCompletedQuestsMap = new Set<String>()
+	alreadyCompletedQuests.map((i) => {
+		let key = `${i.QuestId}-${i.IdentityId}`
+		alreadyCompletedQuestsMap.add(key)
+	})
 
-	for(let quest of basicQuests) {
-		if (quest.source != 'discord') continue;
+	for (let quest of basicQuests) {
+		if (quest.source != 'discord') continue
 		for (let activity of basicAcitivity) {
 			if (activity.activityType != quest.type) {
-				continue;
+				continue
 			}
-			let key = `${quest.id}-${activity.IdentityId}`;
+			let key = `${quest.id}-${activity.IdentityId}`
 			if (alreadyCompletedQuestsMap.has(key)) {
-				continue;
+				continue
 			}
 			newCompletedQuests.push({
 				QuestId: quest.id,
 				guildId: activity.guildId,
-				IdentityId: activity.IdentityId
-			});
+				IdentityId: activity.IdentityId,
+			})
 		}
 	}
 
-	return newCompletedQuests;
+	return newCompletedQuests
 }
 
 export async function processBattlepassQuests(battlepass: Battlepass, identityIds: number[]) {
-	let startDate = battlepass.startDate || new Date(), endDate = battlepass.endDate || new Date();
-	let basicUsersActivity = await getBasicUsersActivity(identityIds);
-	let usersActivity = await getUsersActivity(identityIds, startDate, endDate);
-	let quests = await getBattlePassQuests(battlepass.chainId);
-	let completedQuests = await getCompletedQuests(quests.map(quest => quest.id));
-	let completedQuestsCount = new Map<string, any>();
-	completedQuests.map(quest => {
-		let key = `${quest.QuestId}-${quest.IdentityId}`;
-		completedQuestsCount.set(key, quest.get('cnt'));
-	});
+	let startDate = battlepass.startDate || new Date(),
+		endDate = battlepass.endDate || new Date()
+	let basicUsersActivity = await getBasicUsersActivity(identityIds)
+	let usersActivity = await getUsersActivity(identityIds, startDate, endDate)
+	let quests = await getBattlePassQuests(battlepass.chainId)
+	let completedQuests = await getCompletedQuests(quests.map((quest) => quest.id))
+	let completedQuestsCount = new Map<string, any>()
+	completedQuests.map((quest) => {
+		let key = `${quest.QuestId}-${quest.IdentityId}`
+		completedQuestsCount.set(key, quest.get('cnt'))
+	})
 
-	let basicQuests = new Array<Quest>();
-	let regularQuests = new Array<Quest>();
+	let basicQuests = new Array<Quest>()
+	let regularQuests = new Array<Quest>()
 	for (let quest of quests) {
 		if (quest.source != 'discord') {
-			continue;
+			continue
 		}
 		if (quest.type == 'connect' || quest.type == 'join') {
-			basicQuests.push(quest);
+			basicQuests.push(quest)
 		} else {
-			regularQuests.push(quest);
+			regularQuests.push(quest)
 		}
 	}
 
-	let newCompletedQuests = processBasicQuests(basicQuests, basicUsersActivity, completedQuests);
+	let newCompletedQuests = processBasicQuests(basicQuests, basicUsersActivity, completedQuests)
 	for (let quest of regularQuests) {
 		for (let identityId of identityIds) {
-			let key = `${quest.id}-${identityId}`;
-			let completedCnt = completedQuestsCount.get(key) || 0;
-			let additionalNewQuests = getCompletedQuestsForUser(identityId, quest, usersActivity, completedCnt);
+			let key = `${quest.id}-${identityId}`
+			let completedCnt = completedQuestsCount.get(key) || 0
+			let additionalNewQuests = getCompletedQuestsForUser(identityId, quest, usersActivity, completedCnt)
 			if (additionalNewQuests.length) {
-				newCompletedQuests.push(...additionalNewQuests);
+				newCompletedQuests.push(...additionalNewQuests)
 			}
 		}
 	}
 	if (newCompletedQuests.length) {
-		logger.info('Saving %s completed quests', newCompletedQuests.length);
-		await CompletedQuest.bulkCreate(newCompletedQuests);
+		logger.info('Saving %s completed quests', newCompletedQuests.length)
+		await CompletedQuest.bulkCreate(newCompletedQuests)
 	}
-	if(!battlepass.active) {
+	if (!battlepass.active) {
 		battlepass.finalized = true
 		await battlepass.save()
 	}

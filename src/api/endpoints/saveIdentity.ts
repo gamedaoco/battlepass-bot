@@ -5,9 +5,8 @@ import { logger } from '../../logger'
 import { CreateIdentitySchema } from '../validations'
 import { saveIdentity } from '../controllers'
 
-
 export async function saveIdentityView(request: Request, response: Response) {
-	let validation = CreateIdentitySchema.validate(request.body);
+	let validation = CreateIdentitySchema.validate(request.body)
 	if (validation.error !== undefined || validation.value === undefined) {
 		return response.status(400).send({
 			success: false,

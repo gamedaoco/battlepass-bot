@@ -4,7 +4,6 @@ import { logger } from '../../logger'
 import { CreateQuestSchema } from '../validations'
 import { saveQuest } from '../controllers'
 
-
 export async function saveQuestView(request: Request, response: Response) {
 	let validation = CreateQuestSchema.validate(request.body)
 	if (validation.error != undefined || validation.value === undefined) {

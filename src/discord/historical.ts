@@ -17,7 +17,6 @@ import { logger } from '../logger'
 import { DiscordActivity, Identity } from '../db'
 import { ActivityRecord } from './interfaces'
 
-
 export async function getHistoricalEvents(client: Client, guildId: string) {
 	let guild: Guild | undefined = client.guilds.cache.find((item: Guild) => item.id == guildId)
 	if (guild === undefined) {
@@ -27,7 +26,7 @@ export async function getHistoricalEvents(client: Client, guildId: string) {
 	await guild.channels.fetch().then(async (channels) => {
 		channels.forEach(async (channel) => {
 			if (channel instanceof TextChannel && channel.type == ChannelType.GuildText) {
-				await syncChannelMessages(channel);
+				await syncChannelMessages(channel)
 			} else {
 				logger.debug('Skip channel %s syncing', (channel || 'null').toString())
 			}
