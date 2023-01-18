@@ -32,7 +32,7 @@ export async function getHistoricalEvents(client: Client, guildId: string) {
 			} else {
 				logger.debug('Skip channel %s syncing', (channel || 'null').toString())
 			}
-		});
+		})
 	})
 	p.then(async () => {
 		if (!newActivities.length) {
@@ -46,7 +46,7 @@ export async function getHistoricalEvents(client: Client, guildId: string) {
 			logger.error('Failed to save new discord activities')
 			logger.error(error)
 		}
-	});
+	})
 }
 
 async function syncChannelMessages(channel: TextChannel, newActivities: ActivityRecord[]) {
@@ -115,7 +115,7 @@ async function syncChannelMessages(channel: TextChannel, newActivities: Activity
 }
 
 async function getIdentity(discordMessage: Message, cache: Map<string, Identity>, newActivities: ActivityRecord[]): Promise<Identity> {
-	let discordId = discordMessage.author.id;
+	let discordId = discordMessage.author.id
 	let identity: Identity | undefined = cache.get(discordId)
 	if (identity instanceof Identity) {
 		return identity

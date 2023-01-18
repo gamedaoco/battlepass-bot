@@ -23,7 +23,7 @@ export async function iteration(again: boolean) {
 		).map((item) => item.IdentityId)
 		if ((!chainAddresses || !chainAddresses.length) && !nonChainIdentities.length) {
 			// means there are no participants in the battlepass
-			continue;
+			continue
 		}
 		const battlepassesIdentities = (
 			await Identity.findAll({
