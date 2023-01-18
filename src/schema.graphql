@@ -10,6 +10,7 @@ type CompletedQuest {
 	address: String
 	questId: Int!
 	points: Int!
+	count: Int!
 }
 
 type Quest {
