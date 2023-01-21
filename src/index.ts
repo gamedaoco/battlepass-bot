@@ -4,7 +4,6 @@ import { config, validateConfigs } from './config'
 import { logger } from './logger'
 import { BattlepassParticipant, Identity } from './db'
 import { getActiveBattlePasses, processBattlepassQuests } from './chain/chain'
-import { getBattlepassUsers } from './indexer/indexer'
 
 export async function iteration(again: boolean) {
 	const battlepasses = await getActiveBattlePasses()
@@ -14,28 +13,18 @@ export async function iteration(again: boolean) {
 		logger.debug('Iteration')
 	}
 	for (let [bpId, battlepass] of battlepasses) {
-		const chainAddresses = await getBattlepassUsers(bpId)
-		const nonChainIdentities = (
+		const identities = (
 			await BattlepassParticipant.findAll({
-				where: { BattlepassId: battlepass.id },
-				attributes: ['IdentityId'],
+				where: { battlepassId: battlepass.id },
+				attributes: ['identityId'],
 			})
-		).map((item) => item.IdentityId)
-		if ((!chainAddresses || !chainAddresses.length) && !nonChainIdentities.length) {
+		).map((item) => item.identityId)
+		if (!identities.length) {
 			// means there are no participants in the battlepass
 			continue
 		}
-		const battlepassesIdentities = (
-			await Identity.findAll({
-				where: {
-					[Op.or]: [{ address: chainAddresses }, { id: nonChainIdentities }],
-				},
-				attributes: ['id'],
-			})
-		).map((item) => item.id)
-
-		if (battlepassesIdentities.length) {
-			await processBattlepassQuests(battlepass, battlepassesIdentities)
+		if (identities.length) {
+			await processBattlepassQuests(battlepass, identities)
 		}
 	}
 	if (again) {

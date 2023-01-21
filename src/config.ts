@@ -5,7 +5,6 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
-			requiredEnvVariables.push('GRAPH_URL')
 			break
 		case 'api':
 			// no required variables

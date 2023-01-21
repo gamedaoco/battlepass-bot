@@ -30,7 +30,7 @@ export async function saveIdentity(discord: string | null, twitter: string | nul
 			let existingConnectActivity = await DiscordActivity.findOne({
 				attributes: ['id'],
 				where: {
-					IdentityId: identity.id,
+					identityId: identity.id,
 					activityType: 'connect',
 				},
 			})
@@ -41,7 +41,7 @@ export async function saveIdentity(discord: string | null, twitter: string | nul
 	}
 	if (discord && shouldCreateActivity) {
 		await DiscordActivity.create({
-			IdentityId: identity.id,
+			identityId: identity.id,
 			activityType: 'connect',
 			guildId: '',
 			channelId: null,

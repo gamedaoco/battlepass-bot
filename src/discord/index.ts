@@ -31,6 +31,7 @@ async function main() {
 		})
 		discordApi.on('messageCreate', onMessage)
 		discordApi.on('messageDelete', onMessageDeleted)
+		// todo: event on user joining the guild to create activity with `join` type
 	})
 
 	discordApi.login(config.discord.botKey)

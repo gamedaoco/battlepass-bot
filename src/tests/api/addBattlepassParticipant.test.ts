@@ -42,7 +42,7 @@ describe('Save new identity', () => {
 				let activities = await DiscordActivity.findAll()
 				expect(activities.length).toBe(1)
 				expect(activities[0].activityType).toBe('connect')
-				expect(activities[0].IdentityId).toBe(response.body.identity.id)
+				expect(activities[0].identityId).toBe(response.body.identity.id)
 			})
 	})
 

@@ -123,7 +123,7 @@ async function getIdentity(discordMessage: Message, cache: Map<string, Identity>
 	identity = await Identity.create({ discord: discordId })
 	newActivities.push(...[
 		{
-			IdentityId: identity.id,
+			identityId: identity.id,
 			guildId: '',
 			channelId: null,
 			activityId: '',
@@ -131,7 +131,7 @@ async function getIdentity(discordMessage: Message, cache: Map<string, Identity>
 			createdAt: new Date(),
 		},
 		{
-			IdentityId: identity.id,
+			identityId: identity.id,
 			guildId: discordMessage.guild?.id || '',
 			channelId: null,
 			activityId: '',
@@ -145,7 +145,7 @@ async function getIdentity(discordMessage: Message, cache: Map<string, Identity>
 
 export function discordMessageToActivity(msg: Message, identity: Identity): ActivityRecord {
 	return {
-		IdentityId: identity.id,
+		identityId: identity.id,
 		guildId: msg.guild === null ? '0' : msg.guild.id,
 		channelId: msg.channel instanceof TextChannel ? msg.channel.id : null,
 		activityId: msg.id,

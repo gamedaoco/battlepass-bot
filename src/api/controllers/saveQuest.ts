@@ -1,4 +1,4 @@
-import { Battlepass, Quest } from '../../db'
+import { Battlepass, BattlepassParticipant, Quest, QuestProgress } from '../../db'
 
 export async function saveQuest(
 	battlepass: string,
@@ -19,7 +19,7 @@ export async function saveQuest(
 		return null
 	}
 	let quest = await Quest.create({
-		BattlepassId: bp.id,
+		battlepassId: bp.id,
 		repeat: daily,
 		source: source,
 		type: type,
@@ -28,6 +28,23 @@ export async function saveQuest(
 		points: points,
 		maxDaily: maxDaily,
 	})
+	let participants = await BattlepassParticipant.findAll({
+		attributes: ['identityId'],
+		where: {
+			battlepassId: bp.id
+		}
+	});
+	if (participants.length) {
+		let newProgress: any[] = []
+		participants.map(i => {
+			newProgress.push({
+				questId: quest.id,
+				identityId: i.identityId,
+				progress: 0
+			})
+		})
+		await QuestProgress.bulkCreate(newProgress)
+	}
 	return {
 		battlepass,
 		daily: quest.repeat,
@@ -39,3 +56,5 @@ export async function saveQuest(
 		maxDaily: quest.maxDaily,
 	}
 }
+
+// todo: fetch all participants from the chain and store them into the BattlepassParticipant model

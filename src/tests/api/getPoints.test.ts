@@ -50,7 +50,7 @@ describe('Get earned points', () => {
 			channelId: null,
 			quantity: 5,
 			points: 1000,
-			BattlepassId: bp1.id,
+			battlepassId: bp1.id,
 		})
 		let bp1q2 = await Quest.create({
 			repeat: true,
@@ -60,7 +60,7 @@ describe('Get earned points', () => {
 			quantity: 10,
 			points: 500,
 			maxDaily: 5,
-			BattlepassId: bp1.id,
+			battlepassId: bp1.id,
 		})
 		let bp2q1 = await Quest.create({
 			repeat: false,
@@ -69,7 +69,7 @@ describe('Get earned points', () => {
 			channelId: null,
 			quantity: 5,
 			points: 1000,
-			BattlepassId: bp2.id,
+			battlepassId: bp2.id,
 		})
 		let bp2q2 = await Quest.create({
 			repeat: true,
@@ -79,78 +79,78 @@ describe('Get earned points', () => {
 			quantity: 10,
 			points: 500,
 			maxDaily: 5,
-			BattlepassId: bp2.id,
+			battlepassId: bp2.id,
 		})
 
 		// battlepass completed quests
 		let bp1q1c1 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:01:00Z'),
 			updatedAt: new Date('2023-01-01T00:01:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp1q1.id,
+			identityId: identity1.id,
+			questId: bp1q1.id,
 			guildId: '1',
 		})
 		let bp1q1c2 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:02:00Z'),
 			updatedAt: new Date('2023-01-01T00:02:00Z'),
-			IdentityId: identity2.id,
-			QuestId: bp1q1.id,
+			identityId: identity2.id,
+			questId: bp1q1.id,
 			guildId: '1',
 		})
 		let bp1q2c1 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:03:00Z'),
 			updatedAt: new Date('2023-01-01T00:03:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp1q2.id,
+			identityId: identity1.id,
+			questId: bp1q2.id,
 			guildId: '1',
 		})
 		let bp1q2c3 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:03:00Z'),
 			updatedAt: new Date('2023-01-01T00:03:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp1q2.id,
+			identityId: identity1.id,
+			questId: bp1q2.id,
 			guildId: '1',
 		})
 		let bp1q2c4 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:03:00Z'),
 			updatedAt: new Date('2023-01-01T00:03:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp1q2.id,
+			identityId: identity1.id,
+			questId: bp1q2.id,
 			guildId: '1',
 		})
 		let bp1q2c2 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:04:00Z'),
 			updatedAt: new Date('2023-01-01T00:04:00Z'),
-			IdentityId: identity2.id,
-			QuestId: bp1q2.id,
+			identityId: identity2.id,
+			questId: bp1q2.id,
 			guildId: '1',
 		})
 		let bp2q1c1 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:05:00Z'),
 			updatedAt: new Date('2023-01-01T00:05:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp2q1.id,
+			identityId: identity1.id,
+			questId: bp2q1.id,
 			guildId: '1',
 		})
 		let bp2q1c2 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:06:00Z'),
 			updatedAt: new Date('2023-01-01T00:06:00Z'),
-			IdentityId: identity2.id,
-			QuestId: bp2q1.id,
+			identityId: identity2.id,
+			questId: bp2q1.id,
 			guildId: '1',
 		})
 		let bp2q2c1 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:07:00Z'),
 			updatedAt: new Date('2023-01-01T00:07:00Z'),
-			IdentityId: identity1.id,
-			QuestId: bp2q2.id,
+			identityId: identity1.id,
+			questId: bp2q2.id,
 			guildId: '1',
 		})
 		let bp2q2c2 = await CompletedQuest.create({
 			createdAt: new Date('2023-01-01T00:08:00Z'),
 			updatedAt: new Date('2023-01-01T00:08:00Z'),
-			IdentityId: identity2.id,
-			QuestId: bp2q2.id,
+			identityId: identity2.id,
+			questId: bp2q2.id,
 			guildId: '1',
 		})
 	}

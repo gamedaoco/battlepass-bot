@@ -24,35 +24,75 @@ import {
 	addBattlepassParticipant,
 } from './controllers'
 
+import { battlepasses, battlepassQuests, battlepassMembers } from './resolvers/battlepass'
+import { quests, questBattlepass, questProgress } from './resolvers/quests'
+import { members, memberBattlepass, memberIdentity, memberProgress } from './resolvers/members'
+import { progress, progressQuest, progressIdentity } from './resolvers/progress'
+import { identities, identityMembers, identityProgress } from './resolvers/identities'
+import { points, pointIdentity, pointBattlepass } from './resolvers/points'
+
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
 
 const resolvers = {
 	Query: {
-		points: async (parent: any, args: any) => {
-			let input = PointUpdatesSchema.validate(args)
-			if (input.error) {
-				logger.debug('Invalid points request %s', input.error)
-				return null
-			}
-			return await getPoints(input.value.battlepass, input.value.since, input.value.address)
-		},
-		completedQuests: async (parent: any, args: any) => {
-			let input = QuestUpdatesSchema.validate(args)
-			if (input.error) {
-				logger.debug('Invalid completed quests request %s', input.error)
-				return null
-			}
-			return await getCompletedQuests(input.value.battlepass, input.value.since, input.value.address)
-		},
-		quests: async (parent: any, args: any) => {
-			let input = QuestsSchema.validate(args)
-			if (input.error) {
-				logger.debug('Invalid quests request %s', input.error)
-				return null
-			}
-			return await getQuests(input.value.battlepass)
-		},
+		Battlepasses: battlepasses,
+		BattlepassQuests: quests,
+		BattlepassMembers: members,
+		BattlepassProgresses: progress,
+		BattlepassIdentities: identities,
+		BattlepassPoints: points,
 	},
+	Battlepass: {
+		quests: battlepassQuests,
+		members: battlepassMembers,
+	},
+	BattlepassQuest: {
+		battlepass: questBattlepass,
+		progresses: questProgress,
+	},
+	BattlepassMember: {
+		battlepass: memberBattlepass,
+		identity: memberIdentity,
+		progress: memberProgress,
+	},
+	BattlepassQuestProgress: {
+		quest: progressQuest,
+		identity: progressIdentity,
+	},
+	BattlepassIdentity: {
+		members: identityMembers,
+		progress: identityProgress,
+	},
+	BattlepassPoint: {
+		identity: pointIdentity,
+		battlepass: pointBattlepass,
+	},
+	// Query: {
+	// 	points: async (parent: any, args: any) => {
+	// 		let input = PointUpdatesSchema.validate(args)
+	// 		if (input.error) {
+	// 			logger.debug('Invalid points request %s', input.error)
+	// 			return null
+	// 		}
+	// 		return await getPoints(input.value.battlepass, input.value.since, input.value.address)
+	// 	},
+	// 	completedQuests: async (parent: any, args: any) => {
+	// 		let input = QuestUpdatesSchema.validate(args)
+	// 		if (input.error) {
+	// 			logger.debug('Invalid completed quests request %s', input.error)
+	// 			return null
+	// 		}
+	// 		return await getCompletedQuests(input.value.battlepass, input.value.since, input.value.address)
+	// 	},
+	// 	quests: async (parent: any, args: any) => {
+	// 		let input = QuestsSchema.validate(args)
+	// 		if (input.error) {
+	// 			logger.debug('Invalid quests request %s', input.error)
+	// 			return null
+	// 		}
+	// 		return await getQuests(input.value.battlepass)
+	// 	},
+	// },
 	Mutation: {
 		identity: async (parent: any, args: any) => {
 			let input = CreateIdentitySchema.validate(args)

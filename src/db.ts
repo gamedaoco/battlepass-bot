@@ -75,7 +75,7 @@ export class DiscordActivity extends Model<InferAttributes<DiscordActivity>, Inf
 	declare activityId: string
 	declare activityType: string
 	declare createdAt: CreationOptional<Date>
-	declare IdentityId: ForeignKey<Identity['id']>
+	declare identityId: ForeignKey<Identity['id']>
 }
 DiscordActivity.init(
 	{
@@ -147,11 +147,8 @@ Identity.init(
 	},
 )
 
-Identity.hasMany(DiscordActivity)
-DiscordActivity.belongsTo(Identity)
-
-Identity.hasMany(DiscordActivity)
-DiscordActivity.belongsTo(Identity)
+Identity.hasMany(DiscordActivity, { foreignKey: 'identityId' })
+DiscordActivity.belongsTo(Identity, { foreignKey: 'identityId' })
 
 export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes<Quest>> {
 	declare id: CreationOptional<number>
@@ -162,7 +159,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 	declare quantity: number
 	declare points: number
 	declare maxDaily: number | null
-	declare BattlepassId: ForeignKey<Battlepass['id']>
+	declare battlepassId: ForeignKey<Battlepass['id']>
 }
 Quest.init(
 	{
@@ -202,8 +199,38 @@ Quest.init(
 	},
 )
 
-Battlepass.hasMany(Quest)
-Quest.belongsTo(Battlepass)
+Battlepass.hasMany(Quest, { foreignKey: 'battlepassId' })
+Quest.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
+
+export class QuestProgress extends Model<InferAttributes<QuestProgress>, InferCreationAttributes<QuestProgress>> {
+	declare id: CreationOptional<number>
+	declare questId: ForeignKey<Quest['id']>
+	declare identityId: ForeignKey<Identity['id']>
+	declare progress: number
+}
+QuestProgress.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		progress: {
+			type: DataTypes.DOUBLE,
+			allowNull: false,
+			defaultValue: 0
+		}
+	},
+	{
+		sequelize
+	}
+)
+
+Quest.hasMany(QuestProgress, { foreignKey: 'questId' })
+QuestProgress.belongsTo(Quest, { foreignKey: 'questId' })
+Identity.hasMany(QuestProgress, { foreignKey: 'identityId' })
+QuestProgress.belongsTo(Identity, { foreignKey: 'identityId' })
+
 
 export class ChainStatus extends Model<InferAttributes<ChainStatus>, InferCreationAttributes<ChainStatus>> {
 	declare id: CreationOptional<number>
@@ -231,8 +258,8 @@ export class CompletedQuest extends Model<InferAttributes<CompletedQuest>, Infer
 	declare guildId: string
 	declare createdAt: CreationOptional<Date>
 	declare updatedAt: CreationOptional<Date>
-	declare IdentityId: ForeignKey<Identity['id']>
-	declare QuestId: ForeignKey<Quest['id']>
+	declare identityId: ForeignKey<Identity['id']>
+	declare questId: ForeignKey<Quest['id']>
 }
 CompletedQuest.init(
 	{
@@ -257,18 +284,18 @@ CompletedQuest.init(
 	},
 )
 
-CompletedQuest.belongsTo(Identity)
-Identity.hasMany(CompletedQuest)
-CompletedQuest.belongsTo(Quest)
-Quest.hasMany(CompletedQuest)
+CompletedQuest.belongsTo(Identity, { foreignKey: 'identityId' })
+Identity.hasMany(CompletedQuest, { foreignKey: 'identityId' })
+CompletedQuest.belongsTo(Quest, { foreignKey: 'questId' })
+Quest.hasMany(CompletedQuest, { foreignKey: 'questId' })
 
 export class BattlepassParticipant extends Model<
 	InferAttributes<BattlepassParticipant>,
 	InferCreationAttributes<BattlepassParticipant>
 > {
 	declare id: CreationOptional<number>
-	declare IdentityId: ForeignKey<Identity['id']>
-	declare BattlepassId: ForeignKey<Battlepass['id']>
+	declare identityId: ForeignKey<Identity['id']>
+	declare battlepassId: ForeignKey<Battlepass['id']>
 }
 BattlepassParticipant.init(
 	{
@@ -281,10 +308,10 @@ BattlepassParticipant.init(
 	{ sequelize },
 )
 
-BattlepassParticipant.belongsTo(Identity)
-Identity.hasMany(BattlepassParticipant)
-BattlepassParticipant.belongsTo(Battlepass)
-Battlepass.hasMany(BattlepassParticipant)
+BattlepassParticipant.belongsTo(Identity, { foreignKey: 'identityId' })
+Identity.hasMany(BattlepassParticipant, { foreignKey: 'identityId' })
+BattlepassParticipant.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
+Battlepass.hasMany(BattlepassParticipant, { foreignKey: 'battlepassId' })
 
 export async function initDB(): Promise<boolean> {
 	try {

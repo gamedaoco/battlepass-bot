@@ -41,15 +41,15 @@ export async function addBattlepassParticipant(
 	}
 	await BattlepassParticipant.findOrCreate({
 		where: {
-			IdentityId: existingUser.id,
-			BattlepassId: bp.id,
+			identityId: existingUser.id,
+			battlepassId: bp.id,
 		},
 	})
 	let createActivity = true
 	if (!created && discord) {
 		let existingActivity = await DiscordActivity.count({
 			where: {
-				IdentityId: existingUser.id,
+				identityId: existingUser.id,
 				activityType: 'connect',
 			},
 		})
@@ -59,7 +59,7 @@ export async function addBattlepassParticipant(
 	}
 	if (createActivity && discord) {
 		await DiscordActivity.create({
-			IdentityId: existingUser.id,
+			identityId: existingUser.id,
 			activityType: 'connect',
 			guildId: '',
 			channelId: null,

@@ -40,7 +40,7 @@ describe('Get battlepass quests', () => {
 			channelId: null,
 			quantity: 5,
 			points: 1000,
-			BattlepassId: bp1.id,
+			battlepassId: bp1.id,
 		})
 		let bp1q2 = await Quest.create({
 			repeat: true,
@@ -50,7 +50,7 @@ describe('Get battlepass quests', () => {
 			quantity: 10,
 			points: 500,
 			maxDaily: 5,
-			BattlepassId: bp1.id,
+			battlepassId: bp1.id,
 		})
 		let bp2q1 = await Quest.create({
 			repeat: false,
@@ -59,7 +59,7 @@ describe('Get battlepass quests', () => {
 			channelId: null,
 			quantity: 5,
 			points: 1000,
-			BattlepassId: bp2.id,
+			battlepassId: bp2.id,
 		})
 		let bp2q2 = await Quest.create({
 			repeat: true,
@@ -69,7 +69,7 @@ describe('Get battlepass quests', () => {
 			quantity: 10,
 			points: 500,
 			maxDaily: 5,
-			BattlepassId: bp2.id,
+			battlepassId: bp2.id,
 		})
 	}
 
