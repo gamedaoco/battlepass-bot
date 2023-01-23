@@ -1,4 +1,4 @@
-import { QuestProgress, Battlepass, BattlepassParticipant, Identity, Quest, sequelize } from '../../db'
+import { QuestProgress, Battlepass, BattlepassParticipant, Identity, Quest, CompletedQuest, sequelize } from '../../db'
 
 
 export async function members(parent: any, args: any, context: any, info: any) {
@@ -52,28 +52,37 @@ export async function memberProgress(parent: any, args: any, context: any, info:
 export async function memberPoints(parent: any, args: any, context: any, info: any) {
 	let params: any = {
 		where: {
-			identityId: parent.id,
+			identityId: parent.id
 		},
-		group: ['Quest.battlepassId', 'identityId'],
 		attributes: [
-			[sequelize.col('identityId'), 'identityId'],
+			[sequelize.col('CompletedQuest.identityId'), 'identityId'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
-			[sequelize.fn('sum', sequelize.cast(sequelize.col("progress"), 'integer')), 'points'],
+			[sequelize.fn('count', '*'), 'quests'],
+			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
 		],
+		group: ['Identity.id', 'Battlepass.id'],
 		include: [
 			{
 				model: Quest,
 				required: true,
+				where: {},
 				attributes: [],
-			}
-		]
+				include: []
+			},
+			{
+				model: Identity,
+				required: true,
+				attributes: [],
+			},
+		],
 	}
-	let res = await QuestProgress.findAll(params)
-	return res.map(i => {
+	let res = await CompletedQuest.findAll(params)
+	return res.map((r) => {
 		return {
-			identityId: i.get('identityId'),
-			battlepassId: i.get('battlepassId'),
-			points: i.get('points'),
+			identityId: r.get('identityId'),
+			battlepassId: r.get('battlepassId'),
+			points: r.get('points'),
+			quests: r.get('quests')
 		}
 	})
 }

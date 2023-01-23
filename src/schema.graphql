@@ -59,6 +59,7 @@ type BattlepassPoint {
 	identityId: Int
 	battlepassId: Int
 	points: Int!
+	quests: Int!
 	identity: BattlepassIdentity!
 	battlepass: Battlepass!
 }
