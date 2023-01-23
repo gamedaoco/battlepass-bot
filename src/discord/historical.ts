@@ -9,28 +9,76 @@ import {
 	Message,
 	User,
 	IntentsBitField,
+	Permissions,
 	FetchMessagesOptions,
 } from 'discord.js'
+import { Op } from 'sequelize'
 
 import { config } from '../config'
 import { logger } from '../logger'
 import { DiscordActivity, Identity } from '../db'
 import { ActivityRecord } from './interfaces'
 
-export async function getHistoricalEvents(client: Client, guildId: string) {
-	let guild: Guild | undefined = client.guilds.cache.find((item: Guild) => item.id == guildId)
-	if (guild === undefined) {
-		logger.error('Discord guild with given ID not found.')
-		return
+export async function syncGuildMembers(guild: Guild) {
+	let discordQuery = await Identity.findAll({
+		where: {
+			discord: {
+				[Op.ne]: null
+			}
+		},
+		attributes: ['discord']
+	})
+	let existingDiscordUsers = new Set<string>()
+	discordQuery.map(i => existingDiscordUsers.add(i.discord || ''))
+	let newIdentities = new Map<string, Date>()
+	await guild.members.fetch()
+	for (let [_, member] of guild.members.cache) {
+		let userId = member.user.id
+		if (!existingDiscordUsers.has(userId)) {
+			newIdentities.set(userId, member?.joinedAt || new Date())
+			existingDiscordUsers.add(userId)
+		}
 	}
+	let records = await Identity.bulkCreate([...newIdentities.keys()].map(i => {
+		return {
+			discord: i
+		}
+	}))
 	let newActivities = new Array<ActivityRecord>()
+	records.map(i => {
+		newActivities.push({
+			identityId: i.id,
+			guildId: guild.id,
+			channelId: null,
+			activityId: '',
+			activityType: 'join',
+			createdAt: newIdentities.get(i.discord || '') || new Date(),
+		})
+	})
+	await DiscordActivity.bulkCreate(newActivities)
+	logger.info('Found %s new users for discord guild %s (%s)', records.length, guild.id, guild.name)
+}
+
+export async function getHistoricalEvents(guild: Guild) {
+	let newActivities = new Array<ActivityRecord>()
+	let identityCache = new Map<string, Identity>()
+	let identities = await Identity.findAll({
+		where: {
+			discord: {
+				[Op.ne]: null
+			}
+		}
+	})
+	identities.map((i: Identity) => {
+		identityCache.set(i.discord || '', i)
+	})
 	let p = Promise.resolve()
 	await guild.channels.fetch().then(async (channels) => {
 		await channels.forEach(async (channel) => {
 			if (channel instanceof TextChannel && channel.type == ChannelType.GuildText) {
-				p = p.then(() => syncChannelMessages(channel, newActivities))
-			} else {
-				logger.debug('Skip channel %s syncing', (channel || 'null').toString())
+				if (guild.members.me && guild.members.me.permissionsIn(channel).has(['ReadMessageHistory', 'ViewChannel'])) {
+					p = p.then(() => syncChannelMessages(channel, newActivities, identityCache))
+				}
 			}
 		})
 	})
@@ -49,12 +97,11 @@ export async function getHistoricalEvents(client: Client, guildId: string) {
 	})
 }
 
-async function syncChannelMessages(channel: TextChannel, newActivities: ActivityRecord[]) {
+async function syncChannelMessages(channel: TextChannel, newActivities: ActivityRecord[], identityCache: Map<string, Identity>) {
 	if (channel === null) {
 		logger.debug('Sync channel is empty')
 		return
 	}
-	// if (channel.type !== 'GUILD_TEXT') {
 	if (!channel.isTextBased()) {
 		logger.debug('Skip channel processing')
 		return
@@ -72,10 +119,9 @@ async function syncChannelMessages(channel: TextChannel, newActivities: Activity
 		options.after = lastActivity.activityId
 	}
 	let fetching = true
-	let minMessageDate = new Date() // todo: config value to specify messages old to fetch
-	minMessageDate.setDate(minMessageDate.getDate() - 2)
+	let minMessageDate = new Date()
+	minMessageDate.setDate(minMessageDate.getDate() - config.discord.fetchMessagesSince)
 	let lastMessageDate: Date | null = null
-	let identityCache = new Map<string, Identity>()
 	while (fetching) {
 		await channel.messages
 			.fetch(options)

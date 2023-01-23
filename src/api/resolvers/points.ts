@@ -30,7 +30,13 @@ export async function points(parent: any, args: any, context: any, info: any) {
 		}
 	}
 	let res = await QuestProgress.findAll(params)
-	return JSON.parse(JSON.stringify(res)) // todo: resolve issue with accessing custom query fields
+	return res.map(i => {
+		return {
+			identityId: i.get('identityId'),
+			battlepassId: i.get('battlepassId'),
+			points: i.get('points'),
+		}
+	})
 }
 
 export async function pointIdentity(parent: any, args: any, context: any, info: any) {

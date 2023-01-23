@@ -1,7 +1,7 @@
 import { Op } from 'sequelize'
 
 import { logger } from '../../logger'
-import { Identity, Battlepass, BattlepassParticipant, DiscordActivity } from '../../db'
+import { Identity, Battlepass, BattlepassParticipant, DiscordActivity, Quest, QuestProgress } from '../../db'
 
 export async function addBattlepassParticipant(
 	battlepass: string,
@@ -24,7 +24,7 @@ export async function addBattlepassParticipant(
 	if (!where.length) {
 		return null
 	}
-	let created = false
+	let identityCreated = false
 	let existingUser = await Identity.findOne({
 		where: { [Op.or]: where },
 	})
@@ -33,20 +33,37 @@ export async function addBattlepassParticipant(
 			discord,
 			twitter,
 		})
-		created = true
+		identityCreated = true
 	} else {
 		existingUser.twitter = twitter
 		existingUser.discord = discord
 		await existingUser.save()
 	}
-	await BattlepassParticipant.findOrCreate({
+	let [_, created] = await BattlepassParticipant.findOrCreate({
 		where: {
 			identityId: existingUser.id,
 			battlepassId: bp.id,
 		},
 	})
+	if (created) {
+		let quests = await Quest.findAll({
+			where: { battlepassId: bp.id },
+			attributes: ['id']
+		})
+		let progress = []
+		for (let quest of quests) {
+			progress.push({
+				identityId: existingUser.id,
+				questId: quest.id,
+				progress: 0
+			})
+		}
+		if (progress) {
+			await QuestProgress.bulkCreate(progress)
+		}
+	}
 	let createActivity = true
-	if (!created && discord) {
+	if (!identityCreated && discord) {
 		let existingActivity = await DiscordActivity.count({
 			where: {
 				identityId: existingUser.id,
@@ -65,7 +82,7 @@ export async function addBattlepassParticipant(
 			channelId: null,
 			activityId: '',
 		})
-		logger.debug('Created discord connect activity for user %s', discord)
+		logger.debug('identityCreated discord connect activity for user %s', discord)
 	}
-	return [existingUser, created]
+	return [existingUser, identityCreated]
 }

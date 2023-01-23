@@ -39,6 +39,7 @@ There are few categories of configs, which are applied to one/multiple processes
 * `DATABASE_URL` - access to database, e.g. `postgres://user:pass@example.com:5432/dbname`;
 #### Discord
 * `*DISCORD_BOT_KEY` - bot key to connect to discord guild and track progress. Bot should be added to guild before that.
+* `DISCORD_FETCH_MESSAGES_SINCE` - specify time (in days), since which discord messages should be synced. All messages, which are older then this value, will be skipped. Default value is `2`.
 #### Chain
 * `*CHAIN_RPC_URL` - chain node URL. It will be used to track chain events, such as battlepass status updates or user activities.
 * `*GRAPH_URL` - graph URL. It will be used to fetch initial battlepass objects.

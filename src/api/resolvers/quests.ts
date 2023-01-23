@@ -50,7 +50,7 @@ export async function questBattlepass(parent: any, args: any, context: any, info
 export async function questProgress(parent: any, args: any, context: any, info: any) {
 	let res = await QuestProgress.findAll({
 		where: {
-			id: parent.id
+			questId: parent.id
 		}
 	})
 	return res

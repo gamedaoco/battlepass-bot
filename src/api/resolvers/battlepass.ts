@@ -46,3 +46,19 @@ export async function battlepassMembers(parent: any, args: any, context: any, in
 	})
 	return res
 }
+
+
+export function formattedDate(fieldName: string) {
+	return function(parent: any, args: any, context: any, info: any) {
+		let value = parent[fieldName]
+		if (value) {
+			return value.toISOString()
+		} else {
+			return value
+		}
+	}
+}
+
+export function battlepassesStartDate(parent: any, args: any, context: any, info: any) {
+	return parent.startDate.toISOString()
+}

@@ -12,7 +12,7 @@ enum ActivityType {
 }
 
 type BattlepassIdentity {
-	id: ID!
+	id: Int!
 	discord: String
 	twitter: String
 	address: String
@@ -21,8 +21,8 @@ type BattlepassIdentity {
 }
 
 type BattlepassQuest {
-	id: ID!
-	battlepassId: ID!
+	id: Int!
+	battlepassId: Int!
 	repeat: Boolean!
 	source: Source!
 	type: ActivityType!
@@ -35,45 +35,46 @@ type BattlepassQuest {
 }
 
 type BattlepassQuestProgress {
-	id: ID!
+	id: Int!
 	questId: Int!
 	identityId: Int!
-	progress: Int!
+	progress: Float!
 	quest: BattlepassQuest!
 	identity: BattlepassIdentity!
 }
 
-type BattlepassMember {
-	id: ID!
-	identityId: Int!
-	battlepassId: String!
-	progress: [BattlepassQuestProgress]
-	battlepass: Battlepass!
-	identity: BattlepassIdentity!
-}
-
 type Battlepass {
-	id: ID!
+	id: Int!
 	chainId: String!
 	orgId: String!
 	active: Boolean!
 	finalized: Boolean!
-	startedAt: String
-	endedAt: String
+	startDate: String
+	endDate: String
 	quests: [BattlepassQuest]
 	members: [BattlepassMember]
 }
 
 type BattlepassPoint {
-	identityId: ID!
-	battlepassId: ID!
+	identityId: Int
+	battlepassId: Int
 	points: Int!
 	identity: BattlepassIdentity!
 	battlepass: Battlepass!
 }
 
+type BattlepassMember {
+	id: Int
+	identityId: Int!
+	battlepassId: Int!
+	progress: [BattlepassQuestProgress]
+	battlepass: Battlepass!
+	identity: BattlepassIdentity!
+	points: [BattlepassPoint]
+}
+
 input BattlepassesFilter {
-	id: ID
+	id: Int
 	chainId: String
 	orgChainId: String
 	active: Boolean
@@ -81,8 +82,8 @@ input BattlepassesFilter {
 }
 
 input QuestFilter {
-	id: ID
-	battlepassId: ID
+	id: Int
+	battlepassId: Int
 	battlepassChainId: String
 	source: String
 	type: ActivityType
@@ -90,29 +91,29 @@ input QuestFilter {
 }
 
 input MemberFilter {
-	id: ID
-	battlepassId: ID
-	identityId: ID
+	id: Int
+	battlepassId: Int
+	identityId: Int
 }
 
 input ProgressFilter {
-	id: ID
-	questId: ID
-	identityId: ID
-	battlepassId: ID
+	id: Int
+	questId: Int
+	identityId: Int
+	battlepassId: Int
 	battlepassChainId: String
 }
 
 input IdentityFilter {
-	id: ID
+	id: Int
 	address: String
 	discord: String
 	twitter: String
 }
 
 input PointsFilter {
-	identityId: ID
-	battlepassId: ID
+	identityId: Int
+	battlepassId: Int
 	battlepassChainId: String
 }
 

@@ -45,16 +45,5 @@ export async function saveQuest(
 		})
 		await QuestProgress.bulkCreate(newProgress)
 	}
-	return {
-		battlepass,
-		daily: quest.repeat,
-		source: quest.source,
-		type: quest.type,
-		channelId: quest.channelId,
-		quantity: quest.quantity,
-		points: quest.points,
-		maxDaily: quest.maxDaily,
-	}
+	return quest
 }
-
-// todo: fetch all participants from the chain and store them into the BattlepassParticipant model

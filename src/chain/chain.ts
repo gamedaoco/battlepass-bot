@@ -20,7 +20,6 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 		const at = await api.at(header.hash)
 		const events: any = await at.query.system.events()
 		await events.forEach(async (record: any) => {
-			// todo: event handler when user joins battlepass
 			let event = record.event
 			if (api.events.battlepass.BattlepassActivated.is(event)) {
 				let [byWho, orgId, bpId] = event.data
@@ -63,7 +62,11 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					where: { address: forWho.toString() },
 				})
 				let [participant, created] = await BattlepassParticipant.findOrCreate({
-					where: { identityId: identity.id }
+					where: { identityId: identity.id },
+					defaults: {
+						identityId: identity.id,
+						battlepassId: bp.id
+					}
 				})
 				if (created) {
 					let quests = await Quest.findAll({
