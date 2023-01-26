@@ -1,4 +1,4 @@
-import { Battlepass, BattlepassParticipant, Quest } from '../../db'
+import { Battlepass, BattlepassReward, BattlepassParticipant, Quest } from '../../db'
 
 
 export async function battlepasses(parent: any, args: any, context: any, info: any) {
@@ -47,6 +47,14 @@ export async function battlepassMembers(parent: any, args: any, context: any, in
 	return res
 }
 
+export async function battlepassRewards(parent: any, args: any, context: any, info: any) {
+	let res = await BattlepassReward.findAll({
+		where: {
+			battlepassId: parent.id
+		}
+	})
+	return res
+}
 
 export function formattedDate(fieldName: string) {
 	return function(parent: any, args: any, context: any, info: any) {
@@ -57,8 +65,4 @@ export function formattedDate(fieldName: string) {
 			return value
 		}
 	}
-}
-
-export function battlepassesStartDate(parent: any, args: any, context: any, info: any) {
-	return parent.startDate.toISOString()
 }

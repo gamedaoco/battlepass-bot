@@ -47,7 +47,7 @@ export async function onMemberJoin(member: GuildMember) {
 				guildId: '',
 				channelId: null,
 				activityId: '',
-				activityType: 'create',
+				activityType: 'connect',
 				createdAt: new Date(),
 			},
 			{

@@ -313,6 +313,52 @@ Identity.hasMany(BattlepassParticipant, { foreignKey: 'identityId' })
 BattlepassParticipant.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
 Battlepass.hasMany(BattlepassParticipant, { foreignKey: 'battlepassId' })
 
+export class BattlepassReward extends Model<
+	InferAttributes<BattlepassReward>,
+	InferCreationAttributes<BattlepassReward>
+> {
+	declare id: CreationOptional<number>
+	declare battlepassId: ForeignKey<Battlepass['id']>
+	declare cid: string | null
+	declare name: string | null
+	declare points: number | null
+	declare level: number | null
+	declare total: number
+	declare available: number
+}
+BattlepassReward.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		cid: {
+			type: DataTypes.STRING(50),
+		},
+		name: {
+			type: DataTypes.STRING(100),
+		},
+		points: {
+			type: DataTypes.INTEGER.UNSIGNED,
+		},
+		level: {
+			type: DataTypes.INTEGER.UNSIGNED,
+		},
+		total: {
+			type: DataTypes.INTEGER.UNSIGNED,
+		},
+		available: {
+			type: DataTypes.INTEGER.UNSIGNED,
+		}
+	},
+	{ sequelize }
+)
+
+BattlepassReward.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
+Battlepass.hasMany(BattlepassReward, { foreignKey: 'battlepassId' })
+
+
 export async function initDB(): Promise<boolean> {
 	try {
 		await sequelize.authenticate()
