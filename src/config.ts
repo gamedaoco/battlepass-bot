@@ -5,7 +5,6 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
-			requiredEnvVariables.push('GRAPH_URL')
 			break
 		case 'api':
 			// no required variables
@@ -27,6 +26,7 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 export const config = {
 	discord: {
 		botKey: process.env.DISCORD_BOT_KEY,
+		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2')
 	},
 	logging: {
 		level: process.env.LOGGING_LEVEL || 'debug',

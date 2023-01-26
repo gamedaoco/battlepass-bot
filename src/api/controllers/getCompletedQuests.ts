@@ -5,7 +5,7 @@ import { sequelize, Quest, CompletedQuest, Identity, Battlepass } from '../../db
 export async function getCompletedQuests(battlepass: string, since: Date | null, address: string | null) {
 	let params: any = {
 		attributes: [
-			['QuestId', 'questId'],
+			['questId', 'questId'],
 			'Identity.id',
 			[sequelize.col('Identity.discord'), 'discord'],
 			[sequelize.col('Identity.address'), 'address'],

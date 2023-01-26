@@ -9,6 +9,7 @@ import {
 	Battlepass,
 	BattlepassParticipant,
 	Quest,
+	QuestProgress,
 	CompletedQuest,
 	DiscordActivity,
 } from '../../db'
@@ -45,7 +46,7 @@ describe('Quests matching logic', () => {
 				channelId: null,
 				quantity: 1,
 				points: 3000,
-				BattlepassId: bp.id,
+				battlepassId: bp.id,
 			},
 			{
 				repeat: false,
@@ -54,7 +55,7 @@ describe('Quests matching logic', () => {
 				channelId: null,
 				quantity: 1,
 				points: 3000,
-				BattlepassId: bp.id,
+				battlepassId: bp.id,
 			},
 			{
 				repeat: false,
@@ -63,7 +64,24 @@ describe('Quests matching logic', () => {
 				channelId: null,
 				quantity: 2,
 				points: 1000,
-				BattlepassId: bp.id,
+				battlepassId: bp.id,
+			},
+		])
+		await QuestProgress.bulkCreate([
+			{
+				questId: quest1.id,
+				identityId: identity1.id,
+				progress: 0,
+			},
+			{
+				questId: quest2.id,
+				identityId: identity1.id,
+				progress: 0,
+			},
+			{
+				questId: quest3.id,
+				identityId: identity1.id,
+				progress: 0,
 			},
 		])
 		let [activity1, activity2, activity3, activity4] = await DiscordActivity.bulkCreate([
@@ -73,7 +91,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'connect',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -81,7 +99,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'join',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -89,7 +107,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:00Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -97,25 +115,28 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '8'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:56:00Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 		])
 
 		await processBattlepassQuests(bp, [identity1.id])
 		let completedQuests = await CompletedQuest.findAll()
 		expect(completedQuests.length).toBe(3)
-
-		expect(completedQuests[0].QuestId).toBe(quest1.id)
-		expect(completedQuests[0].IdentityId).toBe(identity1.id)
+		expect(completedQuests[0].questId).toBe(quest1.id)
+		expect(completedQuests[0].identityId).toBe(identity1.id)
 		expect(completedQuests[0].guildId).toBe(activity1.guildId)
-
-		expect(completedQuests[1].QuestId).toBe(quest2.id)
-		expect(completedQuests[1].IdentityId).toBe(identity1.id)
+		expect(completedQuests[1].questId).toBe(quest2.id)
+		expect(completedQuests[1].identityId).toBe(identity1.id)
 		expect(completedQuests[1].guildId).toBe(activity2.guildId)
-
-		expect(completedQuests[2].QuestId).toBe(quest3.id)
-		expect(completedQuests[2].IdentityId).toBe(identity1.id)
+		expect(completedQuests[2].questId).toBe(quest3.id)
+		expect(completedQuests[2].identityId).toBe(identity1.id)
 		expect(completedQuests[2].guildId).toBe(activity3.guildId)
+
+		let progress = await QuestProgress.findAll()
+		expect(progress.length).toBe(3)
+		expect(progress[0].progress).toBe(1)
+		expect(progress[1].progress).toBe(1)
+		expect(progress[2].progress).toBe(1)
 
 		await processBattlepassQuests(bp, [identity1.id])
 		let newCompletedQuestsCount = await CompletedQuest.count()
@@ -142,7 +163,12 @@ describe('Quests matching logic', () => {
 			channelId: null,
 			quantity: 2,
 			points: 1000,
-			BattlepassId: bp.id,
+			battlepassId: bp.id,
+		})
+		await QuestProgress.create({
+			questId: quest1.id,
+			identityId: identity1.id,
+			progress: 0
 		})
 		let activity1 = await DiscordActivity.create({
 			guildId: ''.padEnd(15, '4'),
@@ -150,7 +176,7 @@ describe('Quests matching logic', () => {
 			activityId: ''.padEnd(20, '6'),
 			activityType: 'post',
 			createdAt: new Date('2023-01-01T11:55:00Z'),
-			IdentityId: identity1.id,
+			identityId: identity1.id,
 		})
 		await DiscordActivity.create({
 			guildId: ''.padEnd(15, '4'),
@@ -158,7 +184,7 @@ describe('Quests matching logic', () => {
 			activityId: ''.padEnd(20, '7'),
 			activityType: 'post',
 			createdAt: new Date('2023-01-01T11:56:00Z'),
-			IdentityId: identity1.id,
+			identityId: identity1.id,
 		})
 
 		await processBattlepassQuests(bp, [identity1.id])
@@ -175,16 +201,18 @@ describe('Quests matching logic', () => {
 			active: true,
 			finalized: false,
 		})
-		let identity1 = await Identity.create({
-			discord: ''.padEnd(15, '3'),
-			address: ''.padEnd(48, '3'),
-		})
-		let identity2 = await Identity.create({
-			discord: ''.padEnd(15, '4'),
-		})
+		let [identity1, identity2] = await Identity.bulkCreate([
+			{
+				discord: ''.padEnd(15, '3'),
+				address: ''.padEnd(48, '3'),
+			},
+			{
+				discord: ''.padEnd(15, '4'),
+			}
+		])
 		await BattlepassParticipant.create({
-			BattlepassId: bp.id,
-			IdentityId: identity2.id,
+			battlepassId: bp.id,
+			identityId: identity2.id,
 		})
 		let quest1 = await Quest.create({
 			repeat: true,
@@ -194,8 +222,20 @@ describe('Quests matching logic', () => {
 			quantity: 2,
 			points: 1000,
 			maxDaily: 2,
-			BattlepassId: bp.id,
+			battlepassId: bp.id,
 		})
+		await QuestProgress.bulkCreate([
+			{
+				questId: quest1.id,
+				identityId: identity1.id,
+				progress: 0
+			},
+			{
+				questId: quest1.id,
+				identityId: identity2.id,
+				progress: 0
+			},
+		])
 		await DiscordActivity.bulkCreate([
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -203,7 +243,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:00Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -211,7 +251,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:01Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -219,7 +259,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:02Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -227,7 +267,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:03Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -235,7 +275,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:04Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -243,7 +283,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:05Z'),
-				IdentityId: identity1.id,
+				identityId: identity1.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -251,7 +291,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:06Z'),
-				IdentityId: identity2.id,
+				identityId: identity2.id,
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -259,22 +299,31 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:07Z'),
-				IdentityId: identity2.id,
+				identityId: identity2.id,
 			},
 		])
 
 		await processBattlepassQuests(bp, [identity1.id, identity2.id])
 		let completedQuests = await CompletedQuest.findAll()
 		expect(completedQuests.length).toBe(3)
-		expect(completedQuests[0].IdentityId).toBe(identity1.id)
-		expect(completedQuests[0].QuestId).toBe(quest1.id)
+		expect(completedQuests[0].identityId).toBe(identity1.id)
+		expect(completedQuests[0].questId).toBe(quest1.id)
 		expect(completedQuests[0].guildId).toBe(''.padEnd(15, '4'))
-		expect(completedQuests[1].IdentityId).toBe(identity1.id)
-		expect(completedQuests[1].QuestId).toBe(quest1.id)
+		expect(completedQuests[1].identityId).toBe(identity1.id)
+		expect(completedQuests[1].questId).toBe(quest1.id)
 		expect(completedQuests[1].guildId).toBe(''.padEnd(15, '4'))
-		expect(completedQuests[2].IdentityId).toBe(identity2.id)
-		expect(completedQuests[2].QuestId).toBe(quest1.id)
+		expect(completedQuests[2].identityId).toBe(identity2.id)
+		expect(completedQuests[2].questId).toBe(quest1.id)
 		expect(completedQuests[2].guildId).toBe(''.padEnd(15, '4'))
+
+		let progress = await QuestProgress.findAll()
+		expect(progress.length).toBe(2)
+		expect(progress[0].questId).toBe(quest1.id)
+		expect(progress[0].identityId).toBe(identity1.id)
+		expect(progress[0].progress).toBe(2)
+		expect(progress[1].questId).toBe(quest1.id)
+		expect(progress[1].identityId).toBe(identity2.id)
+		expect(progress[1].progress).toBe(1)
 
 		await processBattlepassQuests(bp, [identity1.id, identity2.id])
 		let newCompletedQuestsCount = await CompletedQuest.count()

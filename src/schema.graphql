@@ -1,35 +1,3 @@
-type PointRecord {
-	discord: String
-	address: String
-	quests: Int!
-	points: Int!
-}
-
-type CompletedQuest {
-	discord: String
-	address: String
-	questId: Int!
-	points: Int!
-	count: Int!
-}
-
-type Quest {
-	battlepass: String!
-	daily: Boolean!
-	source: Source!
-	type: ActivityType!
-	channelId: String
-	quantity: Int!
-	points: Int!
-	maxDaily: Int
-}
-
-type Identity {
-	discord: String
-	twitter: String
-	address: String
-}
-
 enum Source {
 	discord
 	twitter
@@ -43,14 +11,124 @@ enum ActivityType {
 	reaction
 }
 
+type BattlepassIdentity {
+	id: Int!
+	discord: String
+	twitter: String
+	address: String
+	members: [BattlepassMember]
+	progress: [BattlepassQuestProgress]
+}
+
+type BattlepassQuest {
+	id: Int!
+	battlepassId: Int!
+	repeat: Boolean!
+	source: Source!
+	type: ActivityType!
+	channelId: String
+	quantity: Int!
+	points: Int!
+	maxDaily: Int
+	battlepass: Battlepass!
+	progresses: [BattlepassQuestProgress]
+}
+
+type BattlepassQuestProgress {
+	id: Int!
+	questId: Int!
+	identityId: Int!
+	progress: Float!
+	quest: BattlepassQuest!
+	identity: BattlepassIdentity!
+}
+
+type Battlepass {
+	id: Int!
+	chainId: String!
+	orgId: String!
+	active: Boolean!
+	finalized: Boolean!
+	startDate: String
+	endDate: String
+	quests: [BattlepassQuest]
+	members: [BattlepassMember]
+}
+
+type BattlepassPoint {
+	identityId: Int
+	battlepassId: Int
+	points: Int!
+	quests: Int!
+	identity: BattlepassIdentity!
+	battlepass: Battlepass!
+}
+
+type BattlepassMember {
+	id: Int
+	identityId: Int!
+	battlepassId: Int!
+	progress: [BattlepassQuestProgress]
+	battlepass: Battlepass!
+	identity: BattlepassIdentity!
+	points: [BattlepassPoint]
+}
+
+input BattlepassesFilter {
+	id: Int
+	chainId: String
+	orgChainId: String
+	active: Boolean
+	finalized: Boolean
+}
+
+input QuestFilter {
+	id: Int
+	battlepassId: Int
+	battlepassChainId: String
+	source: String
+	type: ActivityType
+	repeat: Boolean
+}
+
+input MemberFilter {
+	id: Int
+	battlepassId: Int
+	identityId: Int
+}
+
+input ProgressFilter {
+	id: Int
+	questId: Int
+	identityId: Int
+	battlepassId: Int
+	battlepassChainId: String
+}
+
+input IdentityFilter {
+	id: Int
+	address: String
+	discord: String
+	twitter: String
+}
+
+input PointsFilter {
+	identityId: Int
+	battlepassId: Int
+	battlepassChainId: String
+}
+
 type Query {
-	points(battlepass: String!, since: String, address: String): [PointRecord]
-	quests(battlepass: String!): [Quest]
-	completedQuests(battlepass: String!, since: String, address: String): [CompletedQuest]
+	Battlepasses(where: BattlepassesFilter): [Battlepass]
+	BattlepassMembers(where: MemberFilter): [BattlepassMember]
+	BattlepassProgresses(where: ProgressFilter): [BattlepassQuestProgress]
+	BattlepassQuests(where: QuestFilter): [BattlepassQuest]
+	BattlepassIdentities(where: IdentityFilter): [BattlepassIdentity]
+	BattlepassPoints(where: PointsFilter): [BattlepassPoint]
 }
 
 type Mutation {
-	identity(discord: String, twitter: String, address: String): Identity
-	participant(battlepass: String!, discord: String, twitter: String): Identity
-	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): Quest
+	identity(discord: String, twitter: String, address: String): BattlepassIdentity
+	participant(battlepass: String!, discord: String, twitter: String): BattlepassIdentity
+	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
 }
