@@ -53,6 +53,7 @@ type Battlepass {
 	endDate: String
 	quests: [BattlepassQuest]
 	members: [BattlepassMember]
+	rewards: [BattlepassReward]
 }
 
 type BattlepassPoint {
@@ -72,6 +73,18 @@ type BattlepassMember {
 	battlepass: Battlepass!
 	identity: BattlepassIdentity!
 	points: [BattlepassPoint]
+}
+
+type BattlepassReward {
+	id: Int!
+	battlepassId: Int!
+	cid: String
+	name: String
+	level: Int
+	points: Int
+	total: Int!
+	available: Int!
+	battlepass: Battlepass!
 }
 
 input BattlepassesFilter {
@@ -118,6 +131,12 @@ input PointsFilter {
 	battlepassChainId: String
 }
 
+input RewardsFilter {
+	id: Int
+	battlepassId: Int
+	battlepassChainId: String
+}
+
 type Query {
 	Battlepasses(where: BattlepassesFilter): [Battlepass]
 	BattlepassMembers(where: MemberFilter): [BattlepassMember]
@@ -125,10 +144,12 @@ type Query {
 	BattlepassQuests(where: QuestFilter): [BattlepassQuest]
 	BattlepassIdentities(where: IdentityFilter): [BattlepassIdentity]
 	BattlepassPoints(where: PointsFilter): [BattlepassPoint]
+	BattlepassRewards(where: RewardsFilter): [BattlepassReward]
 }
 
 type Mutation {
 	identity(discord: String, twitter: String, address: String): BattlepassIdentity
 	participant(battlepass: String!, discord: String, twitter: String): BattlepassIdentity
 	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
+	reward(battlepass: String!, cid: String, name: String, points: Int, level: Int, total: Int!): BattlepassReward
 }

@@ -12,6 +12,7 @@ import {
 	PointUpdatesSchema,
 	QuestUpdatesSchema,
 	CreateQuestSchema,
+	CreateRewardSchema,
 	AddParticipantSchema,
 	QuestsSchema,
 } from './validations'
@@ -21,15 +22,17 @@ import {
 	getQuests,
 	saveIdentity,
 	saveQuest,
+	createReward,
 	addBattlepassParticipant,
 } from './controllers'
 
-import { battlepasses, battlepassQuests, battlepassMembers, battlepassesStartDate, formattedDate } from './resolvers/battlepass'
+import { battlepasses, battlepassQuests, battlepassMembers, battlepassRewards, formattedDate } from './resolvers/battlepass'
 import { quests, questBattlepass, questProgress } from './resolvers/quests'
 import { members, memberBattlepass, memberIdentity, memberProgress, memberPoints } from './resolvers/members'
 import { progress, progressQuest, progressIdentity } from './resolvers/progress'
 import { identities, identityMembers, identityProgress } from './resolvers/identities'
 import { points, pointIdentity, pointBattlepass } from './resolvers/points'
+import { rewards, rewardBattlepass } from './resolvers/rewards'
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
 
@@ -41,10 +44,12 @@ const resolvers = {
 		BattlepassProgresses: progress,
 		BattlepassIdentities: identities,
 		BattlepassPoints: points,
+		BattlepassRewards: rewards
 	},
 	Battlepass: {
 		quests: battlepassQuests,
 		members: battlepassMembers,
+		rewards: battlepassRewards,
 		startDate: formattedDate('startDate'),
 		endDate: formattedDate('endDate'),
 	},
@@ -69,6 +74,9 @@ const resolvers = {
 	BattlepassPoint: {
 		identity: pointIdentity,
 		battlepass: pointBattlepass,
+	},
+	BattlepassReward: {
+		battlepass: rewardBattlepass
 	},
 	Mutation: {
 		identity: async (parent: any, args: any) => {
@@ -111,6 +119,21 @@ const resolvers = {
 				return null
 			}
 		},
+		reward: async (parent: any, args: any) => {
+			let input = CreateRewardSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid reward request %s', input.error)
+				return null
+			}
+			return await createReward(
+				input.value.battlepass,
+				input.value.cid,
+				input.value.name,
+				input.value.points,
+				input.value.level,
+				input.value.total
+			)
+		}
 	},
 }
 
