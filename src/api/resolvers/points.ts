@@ -5,12 +5,13 @@ export async function points(parent: any, args: any, context: any, info: any) {
 	let params: any = {
 		where: {},
 		attributes: [
-			[sequelize.col('CompletedQuest.identityId'), 'identityId'],
+			[sequelize.col('Identity.id'), 'identityId'],
+			[sequelize.col('Identity.uuid'), 'identityUuid'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
 			[sequelize.fn('count', '*'), 'quests'],
 			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
 		],
-		group: ['CompletedQuest.identityId', 'Quest.battlepassId'],
+		group: ['Identity.id', 'Quest.battlepassId'],
 		include: [
 			{
 				model: Quest,
@@ -18,6 +19,11 @@ export async function points(parent: any, args: any, context: any, info: any) {
 				where: {},
 				attributes: [],
 				include: []
+			},
+			{
+				model: Identity,
+				required: true,
+				where: {},
 			}
 		],
 	}
@@ -39,13 +45,17 @@ export async function points(parent: any, args: any, context: any, info: any) {
 			})
 		}
 		if (where.identityId) {
-			params.where['identityId'] = where.identityId
+			params.include[1].where['id'] = where.identityId
+		}
+		if (where.identityUuid) {
+			params.include[1].where['uuid'] = where.identityUuid
 		}
 	}
 	let res = await CompletedQuest.findAll(params)
 	return res.map((r) => {
 		return {
 			identityId: r.get('identityId'),
+			identityId: r.get('identityUuid'),
 			battlepassId: r.get('battlepassId'),
 			points: r.get('points'),
 			quests: r.get('quests')

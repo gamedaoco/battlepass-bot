@@ -14,14 +14,12 @@ export async function addBattlepassParticipantView(request: Request, response: R
 	}
 	let res = await addBattlepassParticipant(
 		validation.value.battlepass,
-		validation.value.discord,
-		validation.value.twitter,
+		validation.value.identityUuid,
 	)
 	if (res !== null) {
-		let [identity, created] = res
-		return response.status(created ? 201 : 200).send({
+		return response.status(200).send({
 			success: true,
-			identity,
+			identity: res,
 		})
 	} else {
 		return response.status(400).send({

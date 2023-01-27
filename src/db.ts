@@ -111,6 +111,7 @@ DiscordActivity.init(
 
 export class Identity extends Model<InferAttributes<Identity>, InferCreationAttributes<Identity>> {
 	declare id: CreationOptional<number>
+	declare uuid: string | null
 	declare address: string | null // chain address
 	declare discord: string | null
 	declare twitter: string | null
@@ -122,6 +123,11 @@ Identity.init(
 			type: DataTypes.INTEGER.UNSIGNED,
 			autoIncrement: true,
 			primaryKey: true,
+		},
+		uuid: {
+			type: DataTypes.UUID,
+			defaultValue: DataTypes.UUIDV4,
+			allowNull: false
 		},
 		address: {
 			type: DataTypes.CHAR(48),
@@ -358,6 +364,45 @@ BattlepassReward.init(
 BattlepassReward.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
 Battlepass.hasMany(BattlepassReward, { foreignKey: 'battlepassId' })
 
+export class BattlepassLevel extends Model<
+	InferAttributes<BattlepassLevel>,
+	InferCreationAttributes<BattlepassLevel>
+> {
+	declare id: CreationOptional<number>
+	declare battlepassId: ForeignKey<Battlepass['id']>
+	declare name: string | null
+	declare points: number
+	declare totalPoints: number
+	declare level: number
+}
+BattlepassLevel.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		name: {
+			type: DataTypes.STRING(100),
+		},
+		points: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			allowNull: false
+		},
+		totalPoints: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			allowNull: false
+		},
+		level: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			allowNull: false
+		},
+	},
+	{ sequelize }
+)
+
+BattlepassLevel.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
+Battlepass.hasMany(BattlepassLevel, { foreignKey: 'battlepassId' })
 
 export async function initDB(): Promise<boolean> {
 	try {

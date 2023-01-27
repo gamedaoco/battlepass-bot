@@ -14,6 +14,9 @@ export async function identities(parent: any, args: any, context: any, info: any
 		if (where.address) {
 			filter.address = where.address
 		}
+		if (where.uuid) {
+			filter.uuid = where.uuid
+		}
 		if (where.discord) {
 			filter.discord = where.discord
 		}

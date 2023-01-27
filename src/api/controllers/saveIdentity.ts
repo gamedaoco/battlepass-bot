@@ -3,21 +3,9 @@ import { Op } from 'sequelize'
 import { Identity, DiscordActivity } from '../../db'
 import { logger } from '../../logger'
 
-export async function saveIdentity(discord: string | null, twitter: string | null, address: string | null) {
-	let orClause = []
-	if (discord) {
-		orClause.push({ discord })
-	}
-	if (twitter) {
-		orClause.push({ twitter })
-	}
-	if (address) {
-		orClause.push({ address })
-	}
+export async function saveIdentity(uuid: string, discord: string | null, twitter: string | null, address: string | null) {
 	let [identity, created] = await Identity.findOrCreate({
-		where: {
-			[Op.or]: orClause,
-		},
+		where: { uuid },
 		defaults: { discord, twitter, address },
 	})
 	let shouldCreateActivity = true

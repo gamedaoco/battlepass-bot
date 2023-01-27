@@ -4,8 +4,18 @@ import { Quest, QuestProgress, Battlepass, Identity } from '../../db'
 export async function progress(parent: any, args: any, context: any, info: any) {
 	let filter: any = {}
 	let params: any = {
+		attributes: {
+			include: [
+				['Identity.uuid', 'identityUuid']
+			]
+		},
 		where: filter,
-		include: []
+		include: [{
+			model: Identity,
+			required: true,
+			attributes: [],
+			where: {}
+		}]
 	}
 	const { where } = args;
 	if (where) {
@@ -17,6 +27,9 @@ export async function progress(parent: any, args: any, context: any, info: any) 
 		}
 		if (where.identityId) {
 			filter.identityId = where.identityId
+		}
+		if (where.identityUuid) {
+			params.include[0].where['uuid'] = where.identityUuid
 		}
 		if (where.battlepassId) {
 			params.include.push({
@@ -41,6 +54,13 @@ export async function progress(parent: any, args: any, context: any, info: any) 
 	}
 	let res = await QuestProgress.findAll(params)
 	return res
+	// return res.map(i => {
+	// 	i.identityUuid = i.get('identityUuid')
+	// })
+}
+
+export function progressIdentityUuid(parent: any, args: any, context: any, info: any) {
+	return parent.get('identityUuid')
 }
 
 export async function progressQuest(parent: any, args: any, context: any, info: any) {

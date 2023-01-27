@@ -13,6 +13,7 @@ import {
 	QuestUpdatesSchema,
 	CreateQuestSchema,
 	CreateRewardSchema,
+	CreateLevelsSchema,
 	AddParticipantSchema,
 	QuestsSchema,
 } from './validations'
@@ -23,16 +24,18 @@ import {
 	saveIdentity,
 	saveQuest,
 	createReward,
+	createLevels,
 	addBattlepassParticipant,
 } from './controllers'
 
 import { battlepasses, battlepassQuests, battlepassMembers, battlepassRewards, formattedDate } from './resolvers/battlepass'
 import { quests, questBattlepass, questProgress } from './resolvers/quests'
 import { members, memberBattlepass, memberIdentity, memberProgress, memberPoints } from './resolvers/members'
-import { progress, progressQuest, progressIdentity } from './resolvers/progress'
+import { progress, progressQuest, progressIdentity, progressIdentityUuid } from './resolvers/progress'
 import { identities, identityMembers, identityProgress } from './resolvers/identities'
 import { points, pointIdentity, pointBattlepass } from './resolvers/points'
 import { rewards, rewardBattlepass } from './resolvers/rewards'
+import { levels, levelBattlepass } from './resolvers/levels'
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
 
@@ -44,7 +47,8 @@ const resolvers = {
 		BattlepassProgresses: progress,
 		BattlepassIdentities: identities,
 		BattlepassPoints: points,
-		BattlepassRewards: rewards
+		BattlepassRewards: rewards,
+		BattlepassLevels: levels
 	},
 	Battlepass: {
 		quests: battlepassQuests,
@@ -61,11 +65,11 @@ const resolvers = {
 		battlepass: memberBattlepass,
 		identity: memberIdentity,
 		progress: memberProgress,
-		points: memberPoints,
+		points: memberPoints
 	},
 	BattlepassQuestProgress: {
 		quest: progressQuest,
-		identity: progressIdentity,
+		identity: progressIdentity
 	},
 	BattlepassIdentity: {
 		members: identityMembers,
@@ -78,6 +82,9 @@ const resolvers = {
 	BattlepassReward: {
 		battlepass: rewardBattlepass
 	},
+	BattlepassLevel: {
+		battlepass: levelBattlepass
+	},
 	Mutation: {
 		identity: async (parent: any, args: any) => {
 			let input = CreateIdentitySchema.validate(args)
@@ -85,7 +92,12 @@ const resolvers = {
 				logger.debug('Invalid identity request %s', input.error)
 				return null
 			}
-			let [identity, created] = await saveIdentity(input.value.discord, input.value.twitter, input.value.address)
+			let [identity, created] = await saveIdentity(
+				input.value.uuid,
+				input.value.discord,
+				input.value.twitter,
+				input.value.address
+			)
 			return identity
 		},
 		quest: async (parent: any, args: any) => {
@@ -105,19 +117,14 @@ const resolvers = {
 				input.value.maxDaily,
 			)
 		},
-		participant: async (parent: any, args: any) => {
+		join: async (parent: any, args: any) => {
 			let input = AddParticipantSchema.validate(args)
 			if (input.error) {
-				logger.debug('Invalid participant request %s', input.error)
+				logger.debug('Invalid join request %s', input.error)
 				return null
 			}
-			let res = await addBattlepassParticipant(input.value.battlepass, input.value.discord, input.value.twitter)
-			if (res !== null) {
-				let [identity, created] = res
-				return identity
-			} else {
-				return null
-			}
+			let res = await addBattlepassParticipant(input.value.battlepass, input.value.identityUuid)
+			return res
 		},
 		reward: async (parent: any, args: any) => {
 			let input = CreateRewardSchema.validate(args)
@@ -132,6 +139,17 @@ const resolvers = {
 				input.value.points,
 				input.value.level,
 				input.value.total
+			)
+		},
+		levels: async (parent: any, args: any) => {
+			let input = CreateLevelsSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid levels request %s', input.error)
+				return null
+			}
+			return await createLevels(
+				input.value.battlepass,
+				input.value.levels
 			)
 		}
 	},
