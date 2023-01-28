@@ -1,6 +1,7 @@
 import * as Joi from 'joi'
 
 export const CreateIdentitySchema = Joi.object({
+	uuid: Joi.string().required().guid({ version: 'uuidv4' }),
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
 	address: Joi.string().alphanum().length(48).allow(null),
@@ -26,6 +27,17 @@ export const CreateRewardSchema = Joi.object({
 	total: Joi.number().integer().required(),
 }).or('level', 'points')
 
+let Level = Joi.object({
+	level: Joi.number().integer().min(1),
+	points: Joi.number().integer().min(1),
+	name: Joi.string().max(20).allow(null)
+});
+
+export const CreateLevelsSchema = Joi.object({
+	battlepass: Joi.string().required().length(66),
+	levels: Joi.array().items(Level)
+})
+
 export const QuestUpdatesSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	since: Joi.date().iso(),
@@ -40,9 +52,8 @@ export const PointUpdatesSchema = Joi.object({
 
 export const AddParticipantSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
-	discord: Joi.string().alphanum().min(10).max(20).allow(null),
-	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
-}).or('discord', 'twitter')
+	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
+})
 
 export const QuestsSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),

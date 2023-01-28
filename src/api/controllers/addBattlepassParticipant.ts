@@ -5,39 +5,19 @@ import { Identity, Battlepass, BattlepassParticipant, DiscordActivity, Quest, Qu
 
 export async function addBattlepassParticipant(
 	battlepass: string,
-	discord: string | null,
-	twitter: string | null,
-): Promise<[Identity, boolean] | null> {
+	identityUuid: string,
+): Promise<Identity | null> {
 	let bp = await Battlepass.findOne({
 		where: { chainId: battlepass },
 	})
 	if (!bp) {
 		return null
 	}
-	let where = []
-	if (discord) {
-		where.push({ discord })
-	}
-	if (twitter) {
-		where.push({ twitter })
-	}
-	if (!where.length) {
-		return null
-	}
-	let identityCreated = false
 	let existingUser = await Identity.findOne({
-		where: { [Op.or]: where },
+		where: { uuid: identityUuid },
 	})
 	if (existingUser === null) {
-		existingUser = await Identity.create({
-			discord,
-			twitter,
-		})
-		identityCreated = true
-	} else {
-		existingUser.twitter = twitter
-		existingUser.discord = discord
-		await existingUser.save()
+		return null
 	}
 	let [_, created] = await BattlepassParticipant.findOrCreate({
 		where: {
@@ -62,27 +42,5 @@ export async function addBattlepassParticipant(
 			await QuestProgress.bulkCreate(progress)
 		}
 	}
-	let createActivity = true
-	if (!identityCreated && discord) {
-		let existingActivity = await DiscordActivity.count({
-			where: {
-				identityId: existingUser.id,
-				activityType: 'connect',
-			},
-		})
-		if (existingActivity) {
-			createActivity = false
-		}
-	}
-	if (createActivity && discord) {
-		await DiscordActivity.create({
-			identityId: existingUser.id,
-			activityType: 'connect',
-			guildId: '',
-			channelId: null,
-			activityId: '',
-		})
-		logger.debug('identityCreated discord connect activity for user %s', discord)
-	}
-	return [existingUser, identityCreated]
+	return existingUser
 }

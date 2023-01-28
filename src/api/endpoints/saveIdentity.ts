@@ -14,6 +14,7 @@ export async function saveIdentityView(request: Request, response: Response) {
 		})
 	}
 	let [identity, created] = await saveIdentity(
+		validation.value.uuid,
 		validation.value.discord,
 		validation.value.twitter,
 		validation.value.address,

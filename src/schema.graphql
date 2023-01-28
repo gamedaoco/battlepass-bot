@@ -13,6 +13,7 @@ enum ActivityType {
 
 type BattlepassIdentity {
 	id: Int!
+	uuid: String!
 	discord: String
 	twitter: String
 	address: String
@@ -58,7 +59,8 @@ type Battlepass {
 
 type BattlepassPoint {
 	identityId: Int
-	battlepassId: Int
+	identityUuid: String
+	battlepassId: Int!
 	points: Int!
 	quests: Int!
 	identity: BattlepassIdentity!
@@ -87,6 +89,16 @@ type BattlepassReward {
 	battlepass: Battlepass!
 }
 
+type BattlepassLevel {
+	id: Int!
+	battlepassId: Int!
+	name: String
+	points: Int!
+	totalPoints: Int!
+	level: Int!
+	battlepass: Battlepass!
+}
+
 input BattlepassesFilter {
 	id: Int
 	chainId: String
@@ -108,18 +120,21 @@ input MemberFilter {
 	id: Int
 	battlepassId: Int
 	identityId: Int
+	identityUuid: String
 }
 
 input ProgressFilter {
 	id: Int
 	questId: Int
 	identityId: Int
+	identityUuid: String
 	battlepassId: Int
 	battlepassChainId: String
 }
 
 input IdentityFilter {
 	id: Int
+	uuid: String
 	address: String
 	discord: String
 	twitter: String
@@ -127,11 +142,24 @@ input IdentityFilter {
 
 input PointsFilter {
 	identityId: Int
+	identityUuid: String
 	battlepassId: Int
 	battlepassChainId: String
 }
 
 input RewardsFilter {
+	id: Int
+	battlepassId: Int
+	battlepassChainId: String
+}
+
+input Level {
+	level: Int!
+	points: Int!
+	name: String
+}
+
+input LevelsFilter {
 	id: Int
 	battlepassId: Int
 	battlepassChainId: String
@@ -145,11 +173,13 @@ type Query {
 	BattlepassIdentities(where: IdentityFilter): [BattlepassIdentity]
 	BattlepassPoints(where: PointsFilter): [BattlepassPoint]
 	BattlepassRewards(where: RewardsFilter): [BattlepassReward]
+	BattlepassLevels(where: LevelsFilter): [BattlepassLevel]
 }
 
 type Mutation {
-	identity(discord: String, twitter: String, address: String): BattlepassIdentity
-	participant(battlepass: String!, discord: String, twitter: String): BattlepassIdentity
+	identity(uuid: String!, discord: String, twitter: String, address: String): BattlepassIdentity
+	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
 	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
 	reward(battlepass: String!, cid: String, name: String, points: Int, level: Int, total: Int!): BattlepassReward
+	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 }

@@ -4,7 +4,13 @@ import { QuestProgress, Battlepass, BattlepassParticipant, Identity, Quest, Comp
 export async function members(parent: any, args: any, context: any, info: any) {
 	let filter: any = {}
 	let params: any = {
-		where: filter
+		where: filter,
+		include: [{
+			model: Identity,
+			required: true,
+			attributes: [],
+			where: {}
+		}]
 	}
 	const { where } = args;
 	if (where) {
@@ -16,6 +22,9 @@ export async function members(parent: any, args: any, context: any, info: any) {
 		}
 		if (where.identityId) {
 			filter.identityId = where.identityId
+		}
+		if (where.identityUuid) {
+			params.include[0].where['uuid'] = where.identityUuid
 		}
 	}
 	let res = await BattlepassParticipant.findAll(params)
@@ -55,12 +64,13 @@ export async function memberPoints(parent: any, args: any, context: any, info: a
 			identityId: parent.id
 		},
 		attributes: [
-			[sequelize.col('CompletedQuest.identityId'), 'identityId'],
+			[sequelize.col('Identity.id'), 'identityId'],
+			[sequelize.col('Identity.uuid'), 'identityUuid'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
 			[sequelize.fn('count', '*'), 'quests'],
 			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
 		],
-		group: ['Identity.id', 'Battlepass.id'],
+		group: ['Identity.id', 'Quest.battlepassId'],
 		include: [
 			{
 				model: Quest,
@@ -73,13 +83,14 @@ export async function memberPoints(parent: any, args: any, context: any, info: a
 				model: Identity,
 				required: true,
 				attributes: [],
-			},
+			}
 		],
 	}
 	let res = await CompletedQuest.findAll(params)
 	return res.map((r) => {
 		return {
 			identityId: r.get('identityId'),
+			identityUuid: r.get('identityUuid'),
 			battlepassId: r.get('battlepassId'),
 			points: r.get('points'),
 			quests: r.get('quests')
