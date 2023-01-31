@@ -23,6 +23,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 			let event = record.event
 			if (api.events.battlepass.BattlepassActivated.is(event)) {
 				let [byWho, orgId, bpId] = event.data
+				const chainBp: any = await api.query.battlepass.battlepasses(bpId.toString())
 				await Battlepass.findOrCreate({
 					where: {
 						chainId: bpId.toString(),
@@ -31,6 +32,9 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						chainId: bpId.toString(),
 						startDate: calculateBlockDate(knownDate, knownBlock, header.number.toNumber()),
 						orgId: orgId.toString(),
+						name: chainBp ?
+							Buffer.from(chainBp.value.name, 'hex').toString() :
+							null,
 						active: true,
 						finalized: false,
 					},
