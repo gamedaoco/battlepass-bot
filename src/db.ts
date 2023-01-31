@@ -20,6 +20,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare id: CreationOptional<number>
 	declare chainId: string
 	declare orgId: string
+	declare name: string | null
 	declare startDate: Date | null
 	declare endDate: Date | null
 	declare active: boolean
@@ -39,6 +40,10 @@ Battlepass.init(
 		orgId: {
 			type: DataTypes.CHAR(66),
 			allowNull: false,
+		},
+		name: {
+			type: DataTypes.STRING(100),
+			allowNull: true,
 		},
 		startDate: {
 			type: DataTypes.DATE,
@@ -158,6 +163,7 @@ DiscordActivity.belongsTo(Identity, { foreignKey: 'identityId' })
 
 export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes<Quest>> {
 	declare id: CreationOptional<number>
+	declare name: string | null
 	declare repeat: boolean
 	declare source: string
 	declare type: string
@@ -173,6 +179,9 @@ Quest.init(
 			type: DataTypes.INTEGER.UNSIGNED,
 			autoIncrement: true,
 			primaryKey: true,
+		},
+		name: {
+			type: DataTypes.STRING(100)
 		},
 		repeat: {
 			type: DataTypes.BOOLEAN,
@@ -327,6 +336,7 @@ export class BattlepassReward extends Model<
 	declare battlepassId: ForeignKey<Battlepass['id']>
 	declare cid: string | null
 	declare name: string | null
+	declare description: string | null
 	declare points: number | null
 	declare level: number | null
 	declare total: number
@@ -344,6 +354,9 @@ BattlepassReward.init(
 		},
 		name: {
 			type: DataTypes.STRING(100),
+		},
+		description: {
+			type: DataTypes.STRING(512),
 		},
 		points: {
 			type: DataTypes.INTEGER.UNSIGNED,

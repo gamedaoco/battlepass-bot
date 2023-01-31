@@ -10,12 +10,13 @@ function getBattlepassesQuery(fromBlock: number) {
 	return gql`
 	query Battlepasses {
 		battlepass(where: {_or: {created_at_block: {_gt: ${fromBlock}}, updated_at_block: {_gt: ${fromBlock}}}}) {
-  		id
-  		active_from_block
-  		active_to_block
-  		organization {
-  			id
-  		}
+			id
+			name
+			active_from_block
+			active_to_block
+			organization {
+				id
+			}
 		}
 	}
 `
@@ -24,11 +25,11 @@ function getBattlepassesQuery(fromBlock: number) {
 function getUsersQuery(battlePassId: string) {
 	return gql`
 	query Users {
-  	battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
-    	owner {
-    		address
-    	}
-  	}
+		battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
+			owner {
+				address
+			}
+		}
 	}
 	`
 }
@@ -82,6 +83,7 @@ async function getBattlepasses(
 	resp.battlepass.forEach((bp: any) => {
 		let item = {
 			chainId: bp.id,
+			name: bp.name,
 			orgId: bp.organization.id,
 			startDate: calculateBlockDate(knownDate, knownBlock, bp.active_from_block),
 			endDate: bp.active_to_block ? calculateBlockDate(knownDate, knownBlock, bp.active_to_block) : null,
