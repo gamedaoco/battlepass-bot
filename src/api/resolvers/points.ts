@@ -55,7 +55,7 @@ export async function points(parent: any, args: any, context: any, info: any) {
 	return res.map((r) => {
 		return {
 			identityId: r.get('identityId'),
-			identityId: r.get('identityUuid'),
+			identityUuid: r.get('identityUuid'),
 			battlepassId: r.get('battlepassId'),
 			points: r.get('points'),
 			quests: r.get('quests')

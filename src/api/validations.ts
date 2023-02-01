@@ -9,6 +9,7 @@ export const CreateIdentitySchema = Joi.object({
 
 export const CreateQuestSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
+	name: Joi.string().min(5).max(100).allow(null),
 	daily: Joi.boolean(),
 	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
 	type: Joi.string().required().valid('connect', 'join', 'post', 'reaction'),
@@ -22,6 +23,7 @@ export const CreateRewardSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	cid: Joi.string().min(5).max(50).allow(null),
 	name: Joi.string().min(5).max(100).allow(null),
+	description: Joi.string().min(5).max(512).allow(null),
 	points: Joi.number().integer().allow(null),
 	level: Joi.number().integer().allow(null),
 	total: Joi.number().integer().required(),

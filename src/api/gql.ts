@@ -109,6 +109,7 @@ const resolvers = {
 			return await saveQuest(
 				input.value.battlepass,
 				input.value.daily,
+				input.value.name,
 				input.value.source,
 				input.value.type,
 				input.value.channelId,
@@ -136,6 +137,7 @@ const resolvers = {
 				input.value.battlepass,
 				input.value.cid,
 				input.value.name,
+				input.value.description,
 				input.value.points,
 				input.value.level,
 				input.value.total

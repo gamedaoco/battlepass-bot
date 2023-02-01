@@ -3,6 +3,7 @@ import { Battlepass, BattlepassParticipant, Quest, QuestProgress } from '../../d
 export async function saveQuest(
 	battlepass: string,
 	daily: boolean,
+	name: string | null,
 	source: string,
 	type: string,
 	channelId: string | null,
@@ -21,12 +22,13 @@ export async function saveQuest(
 	let quest = await Quest.create({
 		battlepassId: bp.id,
 		repeat: daily,
-		source: source,
-		type: type,
-		channelId: channelId,
-		quantity: quantity,
-		points: points,
-		maxDaily: maxDaily,
+		name,
+		source,
+		type,
+		channelId,
+		quantity,
+		points,
+		maxDaily,
 	})
 	let participants = await BattlepassParticipant.findAll({
 		attributes: ['identityId'],

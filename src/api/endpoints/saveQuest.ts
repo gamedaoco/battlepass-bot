@@ -15,6 +15,7 @@ export async function saveQuestView(request: Request, response: Response) {
 	let q = await saveQuest(
 		validation.value.battlepass,
 		validation.value.daily,
+		validation.value.name,
 		validation.value.source,
 		validation.value.type,
 		validation.value.channelId,

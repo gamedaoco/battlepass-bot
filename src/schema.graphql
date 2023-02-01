@@ -24,6 +24,7 @@ type BattlepassIdentity {
 type BattlepassQuest {
 	id: Int!
 	battlepassId: Int!
+	name: String
 	repeat: Boolean!
 	source: Source!
 	type: ActivityType!
@@ -47,6 +48,7 @@ type BattlepassQuestProgress {
 type Battlepass {
 	id: Int!
 	chainId: String!
+	name: String
 	orgId: String!
 	active: Boolean!
 	finalized: Boolean!
@@ -82,6 +84,7 @@ type BattlepassReward {
 	battlepassId: Int!
 	cid: String
 	name: String
+	description: String
 	level: Int
 	points: Int
 	total: Int!
@@ -179,7 +182,7 @@ type Query {
 type Mutation {
 	identity(uuid: String!, discord: String, twitter: String, address: String): BattlepassIdentity
 	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
-	quest(battlepass: String!, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
-	reward(battlepass: String!, cid: String, name: String, points: Int, level: Int, total: Int!): BattlepassReward
+	quest(battlepass: String!, name: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
+	reward(battlepass: String!, cid: String, name: String, description: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 }
