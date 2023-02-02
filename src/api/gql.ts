@@ -113,6 +113,8 @@ const resolvers = {
 				input.value.source,
 				input.value.type,
 				input.value.channelId,
+				input.value.hashtag,
+				input.value.twitterId,
 				input.value.quantity,
 				input.value.points,
 				input.value.maxDaily,

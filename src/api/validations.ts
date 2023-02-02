@@ -1,7 +1,7 @@
 import * as Joi from 'joi'
 
 export const CreateIdentitySchema = Joi.object({
-	uuid: Joi.string().required().guid({ version: 'uuidv4' }),
+	uuid: Joi.string().guid({ version: 'uuidv4' }).allow(null),
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
 	address: Joi.string().alphanum().length(48).allow(null),
@@ -12,8 +12,10 @@ export const CreateQuestSchema = Joi.object({
 	name: Joi.string().min(5).max(100).allow(null),
 	daily: Joi.boolean(),
 	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
-	type: Joi.string().required().valid('connect', 'join', 'post', 'reaction'),
+	type: Joi.string().required().valid('connect', 'join', 'post', 'reaction', 'tweet', 'retweet', 'follow', 'comment', 'like'),
 	channelId: Joi.string().min(10).max(50).allow(null),
+	hashtag: Joi.string().min(3).max(100).allow(null),
+	twitterId: Joi.string().min(3).max(100).allow(null),
 	quantity: Joi.number().integer().required(),
 	points: Joi.number().integer().required(),
 	maxDaily: Joi.number().integer().allow(null),

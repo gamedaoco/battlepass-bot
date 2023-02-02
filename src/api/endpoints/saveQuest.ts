@@ -19,6 +19,8 @@ export async function saveQuestView(request: Request, response: Response) {
 		validation.value.source,
 		validation.value.type,
 		validation.value.channelId,
+		validation.value.hashtag,
+		validation.value.twitterId,
 		validation.value.quantity,
 		validation.value.points,
 		validation.value.maxDaily,

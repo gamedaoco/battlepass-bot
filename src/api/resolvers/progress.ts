@@ -1,4 +1,4 @@
-import { Quest, QuestProgress, Battlepass, Identity } from '../../db'
+import { Quest, QuestProgress, Battlepass, Identity, sequelize } from '../../db'
 
 
 export async function progress(parent: any, args: any, context: any, info: any) {
@@ -6,7 +6,7 @@ export async function progress(parent: any, args: any, context: any, info: any) 
 	let params: any = {
 		attributes: {
 			include: [
-				['Identity.uuid', 'identityUuid']
+				[sequelize.col('Identity.uuid'), 'identityUuid']
 			]
 		},
 		where: filter,

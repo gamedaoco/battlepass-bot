@@ -114,6 +114,52 @@ DiscordActivity.init(
 	},
 )
 
+export class TwitterActivity extends Model<
+	InferAttributes<TwitterActivity>,
+	InferCreationAttributes<TwitterActivity>
+> {
+	declare id: CreationOptional<number>
+	declare activityId: string
+	declare activityType: string
+	declare authorId: string  // author of performed activity
+	declare objectId: string  // object, on which activity was performed
+	declare objectAuthor: string  // author of the object
+	declare createdAt: CreationOptional<Date>
+}
+TwitterActivity.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		authorId: {
+			type: DataTypes.STRING(40),
+			allowNull: true,
+		},
+		activityId: {
+			type: DataTypes.STRING(40),
+			allowNull: true,
+		},
+		objectAuthor: {
+			type: DataTypes.STRING(40),
+			allowNull: true,
+		},
+		objectId: {
+			type: DataTypes.STRING(40),
+			allowNull: true,
+		},
+		activityType: {
+			type: DataTypes.ENUM,
+			values: ['tweet', 'retweet', 'follow', 'comment', 'like']
+		},
+		createdAt: {
+			type: DataTypes.DATE,
+		},
+	},
+	{ sequelize }
+)
+
 export class Identity extends Model<InferAttributes<Identity>, InferCreationAttributes<Identity>> {
 	declare id: CreationOptional<number>
 	declare uuid: string | null
@@ -168,6 +214,8 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 	declare source: string
 	declare type: string
 	declare channelId: string | null
+	declare hashtag: string | null
+	declare twitterId: string | null
 	declare quantity: number
 	declare points: number
 	declare maxDaily: number | null
@@ -192,11 +240,23 @@ Quest.init(
 		},
 		type: {
 			type: DataTypes.ENUM,
-			values: ['connect', 'join', 'post', 'reaction'],
+			values: [
+				'connect', 'join',  // general
+				'post', 'reaction',  // discord
+				'tweet', 'like', 'retweet', 'comment', 'follow'  // twitter
+			],
 		},
 		channelId: {
 			type: DataTypes.STRING(50),
 			allowNull: true,
+		},
+		hashtag: {
+			type: DataTypes.STRING(50),
+			allowNull: true,
+		},
+		twitterId: {
+			type: DataTypes.STRING(30),
+			allowNull: true
 		},
 		quantity: {
 			type: DataTypes.INTEGER.UNSIGNED,
@@ -285,7 +345,7 @@ CompletedQuest.init(
 		},
 		guildId: {
 			type: DataTypes.STRING(20),
-			allowNull: false,
+			allowNull: true,
 		},
 		createdAt: {
 			type: DataTypes.DATE,
@@ -416,6 +476,32 @@ BattlepassLevel.init(
 
 BattlepassLevel.belongsTo(Battlepass, { foreignKey: 'battlepassId' })
 Battlepass.hasMany(BattlepassLevel, { foreignKey: 'battlepassId' })
+
+export class TwitterSearch extends Model<
+	InferAttributes<TwitterSearch>,
+	InferCreationAttributes<TwitterSearch>
+> {
+	declare id: CreationOptional<number>
+	declare query: string
+	declare executedAt: Date
+}
+TwitterSearch.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		query: {
+			type: DataTypes.STRING(100),
+		},
+		executedAt: {
+			type: DataTypes.DATE,
+			allowNull: false
+		}
+	},
+	{ sequelize }
+)
 
 export async function initDB(): Promise<boolean> {
 	try {

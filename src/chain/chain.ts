@@ -3,7 +3,7 @@ import { ApiPromise, WsProvider, Keyring } from '@polkadot/api'
 
 import { config } from '../config'
 import { logger } from '../logger'
-import { Battlepass, Quest, QuestProgress, CompletedQuest, DiscordActivity, Identity, ChainStatus, BattlepassParticipant, sequelize } from '../db'
+import { Battlepass, Quest, QuestProgress, CompletedQuest, DiscordActivity, TwitterActivity, Identity, ChainStatus, BattlepassParticipant, sequelize } from '../db'
 import { calculateBlockDate } from '../indexer/indexer'
 
 export async function connectToNode(): Promise<ApiPromise> {
@@ -108,10 +108,10 @@ export async function getActiveBattlePasses(): Promise<Map<string, Battlepass>> 
 	return map
 }
 
-async function getBattlePassQuests(battlePassId: string): Promise<Quest[]> {
+async function getBattlepassQuests(battlePassId: string): Promise<Quest[]> {
 	return await Quest.findAll({
 		where: {
-			source: 'discord',
+			source: ['discord', 'twitter'],
 		},
 		include: [
 			{
@@ -144,7 +144,11 @@ async function getBasicUsersActivity(identities: number[]): Promise<DiscordActiv
 	})
 }
 
-async function getUsersActivity(identities: number[], startDate: Date, endDate: Date): Promise<DiscordActivity[]> {
+async function getDiscordUsersActivity(
+	identities: number[],
+	startDate: Date,
+	endDate: Date
+): Promise<DiscordActivity[]> {
 	return await DiscordActivity.findAll({
 		attributes: [
 			'identityId',
@@ -176,7 +180,7 @@ async function getCompletedQuests(questIds: number[]) {
 	})
 }
 
-async function getCurrentProgress(battlepassId: number) {
+async function getCurrentProgress(battlepassId: number): Promise<Map<string, QuestProgress>> {
 	let res = await QuestProgress.findAll({
 		include: [{
 			model: Quest,
@@ -195,7 +199,13 @@ async function getCurrentProgress(battlepassId: number) {
 	return map
 }
 
-async function getCompletedQuestsForUser(identityId: number, quest: Quest, userActivity: any[], completedBefore: number, currentProgress: Map<string, QuestProgress>) {
+async function getCompletedQuestsForUser(
+	identityId: number,
+	quest: Quest,
+	userActivity: any[],
+	completedBefore: number,
+	currentProgress: Map<string, QuestProgress>
+) {
 	if (!quest.repeat && completedBefore) {
 		return []
 	}
@@ -283,12 +293,153 @@ async function processBasicQuests(
 	return newCompletedQuests
 }
 
-export async function processBattlepassQuests(battlepass: Battlepass, identityIds: number[]) {
+async function processBattlepassDiscordQuests(
+	battlepass: Battlepass,
+	identityIds: number[],
+	quests: Quest[],
+	completedQuestsCount: Map<string, any>,
+	questsProgress: Map<string, QuestProgress>,
+	newCompletedQuests: any[]
+) {
 	let startDate = battlepass.startDate || new Date(),
 		endDate = battlepass.endDate || new Date()
+	let usersActivity = await getDiscordUsersActivity(identityIds, startDate, endDate)
+	for (let quest of quests) {
+		for (let identityId of identityIds) {
+			let key = `${quest.id}-${identityId}`
+			let completedCnt = completedQuestsCount.get(key) || 0
+			let additionalNewQuests = await getCompletedQuestsForUser(
+				identityId, quest, usersActivity,
+				completedCnt, questsProgress
+			)
+			if (additionalNewQuests.length) {
+				newCompletedQuests.push(...additionalNewQuests)
+			}
+		}
+	}
+}
+
+async function processTwitterLikesQuests(
+	battlepass: Battlepass,
+	quests: Quest[],
+	identityIds: number[],
+	questsProgress: Map<string, QuestProgress>,
+	completedQuestsCount: Map<string, any>,
+	newCompletedQuests: any[]
+) {
+	let twitterUsers = await Identity.findAll({
+		where: {
+			id: identityIds,
+			twitter: {
+				[Op.ne]: null
+			}
+		},
+		attributes: ['id', 'twitter']
+	})
+	let twitterUsersMap = new Map<string, number>()
+	twitterUsers.map(i => {
+		twitterUsersMap.set(i.twitter || '', i.id)
+	})
+	if (!twitterUsersMap) {
+		return
+	}
+	let questsByAuthor = new Map<string, Quest[]>()
+	quests.map(q => {
+		let existing = questsByAuthor.get(q.twitterId || '')
+		if (!existing) {
+			existing = []
+			questsByAuthor.set(q.twitterId || '', existing)
+		}
+		existing.push(q)
+	})
+	let where: any = {
+		authorId: Array.from(twitterUsersMap.keys()),
+		objectAuthor: Array.from(questsByAuthor.keys())
+	}
+	if (battlepass.endDate) {
+		where['createdAt'] = {
+			[Op.between]: [battlepass.startDate || new Date(), battlepass.endDate || new Date()]
+		}
+	} else {twitterUsers
+		where['createdAt'] = {
+			[Op.gte]: battlepass.startDate
+		}
+	}
+	let activity = await TwitterActivity.findAll({
+		where,
+		group: ['authorId', 'objectAuthor'],
+		attributes: [
+			'authorId', 'objectAuthor',
+			[sequelize.fn('count', '*'), 'likesCnt']
+		]
+	})
+	for (let row of activity) {
+		let authorId = row.authorId
+		let tweetAuthor = row.objectAuthor
+		let likesCnt: any = row.get('likesCnt')
+		let identityId = twitterUsersMap.get(authorId)
+		if (!identityId) {
+			continue
+		}
+		let quests = questsByAuthor.get(tweetAuthor)
+		if (!quests) {
+			continue
+		}
+		for (let quest of quests) {
+			let key = `${quest.id}-${identityId}`
+			let currentProgress = questsProgress.get(key)
+			if (!currentProgress) {
+				logger.warn('Twitter quest %s has no progress for user %s', quest.id, identityId)
+				continue
+			}
+			if (!quest.repeat && currentProgress.progress >= 1) {
+				continue
+			}
+			let newProgress = parseFloat((likesCnt / quest.quantity).toFixed(2))
+			if (newProgress > 1 && !quest.repeat) {
+				newProgress = 1
+			}
+			if (newProgress <= currentProgress.progress) {
+				continue
+			}
+			currentProgress.progress = newProgress
+			await currentProgress.save()
+			let completedCount = completedQuestsCount.get(key) || 0
+			let newCompletedCount = Math.floor(newProgress)
+			if (newCompletedCount > completedCount) {
+				let item = {
+					identityId: identityId,
+					questId: quest.id
+				}
+				newCompletedQuests.push(...Array(newCompletedCount - completedCount).fill(item))
+			}
+		}
+	}
+}
+
+async function processBattlepassTwitterQuests(
+	battlepass: Battlepass,
+	identityIds: number[],
+	quests: Quest[],
+	completedQuestsCount: Map<string, any>,
+	questsProgress: Map<string, QuestProgress>,
+	newCompletedQuests: any[]
+) {
+	let likeQuests = quests.filter(q => {
+		return q.source === 'twitter' && q.type === 'like' && q.twitterId
+	})
+	if (likeQuests) {
+		await processTwitterLikesQuests(
+			battlepass, likeQuests,
+			identityIds,questsProgress,
+			completedQuestsCount, newCompletedQuests
+		)
+	}
+}
+
+export async function processBattlepassQuests(battlepass: Battlepass, identityIds: number[]) {
 	let basicUsersActivity = await getBasicUsersActivity(identityIds)
-	let usersActivity = await getUsersActivity(identityIds, startDate, endDate)
-	let quests = await getBattlePassQuests(battlepass.chainId)
+	let quests = await getBattlepassQuests(battlepass.chainId)
 	let completedQuests = await getCompletedQuests(quests.map((quest) => quest.id))
 	let completedQuestsCount = new Map<string, any>()
 	completedQuests.map((quest) => {
@@ -297,29 +448,28 @@ export async function processBattlepassQuests(battlepass: Battlepass, identityId
 	})
 
 	let basicQuests = new Array<Quest>()
-	let regularQuests = new Array<Quest>()
+	let regularDiscordQuests = new Array<Quest>()
+	let regularTwitterQuests = new Array<Quest>()
 	for (let quest of quests) {
-		if (quest.source != 'discord') {
-			continue
-		}
 		if (quest.type == 'connect' || quest.type == 'join') {
 			basicQuests.push(quest)
-		} else {
-			regularQuests.push(quest)
+		} else if (quest.source == 'discord') {
+			regularDiscordQuests.push(quest)
+		} else if (quest.source == 'twitter') {
+			regularTwitterQuests.push(quest)
 		}
 	}
 	let currentProgress = await getCurrentProgress(battlepass.id)
 	let newCompletedQuests = await processBasicQuests(basicQuests, basicUsersActivity, completedQuests, currentProgress)
-	for (let quest of regularQuests) {
-		for (let identityId of identityIds) {
-			let key = `${quest.id}-${identityId}`
-			let completedCnt = completedQuestsCount.get(key) || 0
-			let additionalNewQuests = await getCompletedQuestsForUser(identityId, quest, usersActivity, completedCnt, currentProgress)
-			if (additionalNewQuests.length) {
-				newCompletedQuests.push(...additionalNewQuests)
-			}
-		}
-	}
+	await processBattlepassDiscordQuests(
+		battlepass, identityIds, regularDiscordQuests,
+		completedQuestsCount, currentProgress,
+		newCompletedQuests
+	)
+	await processBattlepassTwitterQuests(
+		battlepass, identityIds, regularTwitterQuests,
+		completedQuestsCount, currentProgress, newCompletedQuests
+	)
 	if (newCompletedQuests.length) {
 		logger.info('Saving %s completed quests', newCompletedQuests.length)
 		await CompletedQuest.bulkCreate(newCompletedQuests)
