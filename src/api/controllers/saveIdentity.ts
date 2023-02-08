@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { Identity, DiscordActivity } from '../../db'
+import { Identity, DiscordActivity, TwitterActivity } from '../../db'
 import { logger } from '../../logger'
 
 export async function saveIdentity(uuid: string | null, discord: string | null, twitter: string | null, address: string | null) {
@@ -20,7 +20,8 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 	}
 	let identity: any = await Identity.findOne({ where: {[Op.or]: where} })
 	let created = identity ? false : true
-	let shouldCreateActivity = true
+	let createDiscordActivity = true
+	let createTwitterActivity = true
 	if (created) {
 		let fields: any = { discord, twitter, address }
 		if (uuid) {
@@ -33,19 +34,31 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 		identity.address = address
 		await identity.save()
 		if (discord) {
-			let existingConnectActivity = await DiscordActivity.findOne({
+			let discordActivity = await DiscordActivity.findOne({
 				attributes: ['id'],
 				where: {
 					identityId: identity.id,
 					activityType: 'connect',
 				},
 			})
-			if (existingConnectActivity) {
-				shouldCreateActivity = false
+			if (discordActivity) {
+				createDiscordActivity = false
+			}
+		}
+		if (twitter) {
+			let twitterActivity = await TwitterActivity.findOne({
+				attributes: ['id'],
+				where: {
+					authorId: twitter,
+					activityType: 'connect'
+				}
+			})
+			if (twitterActivity) {
+				createTwitterActivity = false
 			}
 		}
 	}
-	if (discord && shouldCreateActivity) {
+	if (discord && createDiscordActivity) {
 		await DiscordActivity.create({
 			identityId: identity.id,
 			activityType: 'connect',
@@ -54,6 +67,13 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 			activityId: '',
 		})
 		logger.debug('Created discord connect activity for user %s', discord)
+	}
+	if (twitter && createTwitterActivity) {
+		await TwitterActivity.create({
+			activityType: 'connect',
+			authorId: twitter
+		})
+		logger.debug('Created twitter connect activity for user %s', twitter)
 	}
 	logger.debug('Stored identity')
 	return [identity, created]

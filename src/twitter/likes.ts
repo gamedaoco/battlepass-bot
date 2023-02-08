@@ -38,12 +38,12 @@ async function getExistingLikes(
 	})
 	let map = new Map<string, Set<string>>()
 	existingLikes.map((i) => {
-		let item = map.get(i.objectId)
+		let item = map.get(i.objectId || '')
 		if (!item) {
 			item = new Set<string>()
-			map.set(i.objectId, item)
+			map.set(i.objectId || '', item)
 		}
-		item.add(i.authorId)
+		item.add(i.authorId || '')
 	})
 	return map
 }

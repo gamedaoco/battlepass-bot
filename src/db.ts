@@ -119,11 +119,11 @@ export class TwitterActivity extends Model<
 	InferCreationAttributes<TwitterActivity>
 > {
 	declare id: CreationOptional<number>
-	declare activityId: string
+	declare activityId: string | null
 	declare activityType: string
-	declare authorId: string  // author of performed activity
-	declare objectId: string  // object, on which activity was performed
-	declare objectAuthor: string  // author of the object
+	declare authorId: string | null  // author of performed activity
+	declare objectId: string | null // object, on which activity was performed
+	declare objectAuthor: string | null  // author of the object
 	declare createdAt: CreationOptional<Date>
 }
 TwitterActivity.init(
@@ -151,7 +151,7 @@ TwitterActivity.init(
 		},
 		activityType: {
 			type: DataTypes.ENUM,
-			values: ['tweet', 'retweet', 'follow', 'comment', 'like']
+			values: ['connect', 'tweet', 'retweet', 'follow', 'comment', 'like']
 		},
 		createdAt: {
 			type: DataTypes.DATE,

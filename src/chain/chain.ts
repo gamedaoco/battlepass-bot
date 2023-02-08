@@ -319,12 +319,12 @@ async function processBattlepassDiscordQuests(
 	}
 }
 
-async function processTwitterLikesQuests(
+async function processBattlepassTwitterQuests(
 	battlepass: Battlepass,
-	quests: Quest[],
 	identityIds: number[],
-	questsProgress: Map<string, QuestProgress>,
+	quests: Quest[],
 	completedQuestsCount: Map<string, any>,
+	questsProgress: Map<string, QuestProgress>,
 	newCompletedQuests: any[]
 ) {
 	let twitterUsers = await Identity.findAll({
@@ -343,97 +343,92 @@ async function processTwitterLikesQuests(
 	if (!twitterUsersMap) {
 		return
 	}
-	let questsByAuthor = new Map<string, Quest[]>()
+	let twitterAuthors = new Set<string>()
+	let questsMap = new Map<string, Quest[]>()
 	quests.map(q => {
-		let existing = questsByAuthor.get(q.twitterId || '')
-		if (!existing) {
-			existing = []
-			questsByAuthor.set(q.twitterId || '', existing)
+		if (q.twitterId) {
+			twitterAuthors.add(q.twitterId)
 		}
-		existing.push(q)
+		let key = `${q.type}-${q.twitterId}`
+		let localQuests = questsMap.get(key)
+		if (!localQuests) {
+			localQuests = new Array<Quest>()
+			questsMap.set(key, localQuests)
+		}
+		localQuests.push(q)
 	})
-	let where: any = {
-		authorId: Array.from(twitterUsersMap.keys()),
-		objectAuthor: Array.from(questsByAuthor.keys())
+	if (!twitterAuthors.size) {
+		return
 	}
-	if (battlepass.endDate) {
-		where['createdAt'] = {
-			[Op.between]: [battlepass.startDate || new Date(), battlepass.endDate || new Date()]
-		}
-	} else {twitterUsers
-		where['createdAt'] = {
-			[Op.gte]: battlepass.startDate
-		}
-	}
-	let activity = await TwitterActivity.findAll({
-		where,
-		group: ['authorId', 'objectAuthor'],
+	let activities = await TwitterActivity.findAll({
+		where: {
+			createdAt: {
+				[Op.between]: [battlepass.startDate || new Date(), battlepass.endDate || new Date()]
+			},
+			activityType: {
+				[Op.ne]: 'tweet'
+			},
+			authorId: Array.from(twitterUsersMap.keys()),
+			objectAuthor: Array.from(twitterAuthors.values())
+		},
+		group: ['authorId', 'objectId', 'objectAuthor', 'activityType'],
 		attributes: [
-			'authorId', 'objectAuthor',
-			[sequelize.fn('count', '*'), 'likesCnt']
-		]
+			'authorId',
+			'objectId',
+			'objectAuthor',
+			'activityType',
+			[sequelize.fn('count', '*'), 'activityCnt']
+		],
 	})
-	for (let row of activity) {
-		let authorId = row.authorId
-		let tweetAuthor = row.objectAuthor
-		let likesCnt: any = row.get('likesCnt')
+	let newProgress = new Map<string, number>()
+	for (let summary of activities) {
+		let activityType = summary.activityType
+		let objectAuthor = summary.objectAuthor
+		let activityCnt: any = summary.get('activityCnt')
+		let authorId = summary.authorId || ''
+		let activityQuests = questsMap.get(`${activityType}-${objectAuthor}`)
+		if (!activityQuests) {
+			continue
+		}
 		let identityId = twitterUsersMap.get(authorId)
 		if (!identityId) {
 			continue
 		}
-		let quests = questsByAuthor.get(tweetAuthor)
-		if (!quests) {
-			continue
-		}
-		for (let quest of quests) {
+		for (let quest of activityQuests) {
 			let key = `${quest.id}-${identityId}`
-			let currentProgress = questsProgress.get(key)
-			if (!currentProgress) {
-				logger.warn('Twitter quest %s has no progress for user %s', quest.id, identityId)
+			let newQuestProgress = newProgress.get(key)
+			if (!newQuestProgress) {
+				newQuestProgress = 0
+			}
+			if (newQuestProgress >= (quest.maxDaily || 1)) {
 				continue
 			}
-			if (!quest.repeat && currentProgress.progress >= 1) {
-				continue
-			}
-			let newProgress = parseFloat((likesCnt / quest.quantity).toFixed(2))
-			if (newProgress > 1 && !quest.repeat) {
-				newProgress = 1
-			}
-			if (newProgress <= currentProgress.progress) {
-				continue
-			}
-			currentProgress.progress = newProgress
-			await currentProgress.save()
-			let completedCount = completedQuestsCount.get(key) || 0
-			let newCompletedCount = Math.floor(newProgress)
-			if (newCompletedCount > completedCount) {
-				let item = {
-					identityId: identityId,
-					questId: quest.id
-				}
-				newCompletedQuests.push(...Array(newCompletedCount - completedCount).fill(item))
-			}
+			newQuestProgress = (newQuestProgress * quest.quantity + parseInt(activityCnt)) / quest.quantity
+			newQuestProgress = Math.min(newQuestProgress, quest.maxDaily || 1)
+			newProgress.set(key, newQuestProgress)
 		}
 	}
-}
-
-async function processBattlepassTwitterQuests(
-	battlepass: Battlepass,
-	identityIds: number[],
-	quests: Quest[],
-	completedQuestsCount: Map<string, any>,
-	questsProgress: Map<string, QuestProgress>,
-	newCompletedQuests: any[]
-) {
-	let likeQuests = quests.filter(q => {
-		return q.source === 'twitter' && q.type === 'like' && q.twitterId
-	})
-	if (likeQuests) {
-		await processTwitterLikesQuests(
-			battlepass, likeQuests,
-			identityIds,questsProgress,
-			completedQuestsCount, newCompletedQuests
-		)
+	for (let [progressKey, progressValue] of newProgress) {
+		let questProgress = questsProgress.get(progressKey)
+		if (questProgress === undefined) {
+			logger.warn('No progress object found for quest identifier %s', progressKey)
+			continue
+		}
+		progressValue = parseFloat(progressValue.toFixed(2))
+		if (progressValue > questProgress.progress) {
+			questProgress.progress = progressValue
+			await questProgress.save()
+			let completedValue = Math.floor(progressValue)
+			let completedBeforeValue = completedQuestsCount.get(progressKey) || 0
+			if (completedValue > completedBeforeValue) {
+				let [questId, identityId] = progressKey.split('-')
+				let item = {
+					questId: parseInt(questId),
+					identityId: parseInt(identityId)
+				}
+				newCompletedQuests.push(...Array(completedValue - completedBeforeValue).fill(item))
+			}
+		}
 	}
 }
 

@@ -38,12 +38,12 @@ async function getExistingRetweets(
 	})
 	let map = new Map<string, Set<string>>()
 	existingFollowers.map((i) => {
-		let arr = map.get(i.objectId)
+		let arr = map.get(i.objectId || '')
 		if (!arr) {
 			arr = new Set<string>()
-			map.set(i.objectId, arr)
+			map.set(i.objectId || '', arr)
 		}
-		arr.add(i.authorId)
+		arr.add(i.authorId || '')
 	})
 	return map
 }

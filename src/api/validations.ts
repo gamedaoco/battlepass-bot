@@ -10,16 +10,37 @@ export const CreateIdentitySchema = Joi.object({
 export const CreateQuestSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	name: Joi.string().min(5).max(100).allow(null),
-	daily: Joi.boolean(),
+	daily: Joi.boolean().default(false),
 	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
-	type: Joi.string().required().valid('connect', 'join', 'post', 'reaction', 'tweet', 'retweet', 'follow', 'comment', 'like'),
-	channelId: Joi.string().min(10).max(50).allow(null),
-	hashtag: Joi.string().min(3).max(100).allow(null),
-	twitterId: Joi.string().min(3).max(100).allow(null),
-	quantity: Joi.number().integer().required(),
+	type: Joi.string().required().when('source', {
+		switch: [
+			{ is: 'discord', then: Joi.valid('connect', 'join', 'post', 'reaction') },
+			{ is: 'twitter', then: Joi.valid('connect', 'tweet', 'retweet', 'follow', 'comment', 'like') },
+			{ is: 'gamedao', then: Joi.valid('connect') }
+		]
+	}),
+	channelId: Joi.when('type', {
+		is: 'discord',
+		then: Joi.string().min(10).max(50)
+	}),
+	hashtag: Joi.when('type', {
+		is: 'tweet',
+		then: Joi.string().min(3).max(100).required()
+	}),
+	twitterId: Joi.when('type', {
+		is: Joi.valid('retweet', 'follow', 'comment', 'like'),
+		then: Joi.string().min(3).max(100).required()
+	}),
+	quantity: Joi.when('type', {
+		is: Joi.valid('connect', 'join', 'follow'),
+		then: Joi.number().integer().valid(1).default(1),
+		otherwise: Joi.number().integer().required()
+	}),
 	points: Joi.number().integer().required(),
-	maxDaily: Joi.number().integer().allow(null),
-}).with('maxDaily', 'daily')
+	maxDaily: Joi.when('daily', {
+		is: true, then: Joi.number().integer().required()
+	})
+})
 
 export const CreateRewardSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
