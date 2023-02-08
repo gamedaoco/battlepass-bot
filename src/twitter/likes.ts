@@ -1,3 +1,5 @@
+import { Op } from 'sequelize'
+
 import { TwitterActivity, Battlepass, Quest } from '../db'
 import { logger } from '../logger'
 import { getClient } from './client'
@@ -19,25 +21,41 @@ async function getTweetLikes(tweetId: string) {
 	}
 }
 
-async function getExistingLikes(tweetId: string): Promise<Set<string>> {
+async function getExistingLikes(
+	twitterUsernames: string[],
+	since: Date,
+	before: Date
+): Promise<Map<string, Set<string>>> {
 	let existingLikes = await TwitterActivity.findAll({
 		where: {
 			activityType: 'like',
-			objectId: tweetId,
+			objectAuthor: twitterUsernames,
+			createdAt: {
+				[Op.between]: [since, before]
+			}
 		},
-		attributes: ['authorId'],
+		attributes: ['authorId', 'objectId'],
 	})
-	let set = new Set<string>()
+	let map = new Map<string, Set<string>>()
 	existingLikes.map((i) => {
-		set.add(i.authorId)
+		let item = map.get(i.objectId)
+		if (!item) {
+			item = new Set<string>()
+			map.set(i.objectId, item)
+		}
+		item.add(i.authorId)
 	})
-	return set
+	return map
 }
 
-async function processTweetLikes(tweetId: string, tweetAuthor: string, newObjects: any[]) {
+async function processTweetLikes(
+	tweetId: string,
+	tweetAuthor: string,
+	existingLikes: Set<string>,
+	newObjects: any[]
+) {
 	let tweetLikes = await getTweetLikes(tweetId)
 	if (tweetLikes) {
-		let existingLikes = await getExistingLikes(tweetId)
 		let newCnt = 0
 		for (let record of tweetLikes) {
 			let twitterUserId = record.id
@@ -53,66 +71,43 @@ async function processTweetLikes(tweetId: string, tweetAuthor: string, newObject
 			})
 		}
 		if (newCnt) {
-			logger.debug('Collected %s new likes for tweet %s', newCnt, tweetId)
+			logger.debug('Collected %s new likes for tweet %s of author %s', newCnt, tweetId, tweetAuthor)
 		}
 	}
 }
 
-async function getTwitterUserIdsByNames(usernames: string[]): Promise<Map<string, string>> {
-	if (usernames.length > 100) {
-		throw Error('Usernames must be not more then 100')
-	}
-	let client = getClient()
-	let resp = await client.users.findUsersByUsername({ usernames: usernames })
-	let result = new Map<string, string>()
-	if (resp.data) {
-		resp.data.map((i) => {
-			result.set(i.username, i.id)
-		})
-	} else {
-		logger.warn('Received invalid response for users by username twitter api call')
-	}
-	return result
-}
-
-async function getTweetsToCheck(since: Date, twitterUserId: string) {
-	let client = getClient()
-	let twitterAccountId: string
-	let tweets = []
-	try {
-		let req = client.tweets.usersIdTweets(twitterUserId, { start_time: since.toISOString() })
-		for await (let page of req) {
-			if (page.data) {
-				tweets.push(...page.data)
-			}
-		}
-	} catch (error) {
-		logger.error('Failed to get user %s recent tweets', twitterUserId)
-		logger.error(error)
-	}
-
-	return tweets
-}
-
-export async function processLikeQuests(battlepass: Battlepass, likeQuests: Quest[], newObjects: any[]) {
-	let twitterAuthorsToCheck = new Set<string>()
+export async function processLikeQuests(
+	battlepass: Battlepass,
+	likeQuests: Quest[],
+	tweets: Map<string, string[]>,  // userId: tweetIds
+	twitterUsers: Map<string, string>,  // userId: userName
+	newObjects: any[]
+) {
+	let usersToCheck = new Set<string>()
 	for (let quest of likeQuests) {
-		if (quest.source != 'twitter' || quest.type != 'like' || !quest.twitterId) {
-			continue
+		if (quest.source === 'twitter' && quest.type === 'like' && quest.twitterId) {
+			usersToCheck.add(quest.twitterId)
 		}
-		twitterAuthorsToCheck.add(quest.twitterId)
 	}
-	if (!twitterAuthorsToCheck) {
+	if (!usersToCheck.size) {
 		return
 	}
-	let twitterAccountIds = await getTwitterUserIdsByNames(Array.from(twitterAuthorsToCheck.values()))
-	for (let [twitterName, twitterId] of twitterAccountIds) {
-		let tweets = await getTweetsToCheck(battlepass.startDate || new Date(), twitterId)
-		if (!tweets.length) {
+	let existingLikes = await getExistingLikes(
+		Array.from(usersToCheck.values()),
+		battlepass.startDate || new Date(),
+		battlepass.endDate || new Date()
+	)
+	for (let [twitterUserId, tweetIds] of tweets) {
+		let username = twitterUsers.get(twitterUserId) || ''
+		if (!username) {
+			logger.warn('Not found like username for twitter account with id %s', twitterUserId)
 			continue
 		}
-		for (let tweet of tweets) {
-			await processTweetLikes(tweet.id, twitterName, newObjects)
+		if (!usersToCheck.has(username)) {
+			continue
+		}
+		for (let tweetId of tweetIds) {
+			await processTweetLikes(tweetId, username, existingLikes.get(tweetId) || new Set(), newObjects)
 		}
 	}
 }

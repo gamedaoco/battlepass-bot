@@ -1,5 +1,4 @@
-import { Quest, Battlepass, CompletedQuest, QuestProgress, Identity, sequelize } from '../../db'
-
+import { Quest, Battlepass, BattlepassParticipant, CompletedQuest, QuestProgress, Identity, sequelize } from '../../db'
 
 export async function points(parent: any, args: any, context: any, info: any) {
 	let params: any = {
@@ -8,57 +7,55 @@ export async function points(parent: any, args: any, context: any, info: any) {
 			[sequelize.col('Identity.id'), 'identityId'],
 			[sequelize.col('Identity.uuid'), 'identityUuid'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
-			[sequelize.fn('count', '*'), 'quests'],
-			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
+			[sequelize.fn('sum', sequelize.cast(sequelize.col('QuestProgress.progress'), 'integer')), 'quests'],
+			[sequelize.fn('sum', sequelize.literal('CAST("QuestProgress"."progress" AS INTEGER) * "Quest"."points"')), 'points'],
+
 		],
 		group: ['Identity.id', 'Quest.battlepassId'],
 		include: [
 			{
-				model: Quest,
-				required: true,
-				where: {},
-				attributes: [],
-				include: []
-			},
-			{
 				model: Identity,
 				required: true,
+				attributes: [],
+				where: {}
+			},
+			{
+				model: Quest,
+				required: true,
+				attributes: [],
 				where: {},
+				include: [{
+					model: Battlepass,
+					required: true,
+					attributes: [],
+					where: {}
+				}]
 			}
-		],
+		]
 	}
 	const { where } = args
 	if (where) {
 		if (where.battlepassId) {
-			params.include[0].where = {
-				battlepassId: where.battlepassId
-			}
+			params.include[1].where['battlepassId'] = where.battlepassId
 		}
 		if (where.battlepassChainId) {
-			params.include[0].include.push({
-				model: Battlepass,
-				required: true,
-				attributes: [],
-				where: {
-					chainId: where.battlepassChainId
-				}
-			})
+			params.include[1].include[0].where['chainId'] = where.battlepassChainId
 		}
 		if (where.identityId) {
-			params.include[1].where['id'] = where.identityId
+			params.include[0].where['id'] = where.identityId
 		}
 		if (where.identityUuid) {
-			params.include[1].where['uuid'] = where.identityUuid
+			params.include[0].where['uuid'] = where.identityUuid
 		}
 	}
-	let res = await CompletedQuest.findAll(params)
+	let res = await QuestProgress.findAll(params)
 	return res.map((r) => {
 		return {
 			identityId: r.get('identityId'),
 			identityUuid: r.get('identityUuid'),
 			battlepassId: r.get('battlepassId'),
 			points: r.get('points'),
-			quests: r.get('quests')
+			quests: r.get('quests'),
 		}
 	})
 }
@@ -66,8 +63,8 @@ export async function points(parent: any, args: any, context: any, info: any) {
 export async function pointIdentity(parent: any, args: any, context: any, info: any) {
 	let res = await Identity.findOne({
 		where: {
-			id: parent.identityId
-		}
+			id: parent.identityId,
+		},
 	})
 	return res
 }
@@ -75,8 +72,8 @@ export async function pointIdentity(parent: any, args: any, context: any, info: 
 export async function pointBattlepass(parent: any, args: any, context: any, info: any) {
 	let res = await Battlepass.findOne({
 		where: {
-			id: parent.battlepassId
-		}
+			id: parent.battlepassId,
+		},
 	})
 	return res
 }

@@ -29,11 +29,11 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 export const config = {
 	discord: {
 		botKey: process.env.DISCORD_BOT_KEY,
-		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2')
+		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2'),
 	},
 	twitter: {
 		bearerToken: process.env.TWITTER_BEARER_TOKEN || '',
-		checkFrequency: parseInt(process.env.TWITTER_UPDATES_CHECK_FREQUENCY || '900')
+		checkFrequency: parseInt(process.env.TWITTER_UPDATES_CHECK_FREQUENCY || '960'),
 	},
 	logging: {
 		level: process.env.LOGGING_LEVEL || 'debug',

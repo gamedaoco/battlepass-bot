@@ -82,22 +82,3 @@ export async function processTweetQuests(battlepass: Battlepass, tweetQuests: Qu
 		await processTweets(recentSearch, hashtag, battlepass.startDate || new Date(), newObjects)
 	}
 }
-
-// export async function syncMainAccountTweets() {
-// 	let quests = await Quest.findAll({
-// 		where: {
-// 			source: 'twitter'
-// 		},
-// 		include: [{
-// 			model: Battlepass,
-// 			required: true,
-// 			attributes: [],
-// 			where: {
-// 				active: true,
-// 				startDate: {
-// 					[Op.ne]: null
-// 				}
-// 			}
-// 		}]
-// 	})
-// }
