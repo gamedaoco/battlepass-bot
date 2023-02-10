@@ -8,8 +8,13 @@ export async function points(parent: any, args: any, context: any, info: any) {
 			[sequelize.col('Identity.uuid'), 'identityUuid'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
 			[sequelize.fn('sum', sequelize.cast(sequelize.col('QuestProgress.progress'), 'integer')), 'quests'],
-			[sequelize.fn('sum', sequelize.literal('CAST("QuestProgress"."progress" AS INTEGER) * "Quest"."points"')), 'points'],
-
+			[
+				sequelize.fn(
+					'sum',
+					sequelize.literal('CAST("QuestProgress"."progress" AS INTEGER) * "Quest"."points"'),
+				),
+				'points',
+			],
 		],
 		group: ['Identity.id', 'Quest.battlepassId'],
 		include: [
@@ -17,21 +22,23 @@ export async function points(parent: any, args: any, context: any, info: any) {
 				model: Identity,
 				required: true,
 				attributes: [],
-				where: {}
+				where: {},
 			},
 			{
 				model: Quest,
 				required: true,
 				attributes: [],
 				where: {},
-				include: [{
-					model: Battlepass,
-					required: true,
-					attributes: [],
-					where: {}
-				}]
-			}
-		]
+				include: [
+					{
+						model: Battlepass,
+						required: true,
+						attributes: [],
+						where: {},
+					},
+				],
+			},
+		],
 	}
 	const { where } = args
 	if (where) {

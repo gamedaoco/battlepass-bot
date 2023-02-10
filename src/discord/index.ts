@@ -7,7 +7,11 @@ import { onMessage, onMessageDeleted, onMemberJoin } from './live'
 import { getHistoricalEvents, syncGuildMembers } from './historical'
 
 export function getClient() {
-	let intents = new IntentsBitField([IntentsBitField.Flags.GuildMessages, IntentsBitField.Flags.Guilds, IntentsBitField.Flags.GuildMembers])
+	let intents = new IntentsBitField([
+		IntentsBitField.Flags.GuildMessages,
+		IntentsBitField.Flags.Guilds,
+		IntentsBitField.Flags.GuildMembers,
+	])
 	const client = new Client({ intents })
 	return client
 }

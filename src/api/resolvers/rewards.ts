@@ -1,13 +1,12 @@
 import { BattlepassReward, Battlepass } from '../../db'
 
-
 export async function rewards(parent: any, args: any, context: any, info: any) {
 	let filter: any = {}
 	let params: any = {
 		where: filter,
-		include: []
+		include: [],
 	}
-	const { where } = args;
+	const { where } = args
 	if (where) {
 		if (where.id) {
 			filter.id = where.id
@@ -21,8 +20,8 @@ export async function rewards(parent: any, args: any, context: any, info: any) {
 				required: true,
 				attributes: [],
 				where: {
-					chainId: where.battlepassChainId
-				}
+					chainId: where.battlepassChainId,
+				},
 			})
 		}
 	}
@@ -33,8 +32,8 @@ export async function rewards(parent: any, args: any, context: any, info: any) {
 export async function rewardBattlepass(parent: any, args: any, context: any, info: any) {
 	let res = Battlepass.findOne({
 		where: {
-			id: parent.battlepassId
-		}
+			id: parent.battlepassId,
+		},
 	})
 	return res
 }

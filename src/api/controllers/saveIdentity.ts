@@ -3,8 +3,13 @@ import { Op } from 'sequelize'
 import { Identity, DiscordActivity, TwitterActivity } from '../../db'
 import { logger } from '../../logger'
 
-export async function saveIdentity(uuid: string | null, discord: string | null, twitter: string | null, address: string | null) {
-	let where = [];
+export async function saveIdentity(
+	uuid: string | null,
+	discord: string | null,
+	twitter: string | null,
+	address: string | null,
+) {
+	let where = []
 	if (uuid) {
 		where.push({ uuid })
 	}
@@ -15,10 +20,10 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 			where.push({ twitter })
 		}
 		if (address) {
-			where.push ({ address })
+			where.push({ address })
 		}
 	}
-	let identity: any = await Identity.findOne({ where: {[Op.or]: where} })
+	let identity: any = await Identity.findOne({ where: { [Op.or]: where } })
 	let created = identity ? false : true
 	let createDiscordActivity = true
 	let createTwitterActivity = true
@@ -27,7 +32,7 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 		if (uuid) {
 			fields['uuid'] = uuid
 		}
-		identity = await Identity.create(fields);
+		identity = await Identity.create(fields)
 	} else {
 		identity.discord = discord
 		identity.twitter = twitter
@@ -50,8 +55,8 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 				attributes: ['id'],
 				where: {
 					authorId: twitter,
-					activityType: 'connect'
-				}
+					activityType: 'connect',
+				},
 			})
 			if (twitterActivity) {
 				createTwitterActivity = false
@@ -71,7 +76,7 @@ export async function saveIdentity(uuid: string | null, discord: string | null, 
 	if (twitter && createTwitterActivity) {
 		await TwitterActivity.create({
 			activityType: 'connect',
-			authorId: twitter
+			authorId: twitter,
 		})
 		logger.debug('Created twitter connect activity for user %s', twitter)
 	}

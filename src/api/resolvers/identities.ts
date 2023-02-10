@@ -1,12 +1,11 @@
 import { QuestProgress, BattlepassParticipant, Identity } from '../../db'
 
-
 export async function identities(parent: any, args: any, context: any, info: any) {
 	let filter: any = {}
 	let params: any = {
-		where: filter
+		where: filter,
 	}
-	const { where } = args;
+	const { where } = args
 	if (where) {
 		if (where.id) {
 			filter.id = where.id
@@ -31,8 +30,8 @@ export async function identities(parent: any, args: any, context: any, info: any
 export async function identityMembers(parent: any, args: any, context: any, info: any) {
 	let res = await BattlepassParticipant.findAll({
 		where: {
-			identityId: parent.id
-		}
+			identityId: parent.id,
+		},
 	})
 	return res
 }
@@ -40,8 +39,8 @@ export async function identityMembers(parent: any, args: any, context: any, info
 export async function identityProgress(parent: any, args: any, context: any, info: any) {
 	let res = await QuestProgress.findAll({
 		where: {
-			identityId: parent.id
-		}
+			identityId: parent.id,
+		},
 	})
 	return res
 }

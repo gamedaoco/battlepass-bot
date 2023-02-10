@@ -3,10 +3,7 @@ import { Op } from 'sequelize'
 import { logger } from '../../logger'
 import { Identity, Battlepass, BattlepassParticipant, DiscordActivity, Quest, QuestProgress } from '../../db'
 
-export async function addBattlepassParticipant(
-	battlepass: string,
-	identityUuid: string,
-): Promise<Identity | null> {
+export async function addBattlepassParticipant(battlepass: string, identityUuid: string): Promise<Identity | null> {
 	let bp = await Battlepass.findOne({
 		where: { chainId: battlepass },
 	})
@@ -28,14 +25,14 @@ export async function addBattlepassParticipant(
 	if (created) {
 		let quests = await Quest.findAll({
 			where: { battlepassId: bp.id },
-			attributes: ['id']
+			attributes: ['id'],
 		})
 		let progress = []
 		for (let quest of quests) {
 			progress.push({
 				identityId: existingUser.id,
 				questId: quest.id,
-				progress: 0
+				progress: 0,
 			})
 		}
 		if (progress) {

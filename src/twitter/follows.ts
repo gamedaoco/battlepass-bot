@@ -28,7 +28,7 @@ async function getExistingFollowers(usernames: string[]): Promise<Map<string, Se
 		attributes: ['authorId', 'objectId'],
 	})
 	let map = new Map<string, Set<string>>()
-	existingFollowers.map(i => {
+	existingFollowers.map((i) => {
 		let arr = map.get(i.objectId || '')
 		if (!arr) {
 			arr = new Set<string>()
@@ -43,7 +43,7 @@ async function processUserFollowers(
 	userId: string,
 	userName: string,
 	existingFollowers: Set<string>,
-	newObjects: any[]
+	newObjects: any[],
 ) {
 	let allFollowers = await getUserFollowers(userId)
 	if (!allFollowers) {
@@ -73,8 +73,8 @@ async function processUserFollowers(
 export async function processFollowQuests(
 	battlepass: Battlepass,
 	followQuests: Quest[],
-	twitterUsers: Map<string, string>,  // userId: userName
-	newObjects: any[]
+	twitterUsers: Map<string, string>, // userId: userName
+	newObjects: any[],
 ) {
 	let usersToCheck = new Set<string>()
 	for (let quest of followQuests) {

@@ -24,15 +24,15 @@ async function getRetweets(tweetId: string) {
 async function getExistingRetweets(
 	twitterUserNames: string[],
 	since: Date,
-	before: Date
+	before: Date,
 ): Promise<Map<string, Set<string>>> {
 	let existingFollowers = await TwitterActivity.findAll({
 		where: {
 			activityType: 'retweet',
 			objectAuthor: twitterUserNames,
 			createdAt: {
-				[Op.between]: [since, before]
-			}
+				[Op.between]: [since, before],
+			},
 		},
 		attributes: ['authorId', 'objectId'],
 	})
@@ -52,7 +52,7 @@ async function processTweetRetweets(
 	tweetId: string,
 	tweetAuthor: string,
 	existingRetweets: Set<string>,
-	newObjects: any[]
+	newObjects: any[],
 ) {
 	let retweetUsers = await getRetweets(tweetId)
 	if (!retweetUsers) {
@@ -68,7 +68,7 @@ async function processTweetRetweets(
 			objectAuthor: tweetAuthor,
 			objectId: tweetId,
 			authorId: retweetUserId,
-			activityType: 'retweet'
+			activityType: 'retweet',
 		}
 		newObjects.push(item)
 		newCnt += 1
@@ -81,9 +81,9 @@ async function processTweetRetweets(
 export async function processRetweetQuests(
 	battlepass: Battlepass,
 	followQuests: Quest[],
-	tweets: Map<string, string[]>,  // userId: tweetIds
-	twitterUsers: Map<string, string>,  // userId: userName
-	newObjects: any[]
+	tweets: Map<string, string[]>, // userId: tweetIds
+	twitterUsers: Map<string, string>, // userId: userName
+	newObjects: any[],
 ) {
 	let usersToCheck = new Set<string>()
 	for (let quest of followQuests) {
@@ -97,7 +97,7 @@ export async function processRetweetQuests(
 	let existingRetweets = await getExistingRetweets(
 		Array.from(usersToCheck.values()),
 		battlepass.startDate || new Date(),
-		battlepass.endDate || new Date()
+		battlepass.endDate || new Date(),
 	)
 	for (let [twitterUserId, tweetIds] of tweets) {
 		let username = twitterUsers.get(twitterUserId) || ''
