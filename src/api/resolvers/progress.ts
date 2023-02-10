@@ -1,23 +1,22 @@
-import { Quest, QuestProgress, Battlepass, Identity } from '../../db'
-
+import { Quest, QuestProgress, Battlepass, Identity, sequelize } from '../../db'
 
 export async function progress(parent: any, args: any, context: any, info: any) {
 	let filter: any = {}
 	let params: any = {
 		attributes: {
-			include: [
-				['Identity.uuid', 'identityUuid']
-			]
+			include: [[sequelize.col('Identity.uuid'), 'identityUuid']],
 		},
 		where: filter,
-		include: [{
-			model: Identity,
-			required: true,
-			attributes: [],
-			where: {}
-		}]
+		include: [
+			{
+				model: Identity,
+				required: true,
+				attributes: [],
+				where: {},
+			},
+		],
 	}
-	const { where } = args;
+	const { where } = args
 	if (where) {
 		if (where.id) {
 			filter.id = where.id
@@ -37,18 +36,27 @@ export async function progress(parent: any, args: any, context: any, info: any) 
 				required: true,
 				attributes: [],
 				where: {
-					battlepassId: where.battlepassId
-				}
+					battlepassId: where.battlepassId,
+				},
+				include: []
 			})
 		}
 		if (where.battlepassChainId) {
-			params.include.push({
+			if (!where.battlepassId) {
+				params.include.push({
+					model: Quest,
+					required: true,
+					attributes: [],
+					include: [],
+				})
+			}
+			params.include[1].include.push({
 				model: Battlepass,
 				required: true,
 				attributes: [],
 				where: {
-					chainId: where.battlepassChainId
-				}
+					chainId: where.battlepassChainId,
+				},
 			})
 		}
 	}
@@ -66,8 +74,8 @@ export function progressIdentityUuid(parent: any, args: any, context: any, info:
 export async function progressQuest(parent: any, args: any, context: any, info: any) {
 	let res = await Quest.findOne({
 		where: {
-			id: parent.questId
-		}
+			id: parent.questId,
+		},
 	})
 	return res
 }
@@ -75,8 +83,8 @@ export async function progressQuest(parent: any, args: any, context: any, info: 
 export async function progressIdentity(parent: any, args: any, context: any, info: any) {
 	let res = await Identity.findOne({
 		where: {
-			id: parent.identityId
-		}
+			id: parent.identityId,
+		},
 	})
 	return res
 }

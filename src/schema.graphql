@@ -9,6 +9,11 @@ enum ActivityType {
 	join
 	post
 	reaction
+	tweet
+	retweet
+	follow
+	comment
+	like
 }
 
 type BattlepassIdentity {
@@ -29,6 +34,8 @@ type BattlepassQuest {
 	source: Source!
 	type: ActivityType!
 	channelId: String
+	hashtag: String
+	twitterId: String
 	quantity: Int!
 	points: Int!
 	maxDaily: Int
@@ -180,9 +187,9 @@ type Query {
 }
 
 type Mutation {
-	identity(uuid: String!, discord: String, twitter: String, address: String): BattlepassIdentity
+	identity(uuid: String, discord: String, twitter: String, address: String): BattlepassIdentity
 	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
-	quest(battlepass: String!, name: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
+	quest(battlepass: String!, name: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
 	reward(battlepass: String!, cid: String, name: String, description: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 }

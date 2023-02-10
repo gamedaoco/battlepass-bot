@@ -1,6 +1,7 @@
 import * as fs from 'fs'
 import express from 'express'
 
+import { GraphQLError } from 'graphql';
 import { ApolloServer, gql } from 'apollo-server-express'
 import { ApolloServerPlugin } from 'apollo-server-plugin-base'
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
@@ -90,7 +91,9 @@ const resolvers = {
 			let input = CreateIdentitySchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid identity request %s', input.error)
-				return null
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+				})
 			}
 			let [identity, created] = await saveIdentity(
 				input.value.uuid,
@@ -104,7 +107,9 @@ const resolvers = {
 			let input = CreateQuestSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid quest request %s', input.error)
-				return null
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+				})
 			}
 			return await saveQuest(
 				input.value.battlepass,
@@ -113,6 +118,8 @@ const resolvers = {
 				input.value.source,
 				input.value.type,
 				input.value.channelId,
+				input.value.hashtag,
+				input.value.twitterId,
 				input.value.quantity,
 				input.value.points,
 				input.value.maxDaily,
@@ -122,7 +129,9 @@ const resolvers = {
 			let input = AddParticipantSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid join request %s', input.error)
-				return null
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+				})
 			}
 			let res = await addBattlepassParticipant(input.value.battlepass, input.value.identityUuid)
 			return res
@@ -131,7 +140,9 @@ const resolvers = {
 			let input = CreateRewardSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid reward request %s', input.error)
-				return null
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+				})
 			}
 			return await createReward(
 				input.value.battlepass,
@@ -147,7 +158,9 @@ const resolvers = {
 			let input = CreateLevelsSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid levels request %s', input.error)
-				return null
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+				})
 			}
 			return await createLevels(
 				input.value.battlepass,

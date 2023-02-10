@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord') {
+export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord' | 'twitter') {
 	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
@@ -15,6 +15,9 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 		case 'discord':
 			requiredEnvVariables.push('DISCORD_BOT_KEY')
 			break
+		case 'twitter':
+			requiredEnvVariables.push('TWITTER_BEARER_TOKEN')
+			break
 	}
 	requiredEnvVariables.forEach((name) => {
 		if (!process.env[name]) {
@@ -26,7 +29,11 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 export const config = {
 	discord: {
 		botKey: process.env.DISCORD_BOT_KEY,
-		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2')
+		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2'),
+	},
+	twitter: {
+		bearerToken: process.env.TWITTER_BEARER_TOKEN || '',
+		checkFrequency: parseInt(process.env.TWITTER_UPDATES_CHECK_FREQUENCY || '960'),
 	},
 	logging: {
 		level: process.env.LOGGING_LEVEL || 'debug',

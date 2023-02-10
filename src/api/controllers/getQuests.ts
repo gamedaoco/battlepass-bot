@@ -20,6 +20,8 @@ export async function getQuests(battlepass: string) {
 			source: quest.source,
 			type: quest.type,
 			channelId: quest.channelId,
+			hashtag: quest.hashtag,
+			twitterId: quest.twitterId,
 			quantity: quest.quantity,
 			points: quest.points,
 			maxDaily: quest.maxDaily,
