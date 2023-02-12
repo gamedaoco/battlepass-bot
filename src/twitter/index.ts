@@ -37,10 +37,10 @@ async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
 	let twitterAccountId: string
 	let tweets = []
 	try {
-		let req = client.tweets.usersIdTweets(
-			twitterUserId,
-			{ start_time: since.toISOString(), end_time: before.toISOString() }
-		)
+		let req = client.tweets.usersIdTweets(twitterUserId, {
+			start_time: since.toISOString(),
+			end_time: before.toISOString(),
+		})
 		for await (let page of req) {
 			if (page.data) {
 				tweets.push(...page.data)
@@ -64,9 +64,9 @@ async function iteration(again: boolean) {
 	let newItems: any[] = []
 	let allQuests = await Quest.findAll({
 		where: {
-			battlepassId: Array.from(battlepasses.values()).map(i => i.id),
-			source: 'twitter'
-		}
+			battlepassId: Array.from(battlepasses.values()).map((i) => i.id),
+			source: 'twitter',
+		},
 	})
 	let twitterUsernames = new Set<string>()
 	let questsByBattlepass = new Map<number, Quest[]>()
@@ -87,6 +87,10 @@ async function iteration(again: boolean) {
 				twitterUsernames.add(followUsername)
 			}
 		}
+	}
+	if (!twitterUsernames.size) {
+		logger.debug('Skipping twitter activities processing due to no active quests')
+		return
 	}
 	let usersMap = await getTwitterUserIdsByNames(Array.from(twitterUsernames.values()))
 	for (let [_, battlepass] of battlepasses) {

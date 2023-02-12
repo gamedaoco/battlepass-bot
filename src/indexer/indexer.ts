@@ -117,13 +117,12 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 	}
 	let identities = await Identity.findAll({
 		where: {
-			address: chainUsers
-		}
+			address: chainUsers,
+		},
 	})
 	let identitiesMap = new Map<string, Identity>()
-	identities.map(i => {
-		if (i.address !== null)
-			identitiesMap.set(i.address, i)
+	identities.map((i) => {
+		if (i.address !== null) identitiesMap.set(i.address, i)
 	})
 	let newUsers = []
 	for (let chainUser of chainUsers) {
@@ -132,34 +131,35 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		}
 	}
 	if (newUsers) {
-		(await Identity.bulkCreate(newUsers)).map(i => {
-			if(i.address !== null)
-				identitiesMap.set(i.address, i)
+		;(await Identity.bulkCreate(newUsers)).map((i) => {
+			if (i.address !== null) identitiesMap.set(i.address, i)
 		})
 	}
 	let participants = await BattlepassParticipant.findAll({
 		where: { battlepassId: battlepass.id },
-		include: [{
-			model: Identity,
-			required: true,
-			attributes: ['address'],
-			where: {
-				address: {
-					[Op.ne]: null
-				}
-			}
-		}]
+		include: [
+			{
+				model: Identity,
+				required: true,
+				attributes: ['address'],
+				where: {
+					address: {
+						[Op.ne]: null,
+					},
+				},
+			},
+		],
 	})
 	let participantsMap = new Map<string, BattlepassParticipant>()
 	participants.map((i: any) => {
 		participantsMap.set(i.identity.address, i)
 	})
-	let newParticipants: any = [];
+	let newParticipants: any = []
 	for (let address of chainUsers) {
 		if (!participantsMap.has(address)) {
 			newParticipants.push({
 				battlepassId: battlepass.id,
-				identityId: identitiesMap.get(address)?.id
+				identityId: identitiesMap.get(address)?.id,
 			})
 		}
 	}
@@ -169,16 +169,16 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 
 		let quests = await Quest.findAll({
 			where: {
-				battlepassId: battlepass.id
-			}
+				battlepassId: battlepass.id,
+			},
 		})
-		let newProgress: any = [];
-		quests.map(q => {
+		let newProgress: any = []
+		quests.map((q) => {
 			newParticipants.map((p: any) => {
 				newProgress.push({
 					questId: q.id,
 					identityId: p.identityId,
-					progress: 0
+					progress: 0,
 				})
 			})
 		})

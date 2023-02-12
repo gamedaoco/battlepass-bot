@@ -28,12 +28,9 @@ export async function iteration(again: boolean) {
 		}
 	}
 	if (again) {
-		setTimeout(
-			async () => {
-				await iteration(true)
-			},
-			config.general.checkFrequency * 1000
-		)
+		setTimeout(async () => {
+			await iteration(true)
+		}, config.general.checkFrequency * 1000)
 	}
 }
 

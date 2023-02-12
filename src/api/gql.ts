@@ -1,7 +1,7 @@
 import * as fs from 'fs'
 import express from 'express'
 
-import { GraphQLError } from 'graphql';
+import { GraphQLError } from 'graphql'
 import { ApolloServer, gql } from 'apollo-server-express'
 import { ApolloServerPlugin } from 'apollo-server-plugin-base'
 import { ApolloServerPluginLandingPageLocalDefault } from 'apollo-server-core'
@@ -29,7 +29,13 @@ import {
 	addBattlepassParticipant,
 } from './controllers'
 
-import { battlepasses, battlepassQuests, battlepassMembers, battlepassRewards, formattedDate } from './resolvers/battlepass'
+import {
+	battlepasses,
+	battlepassQuests,
+	battlepassMembers,
+	battlepassRewards,
+	formattedDate,
+} from './resolvers/battlepass'
 import { quests, questBattlepass, questProgress } from './resolvers/quests'
 import { members, memberBattlepass, memberIdentity, memberProgress, memberPoints } from './resolvers/members'
 import { progress, progressQuest, progressIdentity, progressIdentityUuid } from './resolvers/progress'
@@ -49,7 +55,7 @@ const resolvers = {
 		BattlepassIdentities: identities,
 		BattlepassPoints: points,
 		BattlepassRewards: rewards,
-		BattlepassLevels: levels
+		BattlepassLevels: levels,
 	},
 	Battlepass: {
 		quests: battlepassQuests,
@@ -66,11 +72,11 @@ const resolvers = {
 		battlepass: memberBattlepass,
 		identity: memberIdentity,
 		progress: memberProgress,
-		points: memberPoints
+		points: memberPoints,
 	},
 	BattlepassQuestProgress: {
 		quest: progressQuest,
-		identity: progressIdentity
+		identity: progressIdentity,
 	},
 	BattlepassIdentity: {
 		members: identityMembers,
@@ -81,10 +87,10 @@ const resolvers = {
 		battlepass: pointBattlepass,
 	},
 	BattlepassReward: {
-		battlepass: rewardBattlepass
+		battlepass: rewardBattlepass,
 	},
 	BattlepassLevel: {
-		battlepass: levelBattlepass
+		battlepass: levelBattlepass,
 	},
 	Mutation: {
 		identity: async (parent: any, args: any) => {
@@ -92,14 +98,14 @@ const resolvers = {
 			if (input.error) {
 				logger.debug('Invalid identity request %s', input.error)
 				throw new GraphQLError('Invalid input', {
-					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
 			let [identity, created] = await saveIdentity(
 				input.value.uuid,
 				input.value.discord,
 				input.value.twitter,
-				input.value.address
+				input.value.address,
 			)
 			return identity
 		},
@@ -108,7 +114,7 @@ const resolvers = {
 			if (input.error) {
 				logger.debug('Invalid quest request %s', input.error)
 				throw new GraphQLError('Invalid input', {
-					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
 			return await saveQuest(
@@ -130,7 +136,7 @@ const resolvers = {
 			if (input.error) {
 				logger.debug('Invalid join request %s', input.error)
 				throw new GraphQLError('Invalid input', {
-					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
 			let res = await addBattlepassParticipant(input.value.battlepass, input.value.identityUuid)
@@ -141,7 +147,7 @@ const resolvers = {
 			if (input.error) {
 				logger.debug('Invalid reward request %s', input.error)
 				throw new GraphQLError('Invalid input', {
-					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
 			return await createReward(
@@ -151,7 +157,7 @@ const resolvers = {
 				input.value.description,
 				input.value.points,
 				input.value.level,
-				input.value.total
+				input.value.total,
 			)
 		},
 		levels: async (parent: any, args: any) => {
@@ -159,14 +165,11 @@ const resolvers = {
 			if (input.error) {
 				logger.debug('Invalid levels request %s', input.error)
 				throw new GraphQLError('Invalid input', {
-					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() }
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			return await createLevels(
-				input.value.battlepass,
-				input.value.levels
-			)
-		}
+			return await createLevels(input.value.battlepass, input.value.levels)
+		},
 	},
 }
 

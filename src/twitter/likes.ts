@@ -24,15 +24,15 @@ async function getTweetLikes(tweetId: string) {
 async function getExistingLikes(
 	twitterUsernames: string[],
 	since: Date,
-	before: Date
+	before: Date,
 ): Promise<Map<string, Set<string>>> {
 	let existingLikes = await TwitterActivity.findAll({
 		where: {
 			activityType: 'like',
 			objectAuthor: twitterUsernames,
 			createdAt: {
-				[Op.between]: [since, before]
-			}
+				[Op.between]: [since, before],
+			},
 		},
 		attributes: ['authorId', 'objectId'],
 	})
@@ -48,12 +48,7 @@ async function getExistingLikes(
 	return map
 }
 
-async function processTweetLikes(
-	tweetId: string,
-	tweetAuthor: string,
-	existingLikes: Set<string>,
-	newObjects: any[]
-) {
+async function processTweetLikes(tweetId: string, tweetAuthor: string, existingLikes: Set<string>, newObjects: any[]) {
 	let tweetLikes = await getTweetLikes(tweetId)
 	if (tweetLikes) {
 		let newCnt = 0
@@ -79,9 +74,9 @@ async function processTweetLikes(
 export async function processLikeQuests(
 	battlepass: Battlepass,
 	likeQuests: Quest[],
-	tweets: Map<string, string[]>,  // userId: tweetIds
-	twitterUsers: Map<string, string>,  // userId: userName
-	newObjects: any[]
+	tweets: Map<string, string[]>, // userId: tweetIds
+	twitterUsers: Map<string, string>, // userId: userName
+	newObjects: any[],
 ) {
 	let usersToCheck = new Set<string>()
 	for (let quest of likeQuests) {
@@ -95,7 +90,7 @@ export async function processLikeQuests(
 	let existingLikes = await getExistingLikes(
 		Array.from(usersToCheck.values()),
 		battlepass.startDate || new Date(),
-		battlepass.endDate || new Date()
+		battlepass.endDate || new Date(),
 	)
 	for (let [twitterUserId, tweetIds] of tweets) {
 		let username = twitterUsers.get(twitterUserId) || ''

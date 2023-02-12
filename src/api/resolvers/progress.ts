@@ -38,7 +38,7 @@ export async function progress(parent: any, args: any, context: any, info: any) 
 				where: {
 					battlepassId: where.battlepassId,
 				},
-				include: []
+				include: [],
 			})
 		}
 		if (where.battlepassChainId) {

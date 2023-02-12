@@ -32,16 +32,16 @@ describe('Save new quest', () => {
 			},
 			{
 				discord: ''.padEnd(15, '4'),
-			}
+			},
 		])
 		await BattlepassParticipant.bulkCreate([
 			{
 				battlepassId: battlepass.id,
-				identityId: identity1.id
+				identityId: identity1.id,
 			},
 			{
 				battlepassId: battlepass.id,
-				identityId: identity2.id
+				identityId: identity2.id,
 			},
 		])
 

@@ -37,16 +37,16 @@ export async function saveQuest(
 	let participants = await BattlepassParticipant.findAll({
 		attributes: ['identityId'],
 		where: {
-			battlepassId: bp.id
-		}
-	});
+			battlepassId: bp.id,
+		},
+	})
 	if (participants.length) {
 		let newProgress: any[] = []
-		participants.map(i => {
+		participants.map((i) => {
 			newProgress.push({
 				questId: quest.id,
 				identityId: i.identityId,
-				progress: 0
+				progress: 0,
 			})
 		})
 		await QuestProgress.bulkCreate(newProgress)

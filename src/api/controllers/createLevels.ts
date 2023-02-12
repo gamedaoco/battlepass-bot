@@ -1,15 +1,12 @@
 import { Battlepass, BattlepassLevel } from '../../db'
 
 interface Level {
-	name: string | null,
-	points: number,
+	name: string | null
+	points: number
 	level: number
 }
 
-export async function createLevels(
-	battlepass: string,
-	levels: Level[]
-): Promise<object | null> {
+export async function createLevels(battlepass: string, levels: Level[]): Promise<object | null> {
 	let bp = await Battlepass.findOne({
 		where: {
 			chainId: battlepass,
@@ -30,7 +27,7 @@ export async function createLevels(
 			points: level.points,
 			level: level.level,
 			totalPoints: totalPoints,
-			battlepassId: bp.id
+			battlepassId: bp.id,
 		})
 	}
 	return await BattlepassLevel.bulkCreate(records)

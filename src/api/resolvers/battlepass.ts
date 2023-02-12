@@ -1,13 +1,12 @@
 import { Battlepass, BattlepassReward, BattlepassParticipant, Quest } from '../../db'
 
-
 export async function battlepasses(parent: any, args: any, context: any, info: any) {
 	// console.log(info.fieldNodes[0].selectionSet.selections);
 	let filter: any = {}
 	let params: any = {
-		where: filter
+		where: filter,
 	}
-	const { where } = args;
+	const { where } = args
 	if (where) {
 		if (where.id) {
 			filter.id = where.id
@@ -32,8 +31,8 @@ export async function battlepasses(parent: any, args: any, context: any, info: a
 export async function battlepassQuests(parent: any, args: any, context: any, info: any) {
 	let res = await Quest.findAll({
 		where: {
-			battlepassId: parent.id
-		}
+			battlepassId: parent.id,
+		},
 	})
 	return res
 }
@@ -41,8 +40,8 @@ export async function battlepassQuests(parent: any, args: any, context: any, inf
 export async function battlepassMembers(parent: any, args: any, context: any, info: any) {
 	let res = await BattlepassParticipant.findAll({
 		where: {
-			battlepassId: parent.id
-		}
+			battlepassId: parent.id,
+		},
 	})
 	return res
 }
@@ -50,14 +49,14 @@ export async function battlepassMembers(parent: any, args: any, context: any, in
 export async function battlepassRewards(parent: any, args: any, context: any, info: any) {
 	let res = await BattlepassReward.findAll({
 		where: {
-			battlepassId: parent.id
-		}
+			battlepassId: parent.id,
+		},
 	})
 	return res
 }
 
 export function formattedDate(fieldName: string) {
-	return function(parent: any, args: any, context: any, info: any) {
+	return function (parent: any, args: any, context: any, info: any) {
 		let value = parent[fieldName]
 		if (value) {
 			return value.toISOString()

@@ -11,7 +11,7 @@ async function getNewComments(tweetId: string, since: Date | null) {
 		expansions: ['author_id'],
 		'tweet.fields': ['created_at'],
 	}
-	if (since && Date.now() - since.getTime() < 7*24*60*60*1000) {
+	if (since && Date.now() - since.getTime() < 7 * 24 * 60 * 60 * 1000) {
 		params['start_time'] = since.toISOString()
 	}
 	let results = []
@@ -32,20 +32,20 @@ async function getNewComments(tweetId: string, since: Date | null) {
 async function getExistingComments(
 	twitterUsernames: string[],
 	since: Date,
-	before: Date
+	before: Date,
 ): Promise<Map<string, Set<string>>> {
 	let existingComments = await TwitterActivity.findAll({
 		where: {
 			activityType: 'comment',
 			objectAuthor: twitterUsernames,
 			createdAt: {
-				[Op.between]: [since, before]
-			}
+				[Op.between]: [since, before],
+			},
 		},
 		attributes: ['authorId', 'objectId'],
 	})
 	let map = new Map<string, Set<string>>()
-	existingComments.map(i => {
+	existingComments.map((i) => {
 		let arr = map.get(i.objectId || '')
 		if (!arr) {
 			arr = new Set<string>()
@@ -61,7 +61,7 @@ async function processTweetComments(
 	tweetAuthor: string,
 	existingLikes: Set<string>,
 	since: Date | null,
-	newObjects: any[]
+	newObjects: any[],
 ) {
 	// todo: `since` parameter from last update time
 	let comments = await getNewComments(tweetId, since)
@@ -77,7 +77,7 @@ async function processTweetComments(
 			objectId: tweetId,
 			authorId: record.author_id,
 			activityId: record.id,
-			activityType: 'comment'
+			activityType: 'comment',
 		}
 		newObjects.push(item)
 	}
@@ -86,9 +86,9 @@ async function processTweetComments(
 export async function processCommentQuests(
 	battlepass: Battlepass,
 	commentQuests: Quest[],
-	tweets: Map<string, string[]>,  // userId: tweetIds
-	twitterUsers: Map<string, string>,  // userId: userName
-	newObjects: any[]
+	tweets: Map<string, string[]>, // userId: tweetIds
+	twitterUsers: Map<string, string>, // userId: userName
+	newObjects: any[],
 ) {
 	let usersToCheck = new Set<string>()
 	for (let quest of commentQuests) {
@@ -102,7 +102,7 @@ export async function processCommentQuests(
 	let existingComments = await getExistingComments(
 		Array.from(usersToCheck.values()),
 		battlepass.startDate || new Date(),
-		battlepass.endDate || new Date()
+		battlepass.endDate || new Date(),
 	)
 	for (let [twitterUserId, tweetIds] of tweets) {
 		let username = twitterUsers.get(twitterUserId) || ''

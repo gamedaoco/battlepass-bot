@@ -25,7 +25,7 @@ export async function createReward(
 		points,
 		level,
 		total,
-		available: total
+		available: total,
 	})
 	return reward
 }

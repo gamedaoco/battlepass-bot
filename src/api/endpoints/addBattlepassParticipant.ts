@@ -12,10 +12,7 @@ export async function addBattlepassParticipantView(request: Request, response: R
 			error: validation.error || 'Invalid input',
 		})
 	}
-	let res = await addBattlepassParticipant(
-		validation.value.battlepass,
-		validation.value.identityUuid,
-	)
+	let res = await addBattlepassParticipant(validation.value.battlepass, validation.value.identityUuid)
 	if (res !== null) {
 		return response.status(200).send({
 			success: true,

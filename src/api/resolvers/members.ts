@@ -67,8 +67,13 @@ export async function memberPoints(parent: any, args: any, context: any, info: a
 			[sequelize.col('Identity.uuid'), 'identityUuid'],
 			[sequelize.col('Quest.battlepassId'), 'battlepassId'],
 			[sequelize.fn('sum', sequelize.cast(sequelize.col('QuestProgress.progress'), 'integer')), 'quests'],
-			[sequelize.fn('sum', sequelize.literal('CAST("QuestProgress"."progress" AS INTEGER) * "Quest"."points"')), 'points'],
-
+			[
+				sequelize.fn(
+					'sum',
+					sequelize.literal('CAST("QuestProgress"."progress" AS INTEGER) * "Quest"."points"'),
+				),
+				'points',
+			],
 		],
 		group: ['Identity.id', 'Quest.battlepassId'],
 		include: [
@@ -77,22 +82,24 @@ export async function memberPoints(parent: any, args: any, context: any, info: a
 				required: true,
 				attributes: [],
 				where: {
-					id: parent.id
-				}
+					id: parent.id,
+				},
 			},
 			{
 				model: Quest,
 				required: true,
 				attributes: [],
 				where: {},
-				include: [{
-					model: Battlepass,
-					required: true,
-					attributes: [],
-					where: {}
-				}]
-			}
-		]
+				include: [
+					{
+						model: Battlepass,
+						required: true,
+						attributes: [],
+						where: {},
+					},
+				],
+			},
+		],
 	}
 	let res = await QuestProgress.findAll(params)
 	return res.map((r) => {

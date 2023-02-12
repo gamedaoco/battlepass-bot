@@ -168,7 +168,7 @@ describe('Quests matching logic', () => {
 		await QuestProgress.create({
 			questId: quest1.id,
 			identityId: identity1.id,
-			progress: 0
+			progress: 0,
 		})
 		let activity1 = await DiscordActivity.create({
 			guildId: ''.padEnd(15, '4'),
@@ -208,7 +208,7 @@ describe('Quests matching logic', () => {
 			},
 			{
 				discord: ''.padEnd(15, '4'),
-			}
+			},
 		])
 		await BattlepassParticipant.create({
 			battlepassId: bp.id,
@@ -228,12 +228,12 @@ describe('Quests matching logic', () => {
 			{
 				questId: quest1.id,
 				identityId: identity1.id,
-				progress: 0
+				progress: 0,
 			},
 			{
 				questId: quest1.id,
 				identityId: identity2.id,
-				progress: 0
+				progress: 0,
 			},
 		])
 		await DiscordActivity.bulkCreate([
