@@ -3,15 +3,20 @@ import { Op } from 'sequelize'
 import { logger } from '../../logger'
 import { Identity, Battlepass, BattlepassParticipant, DiscordActivity, Quest, QuestProgress } from '../../db'
 
-export async function addBattlepassParticipant(battlepass: string, identityUuid: string): Promise<Identity | null> {
+interface AddParticipantInterface {
+	battlepass: string
+	identityUuid: string
+}
+
+export async function addBattlepassParticipant(data: AddParticipantInterface): Promise<Identity | null> {
 	let bp = await Battlepass.findOne({
-		where: { chainId: battlepass },
+		where: { chainId: data.battlepass },
 	})
 	if (!bp) {
 		return null
 	}
 	let existingUser = await Identity.findOne({
-		where: { uuid: identityUuid },
+		where: { uuid: data.identityUuid },
 	})
 	if (existingUser === null) {
 		return null
@@ -21,6 +26,9 @@ export async function addBattlepassParticipant(battlepass: string, identityUuid:
 			identityId: existingUser.id,
 			battlepassId: bp.id,
 		},
+		defaults: {
+			premium: false
+		}
 	})
 	if (created) {
 		let quests = await Quest.findAll({

@@ -21,6 +21,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare chainId: string
 	declare orgId: string
 	declare name: string | null
+	declare cid: string | null
 	declare startDate: Date | null
 	declare endDate: Date | null
 	declare active: boolean
@@ -43,6 +44,10 @@ Battlepass.init(
 		},
 		name: {
 			type: DataTypes.STRING(100),
+			allowNull: true,
+		},
+		cid: {
+			type: DataTypes.STRING(50),
 			allowNull: true,
 		},
 		startDate: {
@@ -163,6 +168,9 @@ export class Identity extends Model<InferAttributes<Identity>, InferCreationAttr
 	declare address: string | null // chain address
 	declare discord: string | null
 	declare twitter: string | null
+	declare cid: string | null
+	declare name: string | null
+	declare email: string | null
 }
 
 Identity.init(
@@ -189,6 +197,18 @@ Identity.init(
 			type: DataTypes.STRING(20),
 			allowNull: true,
 		},
+		cid: {
+			type: DataTypes.STRING(50),
+			allowNull: true,
+		},
+		name: {
+			type: DataTypes.STRING(50),
+			allowNull: true,
+		},
+		email: {
+			type: DataTypes.STRING(50),
+			allowNull: true,
+		},
 	},
 	{
 		sequelize,
@@ -207,6 +227,8 @@ DiscordActivity.belongsTo(Identity, { foreignKey: 'identityId' })
 export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes<Quest>> {
 	declare id: CreationOptional<number>
 	declare name: string | null
+	declare description: string | null
+	declare cid: string | null
 	declare repeat: boolean
 	declare source: string
 	declare type: string
@@ -227,6 +249,12 @@ Quest.init(
 		},
 		name: {
 			type: DataTypes.STRING(100),
+		},
+		description: {
+			type: DataTypes.STRING(512),
+		},
+		cid: {
+			type: DataTypes.STRING(50),
 		},
 		repeat: {
 			type: DataTypes.BOOLEAN,
@@ -371,6 +399,8 @@ export class BattlepassParticipant extends Model<
 	InferCreationAttributes<BattlepassParticipant>
 > {
 	declare id: CreationOptional<number>
+	declare premium: boolean
+	declare passChainId: string | null
 	declare identityId: ForeignKey<Identity['id']>
 	declare battlepassId: ForeignKey<Battlepass['id']>
 }
@@ -381,6 +411,14 @@ BattlepassParticipant.init(
 			autoIncrement: true,
 			primaryKey: true,
 		},
+		premium: {
+			type: DataTypes.BOOLEAN,
+			defaultValue: false
+		},
+		passChainId: {
+			type: DataTypes.CHAR(66),  // todo: check type is correct once chain is populated,
+			allowNull: true
+		}
 	},
 	{ sequelize },
 )
@@ -396,9 +434,9 @@ export class BattlepassReward extends Model<
 > {
 	declare id: CreationOptional<number>
 	declare battlepassId: ForeignKey<Battlepass['id']>
-	declare cid: string | null
 	declare name: string | null
 	declare description: string | null
+	declare cid: string | null
 	declare points: number | null
 	declare level: number | null
 	declare total: number
@@ -411,14 +449,14 @@ BattlepassReward.init(
 			autoIncrement: true,
 			primaryKey: true,
 		},
-		cid: {
-			type: DataTypes.STRING(50),
-		},
 		name: {
 			type: DataTypes.STRING(100),
 		},
 		description: {
 			type: DataTypes.STRING(512),
+		},
+		cid: {
+			type: DataTypes.STRING(50),
 		},
 		points: {
 			type: DataTypes.INTEGER.UNSIGNED,

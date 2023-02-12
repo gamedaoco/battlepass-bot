@@ -44,6 +44,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						startDate: calculateBlockDate(knownDate, knownBlock, header.number.toNumber()),
 						orgId: orgId.toString(),
 						name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
+						cid: chainBp ? Buffer.from(chainBp.cid.name, 'hex').toString() : null,
 						active: true,
 						finalized: false,
 					},
@@ -79,6 +80,8 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					defaults: {
 						identityId: identity.id,
 						battlepassId: bp.id,
+						premium: true,
+						passChainId: nftId.toString()
 					},
 				})
 				if (created) {
@@ -101,6 +104,15 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						)
 						await QuestProgress.bulkCreate(newProgress)
 					}
+				} else {
+					participant.premium = true
+					participant.passChainId = nftId.toString()
+					logger.debug(
+						'Updating participant status to premoim for user %s and battlepass %s',
+						identity.address,
+						bp.chainId
+					)
+					await participant.save()
 				}
 			}
 		})

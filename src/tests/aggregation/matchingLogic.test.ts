@@ -213,6 +213,7 @@ describe('Quests matching logic', () => {
 		await BattlepassParticipant.create({
 			battlepassId: bp.id,
 			identityId: identity2.id,
+			premium: false
 		})
 		let quest1 = await Quest.create({
 			repeat: true,

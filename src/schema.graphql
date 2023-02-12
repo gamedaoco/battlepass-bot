@@ -22,6 +22,9 @@ type BattlepassIdentity {
 	discord: String
 	twitter: String
 	address: String
+	name: String
+	email: String
+	cid: String
 	members: [BattlepassMember]
 	progress: [BattlepassQuestProgress]
 }
@@ -30,6 +33,8 @@ type BattlepassQuest {
 	id: Int!
 	battlepassId: Int!
 	name: String
+	description: String
+	cid: String
 	repeat: Boolean!
 	source: Source!
 	type: ActivityType!
@@ -56,6 +61,7 @@ type Battlepass {
 	id: Int!
 	chainId: String!
 	name: String
+	cid: String
 	orgId: String!
 	active: Boolean!
 	finalized: Boolean!
@@ -80,6 +86,8 @@ type BattlepassMember {
 	id: Int
 	identityId: Int!
 	battlepassId: Int!
+	premium: Boolean!
+	passChainId: String
 	progress: [BattlepassQuestProgress]
 	battlepass: Battlepass!
 	identity: BattlepassIdentity!
@@ -89,9 +97,9 @@ type BattlepassMember {
 type BattlepassReward {
 	id: Int!
 	battlepassId: Int!
-	cid: String
 	name: String
 	description: String
+	cid: String
 	level: Int
 	points: Int
 	total: Int!
@@ -131,6 +139,7 @@ input MemberFilter {
 	battlepassId: Int
 	identityId: Int
 	identityUuid: String
+	premium: Boolean
 }
 
 input ProgressFilter {
@@ -187,9 +196,9 @@ type Query {
 }
 
 type Mutation {
-	identity(uuid: String, discord: String, twitter: String, address: String): BattlepassIdentity
+	identity(uuid: String, discord: String, twitter: String, address: String, name: String, email: String, cid: String): BattlepassIdentity
 	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
-	quest(battlepass: String!, name: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
-	reward(battlepass: String!, cid: String, name: String, description: String, points: Int, level: Int, total: Int!): BattlepassReward
+	quest(battlepass: String!, name: String, description: String, cid: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
+	reward(battlepass: String!, name: String, description: String, cid: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 }

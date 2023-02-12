@@ -27,6 +27,9 @@ export async function members(parent: any, args: any, context: any, info: any) {
 		if (where.identityUuid) {
 			params.include[0].where['uuid'] = where.identityUuid
 		}
+		if (where.premium) {
+			filter.premium = where.premium
+		}
 	}
 	let res = await BattlepassParticipant.findAll(params)
 	return res
