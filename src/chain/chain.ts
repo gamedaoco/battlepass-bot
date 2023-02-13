@@ -57,7 +57,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						startDate: calculateBlockDate(knownDate, knownBlock, header.number.toNumber()),
 						orgId: orgId.toString(),
 						name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
-						cid: chainBp ? Buffer.from(chainBp.cid?.name, 'hex').toString() : null,
+						cid: chainBp ? Buffer.from(chainBp.value.cid, 'hex').toString() : null,
 						active: true,
 						finalized: false,
 					},

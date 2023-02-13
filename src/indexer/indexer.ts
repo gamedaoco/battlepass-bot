@@ -27,7 +27,7 @@ function getUsersQuery(battlePassId: string) {
 	return gql`
 	query Users {
 		battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
-			owner {
+			identity {
 				address
 			}
 		}
