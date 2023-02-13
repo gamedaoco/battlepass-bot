@@ -1,17 +1,19 @@
 import { Battlepass, BattlepassReward } from '../../db'
 
-export async function createReward(
-	battlepass: string,
-	cid: string | null,
-	name: string | null,
-	description: string | null,
-	points: number | null,
-	level: number | null,
-	total: number,
-): Promise<object | null> {
+interface CreateRewardInterface {
+	battlepass: string
+	name: string | null
+	description: string | null
+	cid: string | null
+	points: number | null
+	level: number | null
+	total: number
+}
+
+export async function createReward(data: CreateRewardInterface): Promise<BattlepassReward | null> {
 	let bp = await Battlepass.findOne({
 		where: {
-			chainId: battlepass,
+			chainId: data.battlepass,
 		},
 	})
 	if (bp == null) {
@@ -19,13 +21,13 @@ export async function createReward(
 	}
 	let reward = await BattlepassReward.create({
 		battlepassId: bp.id,
-		cid,
-		name,
-		description,
-		points,
-		level,
-		total,
-		available: total,
+		cid: data.cid,
+		name: data.name,
+		description: data.description,
+		points: data.points,
+		level: data.level,
+		total: data.total,
+		available: data.total,
 	})
 	return reward
 }

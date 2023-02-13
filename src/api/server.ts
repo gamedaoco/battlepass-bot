@@ -4,7 +4,6 @@ import cors from 'cors'
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
 import { initDB, sequelize } from '../db'
-import { router } from './endpoints'
 import { auth } from './tokenAuth'
 import { applyApolloServer } from './gql'
 
@@ -19,7 +18,6 @@ if (config.api.secretKey) {
 } else {
 	logger.debug('API not secure')
 }
-app.use('/api', router)
 
 async function main() {
 	validateConfigs('api')

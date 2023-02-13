@@ -101,12 +101,7 @@ const resolvers = {
 					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			let [identity, created] = await saveIdentity(
-				input.value.uuid,
-				input.value.discord,
-				input.value.twitter,
-				input.value.address,
-			)
+			let [identity, created] = await saveIdentity(input.value)
 			return identity
 		},
 		quest: async (parent: any, args: any) => {
@@ -117,19 +112,7 @@ const resolvers = {
 					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			return await saveQuest(
-				input.value.battlepass,
-				input.value.daily,
-				input.value.name,
-				input.value.source,
-				input.value.type,
-				input.value.channelId,
-				input.value.hashtag,
-				input.value.twitterId,
-				input.value.quantity,
-				input.value.points,
-				input.value.maxDaily,
-			)
+			return await saveQuest(input.value)
 		},
 		join: async (parent: any, args: any) => {
 			let input = AddParticipantSchema.validate(args)
@@ -139,7 +122,7 @@ const resolvers = {
 					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			let res = await addBattlepassParticipant(input.value.battlepass, input.value.identityUuid)
+			let res = await addBattlepassParticipant(input.value)
 			return res
 		},
 		reward: async (parent: any, args: any) => {
@@ -150,15 +133,7 @@ const resolvers = {
 					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			return await createReward(
-				input.value.battlepass,
-				input.value.cid,
-				input.value.name,
-				input.value.description,
-				input.value.points,
-				input.value.level,
-				input.value.total,
-			)
+			return await createReward(input.value)
 		},
 		levels: async (parent: any, args: any) => {
 			let input = CreateLevelsSchema.validate(args)
@@ -168,7 +143,7 @@ const resolvers = {
 					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
 				})
 			}
-			return await createLevels(input.value.battlepass, input.value.levels)
+			return await createLevels(input.value)
 		},
 	},
 }

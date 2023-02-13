@@ -12,6 +12,7 @@ function getBattlepassesQuery(fromBlock: number) {
 		battlepass(where: {_or: {created_at_block: {_gt: ${fromBlock}}, updated_at_block: {_gt: ${fromBlock}}}}) {
 			id
 			name
+			cid
 			active_from_block
 			active_to_block
 			organization {
@@ -26,7 +27,7 @@ function getUsersQuery(battlePassId: string) {
 	return gql`
 	query Users {
 		battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
-			owner {
+			identity {
 				address
 			}
 		}
@@ -83,6 +84,7 @@ async function getBattlepasses(
 	resp.battlepass.forEach((bp: any) => {
 		let item = {
 			chainId: bp.id,
+			cid: bp.cid,
 			name: bp.name,
 			orgId: bp.organization.id,
 			startDate: calculateBlockDate(knownDate, knownBlock, bp.active_from_block),

@@ -32,10 +32,23 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 		const events: any = await at.query.system.events()
 		await events.forEach(async (record: any) => {
 			let event = record.event
-			if (api.events.battlepass.BattlepassActivated.is(event)) {
+			if (api.events.battlepass.BattlepassCreated.is(event)) {
+				let [orgId, bpId, season] = event.data
+				const chainBp: any = await api.query.battlepass.battlepasses(bpId.toString())
+				await Battlepass.create({
+					chainId: bpId.toString(),
+					startDate: null,
+					orgId: orgId.toString(),
+					name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
+					cid: chainBp ? Buffer.from(chainBp.value.cid, 'hex').toString() : null,
+					active: false,
+					finalized: false,
+				})
+				logger.debug('Found new battlepass %s', bpId.toString())
+			} else if (api.events.battlepass.BattlepassActivated.is(event)) {
 				let [byWho, orgId, bpId] = event.data
 				const chainBp: any = await api.query.battlepass.battlepasses(bpId.toString())
-				await Battlepass.findOrCreate({
+				let [bp, created] = await Battlepass.findOrCreate({
 					where: {
 						chainId: bpId.toString(),
 					},
@@ -44,11 +57,18 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						startDate: calculateBlockDate(knownDate, knownBlock, header.number.toNumber()),
 						orgId: orgId.toString(),
 						name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
+						cid: chainBp ? Buffer.from(chainBp.value.cid, 'hex').toString() : null,
 						active: true,
 						finalized: false,
 					},
 				})
-				logger.debug('Found new active battlepass %s', bpId.toString())
+				if (!created) {
+					bp.startDate = calculateBlockDate(knownDate, knownBlock, header.number.toNumber())
+					bp.active = true
+					bp.finalized = false
+					await bp.save()
+				}
+				logger.debug('Activating battlepass %s', bpId.toString())
 			} else if (api.events.battlepass.BattlepassEnded.is(event)) {
 				let [byWho, orgId, bpId] = event.data
 				let bp = await Battlepass.findOne({
@@ -79,6 +99,8 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					defaults: {
 						identityId: identity.id,
 						battlepassId: bp.id,
+						premium: true,
+						passChainId: nftId.toString()
 					},
 				})
 				if (created) {
@@ -101,6 +123,15 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						)
 						await QuestProgress.bulkCreate(newProgress)
 					}
+				} else {
+					participant.premium = true
+					participant.passChainId = nftId.toString()
+					logger.debug(
+						'Updating participant status to premoim for user %s and battlepass %s',
+						identity.address,
+						bp.chainId
+					)
+					await participant.save()
 				}
 			}
 		})

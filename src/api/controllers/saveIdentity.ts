@@ -3,24 +3,29 @@ import { Op } from 'sequelize'
 import { Identity, DiscordActivity, TwitterActivity } from '../../db'
 import { logger } from '../../logger'
 
-export async function saveIdentity(
-	uuid: string | null,
-	discord: string | null,
-	twitter: string | null,
-	address: string | null,
-) {
+interface SaveIdentityInterface {
+	uuid: string | null
+	discord: string | null
+	twitter: string | null
+	address: string | null
+	name: string | null
+	email: string | null
+	cid: string | null
+}
+
+export async function saveIdentity(data: SaveIdentityInterface) {
 	let where = []
-	if (uuid) {
-		where.push({ uuid })
+	if (data.uuid) {
+		where.push({ uuid: data.uuid })
 	}
-	if (discord) {
-		where.push({ discord })
+	if (data.discord) {
+		where.push({ discord: data.discord })
 	} else {
-		if (twitter) {
-			where.push({ twitter })
+		if (data.twitter) {
+			where.push({ twitter: data.twitter })
 		}
-		if (address) {
-			where.push({ address })
+		if (data.address) {
+			where.push({ address: data.address })
 		}
 	}
 	let identity: any = await Identity.findOne({ where: { [Op.or]: where } })
@@ -28,17 +33,27 @@ export async function saveIdentity(
 	let createDiscordActivity = true
 	let createTwitterActivity = true
 	if (created) {
-		let fields: any = { discord, twitter, address }
-		if (uuid) {
-			fields['uuid'] = uuid
+		let fields: any = {
+			discord: data.discord,
+			twitter: data.twitter,
+			address: data.address,
+			name: data.name,
+			email: data.email,
+			cid: data.cid,
+		}
+		if (data.uuid) {
+			fields['uuid'] = data.uuid
 		}
 		identity = await Identity.create(fields)
 	} else {
-		identity.discord = discord
-		identity.twitter = twitter
-		identity.address = address
+		identity.discord = data.discord
+		identity.twitter = data.twitter
+		identity.address = data.address
+		identity.name = data.name
+		identity.email = data.email
+		identity.cid = data.cid
 		await identity.save()
-		if (discord) {
+		if (data.discord) {
 			let discordActivity = await DiscordActivity.findOne({
 				attributes: ['id'],
 				where: {
@@ -50,11 +65,11 @@ export async function saveIdentity(
 				createDiscordActivity = false
 			}
 		}
-		if (twitter) {
+		if (data.twitter) {
 			let twitterActivity = await TwitterActivity.findOne({
 				attributes: ['id'],
 				where: {
-					authorId: twitter,
+					authorId: data.twitter,
 					activityType: 'connect',
 				},
 			})
@@ -63,7 +78,7 @@ export async function saveIdentity(
 			}
 		}
 	}
-	if (discord && createDiscordActivity) {
+	if (data.discord && createDiscordActivity) {
 		await DiscordActivity.create({
 			identityId: identity.id,
 			activityType: 'connect',
@@ -71,14 +86,14 @@ export async function saveIdentity(
 			channelId: null,
 			activityId: '',
 		})
-		logger.debug('Created discord connect activity for user %s', discord)
+		logger.debug('Created discord connect activity for user %s', data.discord)
 	}
-	if (twitter && createTwitterActivity) {
+	if (data.twitter && createTwitterActivity) {
 		await TwitterActivity.create({
 			activityType: 'connect',
-			authorId: twitter,
+			authorId: data.twitter,
 		})
-		logger.debug('Created twitter connect activity for user %s', twitter)
+		logger.debug('Created twitter connect activity for user %s', data.twitter)
 	}
 	logger.debug('Stored identity')
 	return [identity, created]

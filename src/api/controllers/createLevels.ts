@@ -1,21 +1,26 @@
 import { Battlepass, BattlepassLevel } from '../../db'
 
-interface Level {
+interface LevelInterface {
 	name: string | null
 	points: number
 	level: number
 }
 
-export async function createLevels(battlepass: string, levels: Level[]): Promise<object | null> {
+interface CreateLevelsInterface {
+	battlepass: string
+	levels: LevelInterface[]
+}
+
+export async function createLevels(data: CreateLevelsInterface): Promise<BattlepassLevel[] | null> {
 	let bp = await Battlepass.findOne({
 		where: {
-			chainId: battlepass,
+			chainId: data.battlepass,
 		},
 	})
 	if (bp == null) {
 		return null
 	}
-	let sortedLevels = levels.sort((l1, l2) => {
+	let sortedLevels = data.levels.sort((l1, l2) => {
 		return l1.level - l2.level
 	})
 	let records = []

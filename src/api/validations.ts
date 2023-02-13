@@ -5,11 +5,16 @@ export const CreateIdentitySchema = Joi.object({
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
 	address: Joi.string().alphanum().length(48).allow(null),
+	name: Joi.string().alphanum().min(3).max(50).allow(null),
+	email: Joi.string().max(50).email().allow(null),
+	cid: Joi.string().min(3).max(50).allow(null),
 }).or('discord', 'twitter', 'address')
 
 export const CreateQuestSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	name: Joi.string().min(5).max(100).allow(null),
+	description: Joi.string().min(5).max(512).allow(null),
+	cid: Joi.string().min(5).max(100).allow(null),
 	daily: Joi.boolean().default(false),
 	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
 	type: Joi.string()
@@ -47,12 +52,12 @@ export const CreateQuestSchema = Joi.object({
 
 export const CreateRewardSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
-	cid: Joi.string().min(5).max(50).allow(null),
 	name: Joi.string().min(5).max(100).allow(null),
 	description: Joi.string().min(5).max(512).allow(null),
+	cid: Joi.string().min(5).max(50).allow(null),
 	points: Joi.number().integer().allow(null),
 	level: Joi.number().integer().allow(null),
-	total: Joi.number().integer().required(),
+	total: Joi.number().integer().min(1).max(1000000).required(),
 }).or('level', 'points')
 
 let Level = Joi.object({
