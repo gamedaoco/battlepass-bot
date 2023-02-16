@@ -14,6 +14,9 @@ export async function battlepasses(parent: any, args: any, context: any, info: a
 		if (where.chainId) {
 			filter.chainId = where.chainId
 		}
+		if (where.season) {
+			filter.season = where.season
+		}
 		if (where.orgChainId) {
 			filter.orgId = where.orgChainId
 		}

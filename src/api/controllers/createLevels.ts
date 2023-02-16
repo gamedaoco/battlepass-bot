@@ -28,11 +28,9 @@ export async function createLevels(data: CreateLevelsInterface): Promise<Battlep
 	for (let level of sortedLevels) {
 		totalPoints += level.points
 		records.push({
-			name: level.name,
-			points: level.points,
-			level: level.level,
-			totalPoints: totalPoints,
 			battlepassId: bp.id,
+			totalPoints: totalPoints,
+			...level
 		})
 	}
 	return await BattlepassLevel.bulkCreate(records)

@@ -88,6 +88,7 @@ export const AddParticipantSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 })
 
-export const QuestsSchema = Joi.object({
+export const SetBattlepassFreePasses = Joi.object({
 	battlepass: Joi.string().required().length(66),
+	freePasses: Joi.number().integer().min(0).max(10000)
 })

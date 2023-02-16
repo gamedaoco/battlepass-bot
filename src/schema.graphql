@@ -63,10 +63,13 @@ type Battlepass {
 	name: String
 	cid: String
 	orgId: String!
+	season: Int
 	active: Boolean!
 	finalized: Boolean!
 	startDate: String
 	endDate: String
+	freePasses: Int!
+	passesClaimed: Int!
 	quests: [BattlepassQuest]
 	members: [BattlepassMember]
 	rewards: [BattlepassReward]
@@ -120,6 +123,7 @@ type BattlepassLevel {
 input BattlepassesFilter {
 	id: Int
 	chainId: String
+	season: Int
 	orgChainId: String
 	active: Boolean
 	finalized: Boolean
@@ -201,4 +205,5 @@ type Mutation {
 	quest(battlepass: String!, name: String, description: String, cid: String, daily: Boolean!, source: Source!, type: ActivityType!, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
 	reward(battlepass: String!, name: String, description: String, cid: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
+	setFreePasses(battlepass: String!, freePasses: Int!): Battlepass
 }

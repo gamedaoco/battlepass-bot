@@ -41,6 +41,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					orgId: orgId.toString(),
 					name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
 					cid: chainBp ? Buffer.from(chainBp.value.cid, 'hex').toString() : null,
+					season: parseInt(season.toString()),
 					active: false,
 					finalized: false,
 				})
@@ -91,6 +92,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					logger.error('Found chain event about claimed unknown battlepass')
 					return
 				}
+				await Battlepass.increment({ passesClaimed: 1 }, { where: { id: bp.id } })
 				let [identity, _] = await Identity.findOrCreate({
 					where: { address: forWho.toString() },
 				})
@@ -398,7 +400,7 @@ async function processBattlepassTwitterQuests(
 		if (q.twitterId) {
 			twitterAuthors.add(q.twitterId)
 		}
-		let key = `${q.type}-${q.twitterId}`
+		let key = `${q.type}-${q.twitterId || ''}`
 		let localQuests = questsMap.get(key)
 		if (!localQuests) {
 			localQuests = new Array<Quest>()
@@ -411,14 +413,21 @@ async function processBattlepassTwitterQuests(
 	}
 	let activities = await TwitterActivity.findAll({
 		where: {
-			createdAt: {
-				[Op.between]: [battlepass.startDate || new Date(), battlepass.endDate || new Date()],
-			},
-			activityType: {
-				[Op.ne]: 'tweet',
-			},
-			authorId: Array.from(twitterUsersMap.keys()),
-			objectAuthor: Array.from(twitterAuthors.values()),
+			[Op.or]: [
+				{
+					activityType: 'connect'
+				},
+				{
+					createdAt: {
+						[Op.between]: [battlepass.startDate || new Date(), battlepass.endDate || new Date()],
+					},
+					activityType: {
+						[Op.ne]: 'tweet',
+					},
+					authorId: Array.from(twitterUsersMap.keys()),
+					objectAuthor: Array.from(twitterAuthors.values()),
+				}
+			]
 		},
 		group: ['authorId', 'objectId', 'objectAuthor', 'activityType'],
 		attributes: [
@@ -435,7 +444,7 @@ async function processBattlepassTwitterQuests(
 		let objectAuthor = summary.objectAuthor
 		let activityCnt: any = summary.get('activityCnt')
 		let authorId = summary.authorId || ''
-		let activityQuests = questsMap.get(`${activityType}-${objectAuthor}`)
+		let activityQuests = questsMap.get(`${activityType}-${objectAuthor || ''}`)
 		if (!activityQuests) {
 			continue
 		}
@@ -495,7 +504,7 @@ export async function processBattlepassQuests(battlepass: Battlepass, identityId
 	let regularDiscordQuests = new Array<Quest>()
 	let regularTwitterQuests = new Array<Quest>()
 	for (let quest of quests) {
-		if (quest.type == 'connect' || quest.type == 'join') {
+		if (quest.source == 'discord' && (quest.type == 'connect' || quest.type == 'join')) {
 			basicQuests.push(quest)
 		} else if (quest.source == 'discord') {
 			regularDiscordQuests.push(quest)

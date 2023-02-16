@@ -21,13 +21,8 @@ export async function createReward(data: CreateRewardInterface): Promise<Battlep
 	}
 	let reward = await BattlepassReward.create({
 		battlepassId: bp.id,
-		cid: data.cid,
-		name: data.name,
-		description: data.description,
-		points: data.points,
-		level: data.level,
-		total: data.total,
 		available: data.total,
+		...data
 	})
 	return reward
 }

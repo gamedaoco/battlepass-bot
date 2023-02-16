@@ -22,10 +22,13 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare orgId: string
 	declare name: string | null
 	declare cid: string | null
+	declare season: number | null
 	declare startDate: Date | null
 	declare endDate: Date | null
 	declare active: boolean
 	declare finalized: boolean
+	declare freePasses: CreationOptional<number>
+	declare passesClaimed: CreationOptional<number>
 }
 Battlepass.init(
 	{
@@ -50,6 +53,10 @@ Battlepass.init(
 			type: DataTypes.STRING(50),
 			allowNull: true,
 		},
+		season: {
+			type: DataTypes.INTEGER,
+			allowNull: true
+		},
 		startDate: {
 			type: DataTypes.DATE,
 			allowNull: true,
@@ -65,6 +72,16 @@ Battlepass.init(
 		finalized: {
 			type: DataTypes.BOOLEAN,
 			allowNull: false,
+		},
+		freePasses: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+		},
+		passesClaimed: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
 		},
 	},
 	{
@@ -542,6 +559,7 @@ export async function initDB(): Promise<boolean> {
 		await sequelize.authenticate()
 		return true
 	} catch (error) {
+		logger.error(error)
 		return false
 	}
 }
