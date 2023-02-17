@@ -37,6 +37,20 @@ services:
       - db
       - api
 
+  twitter:
+    image: battlepass-bot:local
+    command:
+      - npm
+      - run-script
+      - twitter
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      TWITTER_BEARER_TOKEN: 
+    depends_on:
+      - db
+      - api
+
   chain:
     image: battlepass-bot:local
     command:
