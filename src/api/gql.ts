@@ -146,7 +146,7 @@ const resolvers = {
 			}
 			return await createLevels(input.value)
 		},
-		freePasses: async (parent: any, args: any) => {
+		setFreePasses: async (parent: any, args: any) => {
 			let input = SetBattlepassFreePasses.validate(args)
 			if (input.error) {
 				logger.debug('Invalid freePasses request %s', input.error)

@@ -90,5 +90,5 @@ export const AddParticipantSchema = Joi.object({
 
 export const SetBattlepassFreePasses = Joi.object({
 	battlepass: Joi.string().required().length(66),
-	freePasses: Joi.number().integer().min(0).max(10000)
+	freePasses: Joi.number().integer().min(0).max(10000).required()
 })
