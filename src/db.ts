@@ -250,6 +250,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 	declare source: string
 	declare type: string
 	declare channelId: string | null
+	declare guildId: string | null
 	declare hashtag: string | null
 	declare twitterId: string | null
 	declare quantity: number
@@ -293,6 +294,10 @@ Quest.init(
 				'comment',
 				'follow', // twitter
 			],
+		},
+		guildId: {
+			type: DataTypes.STRING(50),
+			allowNull: true,
 		},
 		channelId: {
 			type: DataTypes.STRING(50),

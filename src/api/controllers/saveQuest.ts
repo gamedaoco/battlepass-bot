@@ -8,6 +8,7 @@ interface CreateQuestInterface {
 	cid: string | null
 	source: string
 	type: string
+	guildId: string | null
 	channelId: string | null
 	hashtag: string | null
 	twitterId: string | null
@@ -33,6 +34,7 @@ export async function saveQuest(data: CreateQuestInterface): Promise<Quest | nul
 		cid: data.cid,
 		source: data.source,
 		type: data.type,
+		guildId: data.guildId,
 		channelId: data.channelId,
 		hashtag: data.hashtag,
 		twitterId: data.twitterId,

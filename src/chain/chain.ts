@@ -266,6 +266,9 @@ async function getCompletedQuestsForUser(
 		if (activity.get('identityId') != identityId) {
 			continue
 		}
+		if (quest.guildId && activity.get('guildId') != quest.guildId) {
+			continue
+		}
 		if (quest.channelId && activity.get('channelId') != quest.channelId) {
 			continue
 		}
@@ -317,6 +320,9 @@ async function processBasicQuests(
 		if (quest.source != 'discord') continue
 		for (let activity of basicAcitivity) {
 			if (activity.activityType != quest.type) {
+				continue
+			}
+			if (quest.guildId && quest.guildId != activity.guildId) {
 				continue
 			}
 			let key = `${quest.id}-${activity.identityId}`
