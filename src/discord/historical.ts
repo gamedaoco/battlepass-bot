@@ -37,7 +37,7 @@ export async function syncGuildMembers(guild: Guild) {
 	})
 	let existingActivities = new Map<string, number>()
 	let newActivities = new Map<string, Date>()
-	q.map((i: any) => existingActivities.set(i.identity.discord, i.identity.id))
+	q.map((i: any) => existingActivities.set(i.Identity.discord, i.identityId))
 	await guild.members.fetch()
 	for (let [_, member] of guild.members.cache) {
 		let userId = member.user.id
