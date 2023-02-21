@@ -3,7 +3,8 @@
 ## Components
 Service consists of few components, which are required for it to properly operate.
 * Discord tracking process - monitors and stores the activity in the Discord guilds;
-* Chain tracking process - checks battlepass status changes, on-chain activities;
+* Twitter tracking process - monitors and stores the activity in the Twitter;
+* Chain integration process - checks battlepass status changes, on-chain activities;
 * Aggregation process - collects all gathered activities, analyzes them and assigns points to the users for completed quests;
 * API - provides access to manage battlepass quests and receive information about users progress, like completed quests and earned points.
 
@@ -14,6 +15,7 @@ Before running make sure all required configs are provided.
 ### Directly on server
 Make sure to compile the project before executing any of the commands (or tests) via `npx tsc`.
 * `npm run-script discord` - starts service, which keeps track of discord activity;
+* `npm run-script twitter` - starts service, which keeps track of twitter activity;
 * `npm run-script chain` - starts service, which keeps track of on-chain activity and battlepass status changes;
 * `npm run-script api` - starts API server;
 * `npm run-script service` - starts aggregations service, which keeps track of completed quests;
@@ -23,7 +25,7 @@ Make sure to compile the project before executing any of the commands (or tests)
    ```bash
    docker build . -t battlepass-bot:local
    ```
-2. Update docker-compose with env variables `DISCORD_BOT_KEY`, `GRAPH_URL`, `CHAIN_RPC_URL`
+2. Update docker-compose with env variables `DISCORD_BOT_KEY`, `TWITTER_BEARER_TOKEN`, `GRAPH_URL`, `CHAIN_RPC_URL`
 3. Run compose services
    ```bash
    docker-compose up
@@ -40,6 +42,8 @@ There are few categories of configs, which are applied to one/multiple processes
 #### Discord
 * `*DISCORD_BOT_KEY` - bot key to connect to discord guild and track progress. Bot should be added to guild before that.
 * `DISCORD_FETCH_MESSAGES_SINCE` - specify time (in days), since which discord messages should be synced. All messages, which are older then this value, will be skipped. Default value is `2`.
+#### Twitter
+* `*TWITTER_BEARER_TOKEN` - bearer token of the active application to access Twitter API.
 #### Chain
 * `*CHAIN_RPC_URL` - chain node URL. It will be used to track chain events, such as battlepass status updates or user activities.
 * `*GRAPH_URL` - graph URL. It will be used to fetch initial battlepass objects.
@@ -57,67 +61,45 @@ To run tests, execute.
 npm test
 ```
 
-## API endpoints
+## API service
+API is provided as GraphQL service with number of available query and mutation methods.  
+Queries allow to fetch data from the service.  
+Mutations allow to interact with the application and change its state.
+
+### Available mutations
 
 #### Save identity
 Store identity, which is associated with discord id, twitter id and chain address.  
 All values are optional but at least one should be specified.  
 It is possible to update the identity by providing same field with additional ones.  
 For example, if identity was saved only with discord earlier, it can be updated by providing same discord and additional fields.  
-Endpoint: `/api/identity`.  
-Method: `POST`.  
-Format: `json`.  
-Request data:
+Input parameters:
 * `discord` - user discord ID (not nickname/username, digits format);
-* `twitter` - user twitter ID;
-* `address` - user on-chain wallet address.  
+* `twitter` - user twitter ID (not nickname/username, digits format);
+* `address` - user on-chain wallet address;
+* `email` - optional user email;
+* `name` - optional user display name;
+* `cid` - optional content id for IPFS object, associated with the account.
 
 Request example:
-```json
-{
-	"discord": "111111111111111111"
-}
-```
-
-Response example:
-```json
-{
-  "success": true,
-  "identity": {
-    "id": 1,
-    "discord": "111111111111111111",
-    "updatedAt": "2023-01-04T14:19:40.343Z",
-    "createdAt": "2023-01-04T14:19:40.343Z"
-  }
-}
-```
-
-#### Save quest
-Save new quest, which may be used in battleground to earn points and win rewards.  
-Endpoint: `/api/quest`.  
-Method: `POST`.  
-Format: `json`.  
-Request data:
-* `battlepass` - battlepass id (hash), as stored on the chain;
-* `daily` - boolean flag, indicating if quest is available for daily completion (`true`) or it's a one-time action (`false`).
-* `source` - which source quest applies to: `discord`, `twitter` or `gamedao`;
-* `type` - type of the action to complete quest: `post` - post a message, `reaction` - leave a reaction;
-* `channelId` - for quests in discord this value specifies specific channel it applies to. If not provided, activity in all channels counts;
-* `quantity` - how many times activity should be perfromed to complete quest (for example, send `100` messages to complete);
-* `points` - specify amount of points, which will be received by completing the quest;
-* `maxDaily` - if quest is daily, specify amount of times it can be completed per day.
-
-Request example:
-```json
-{
-  "success": true,
-  "quest": {
-    "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
-    "daily": false,
-    "source": "discord",
-    "type": "post",
-    "quantity": 100,
-    "points": 5000
+```gql
+mutation Mutation {
+  identity(
+    discord: "819274758560135164",
+    twitter: "2764942166287669366",
+    address: null,
+    name: "John",
+    email: "john@zero.io",
+    cid: null
+  ) {
+    id
+    uuid
+    discord
+    twitter
+    address
+    name
+    email
+    cid
   }
 }
 ```
@@ -125,171 +107,335 @@ Request example:
 Response example:
 ```json
 {
-  "success": true,
-  "quest": {
-    "id": 1,
-    "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
-    "daily": false,
-    "source": "discord",
-    "type": "post",
-    "quantity": 100,
-    "points": 5000,
-    "updatedAt": "2023-01-04T14:50:03.168Z",
-    "createdAt": "2023-01-04T14:50:03.168Z"
+  "data": {
+    "identity": {
+      "id": 128,
+      "uuid": "d9c931e6-2ea0-4934-ac64-3e21e7f72474",
+      "discord": "819274758560135164",
+      "twitter": "2764942166287669366",
+      "address": null,
+      "name": "John",
+      "email": "john@zero.io",
+      "cid": null
+    }
   }
 }
 ```
 
-#### Add battlepass participant
+#### Join user to the battlepass
 Allows to add users to existing battlepass if they don't have chain address specified.  
-In this case, they need to provide either discord or twitter handle.  
-Endpoint: `/api/participant`.  
-Method: `POST`.  
-Format: `json`.  
-Request data: 
+Identity should be created first.  
+Input parameters: 
 * `battlepass` - battlepass id (hash), as stored on the chain;
-* `discord` - user discord handle, optional;
-* `twitter` - user twitter handle, optional.
+* `identityUuid` - UUID value of the identity, which should be added.
 
 Request example:
-```json
-{
-  "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
-  "discord": "333333333333",
-  "twitter": "444444444444"
+```gql
+mutation Mutation {
+  join(
+    battlepass: "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+    identityUuid: "d9c931e6-2ea0-4934-ac64-3e21e7f72474"
+  ) {
+    id
+    uuid
+    discord
+    twitter
+    address
+    name
+    email
+    cid
+  }
 }
 ```
 
 Response example:
 ```json
  {
-    "success": true,
-    "identity": {
-      "id": 1,
-      "discord": "333333333333",
-      "twitter": "444444444444",
-      "updatedAt": "2023-01-01T00:05:10.000Z",
-      "createdAt": "2023-01-01T00:05:10.000Z"
+  "data": {
+    "join": {
+      "id": 128,
+      "uuid": "d9c931e6-2ea0-4934-ac64-3e21e7f72474",
+      "discord": "481201928348114564",
+      "twitter": "2764942166287669366",
+      "address": null,
+      "name": "John",
+      "email": "john@zero.io",
+      "cid": null
     }
-}
-```
-
-#### Get quests
-Request list of all quests for given battlepass.  
-Endpoint: `/api/quests`.  
-Method: `GET`.  
-Params:
-* `battlepass` - chain id (hash) of the battlepass, required.
-
-Request example: 
-```
-/api/quest?battlepass=111111111111111111111111111111111111111111111111111111111111111111
-```
-
-Response example:
-```json
-{
-  "success":true,
-  "quest":{
-    "battlepass": "111111111111111111111111111111111111111111111111111111111111111111",
-    "daily":true,
-    "source":"discord",
-    "type":"post",
-    "quantity":100,
-    "points":5000,
-    "maxDaily":10
   }
 }
 ```
 
-#### Get completed quests
-Request list of all completed quests for given battlepass.  
-Every record contains identity fields `discord` and `address`.  
-Endpoint: `/api/completed-quest`.  
-Method: `GET`.  
-Params: 
-* `battlepass` - chain id (hash) of the battlepass, required;
-* `since` - filter completed quests by time, returning only the ones which updated after this value (date in ISO format);
-* `address` - filter results by specific chain address.
+#### Create quest
+Save new quest, which may be used in battleground to earn points and win rewards.  
+Input parameters:
+* `battlepass` - battlepass id (hash), as stored on the chain;
+* `name` - quest name or title;
+* `description` - additional quest description;
+* `cid` - content id on IPFS, associated with the quest;
+* `source` - which source quest applies to: `discord`, `twitter` or `gamedao`;
+* `quantity` - how many times activity should be perfromed to complete quest (for example, send `100` messages to complete);
+* `points` - specify amount of points, which will be received by completing the quest;
+* `daily` - boolean flag, indicating if quest is available for daily completion (`true`) or it's a one-time action (`false`);
+* `maxDaily` - if quest is daily, specify amount of times it can be completed per day;
+* `type` - which quest type is it, or which action should be performed to complete the quest.
+  There are few types, which can be used, depending on the `source` value.  
+  If source is `discord`, next types are available:
+  - `connect` - connect your discord account to the battlepass identity;
+  - `join` - join discord guild with your account;
+  - `post` - post a message in discord guild or specific channel;
+  For `twitter`:
+  - `connect` - user should connect his twitter account;
+  - `tweet` - user should post a tweet with specific details;
+  - `retweet` - user should retweet tweet of the specific user;
+  - `follow` - user to follow specific twitter account;
+  - `comment` - user to comment tweet of specific twitter account;
+  - `like`  - user to like tweets of specific twitter account;
+Discord quests specific fields:
+* `guildId` - specific guild, activity in which should be analyzed. Parameter applied for `join` and `post` quest types;
+* `channelId` - specific channel it applies to. If not provided, activity in all channels counts;
+Twitter quests specific fields:
+* `twitterId` - twitter account, which users need to follow/like/retweet/comment to complete the quest;
+* `hashtag` - for tweet quests, specific hashtag to be present in a tweet message.
 
-Request example: 
-```
-/api/completed-quest?battlepass=111111111111111111111111111111111111111111111111111111111111111111
+Request example:
+```gql
+mutation Mutation {
+  quest(
+    battlepass: "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+    daily: false,
+    source: "discord",
+    type: "connect",
+    quantity: 1,
+    points: 1000,
+    name: "Connect your Discord account",
+    description: null,
+    cid: null
+  ) {
+    id
+    battlepassId
+    name
+    description
+    cid
+    repeat
+    source
+    type
+    guildId
+    channelId
+    hashtag
+    twitterId
+    quantity
+    points
+    maxDaily
+  }
+}
 ```
 
 Response example:
 ```json
 {
-  "success": true,
-  "quests": [
-    {
-      "questId": 1,
-      "discord": "111111111111111",
-      "address": "111111111111111111111111111111111111111111111111",
-      "count": 1,
-      "points": 1000
-    },
-    {
-      "questId": 1,
-      "discord": "222222222222222",
-      "address": "222222222222222222222222222222222222222222222222",
-      "count": 1,
-      "points": 1000
-    },
-    {
-      "questId": 2,
-      "discord": "111111111111111",
-      "address": "111111111111111111111111111111111111111111111111",
-      "count": 3,
-      "points": 1500
-    },
-    {
-      "questId": 2,
-      "discord": "222222222222222",
-      "address": "222222222222222222222222222222222222222222222222",
-      "count": 1,
-      "points": 500
+  "data": {
+    "quest": {
+        "id": 1,
+        "battlepassId": 1,
+        "name": "Connect your Discord account",
+        "description": null,
+        "cid": null,
+        "repeat": false,
+        "source": "discord",
+        "type": "connect",
+        "guildId": null,
+        "channelId": null,
+        "hashtag": null,
+        "twitterId": null,
+        "quantity": 1,
+        "points": 1000,
+        "maxDaily": null
     }
-  ]
+  }
 }
 ```
 
+#### Create levels
+Create levels in the scope of specific battlepass.  
+Input parameters:  
+* `battlepass` - hash of the battlepass to add levels to;
+* `levels` - list of levels which are to be created.  
+  Each `Level` object accepts next parameters:
+  * `name` - level name;
+  * `level` - numeric level value;
+  * `points` - number of points, which user needs to earn in order to achieve this level.
 
-#### Get earned points
-Request earned points for given battlepass.  
-Every record contains identity fields `discord` and `address`.  
-Endpoint: `/api/points`.  
-Method: `GET`.  
-Params:
-* `battlepass` - chain id (hash) of the battlepass, required;
-* `since` - filter completed quests by time, returning only the ones which updated after this value (date in ISO format);
-* `address` - filter results by specific chain address.
-
-Request example: 
+Request example:
+```gql
+mutation Mutation($battlepass: String!, $levels: [Level]!) {
+  levels(battlepass: $battlepass, levels: $levels) {
+    id
+    battlepassId
+    name
+    points
+    totalPoints
+    level
+  }
+}
 ```
-/api/points?battlepass=111111111111111111111111111111111111111111111111111111111111111111&since=2023-01-01T00:03:10Z
+
+Request variables:
+```json
+{
+  "battlepass": "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+  "levels": [
+    {"name": "beginner", "points": 100, "level": 1},
+    {"name": "amateur", "points": 500, "level": 2},
+    {"name": "regular", "points": 2500, "level": 3},
+    {"name": "advanced", "points": 10000, "level": 4}
+  ]
+}
 ```
 
 Response example:
 ```json
 {
-  "success": true,
-  "points": [
-    {
-      "discord": "111111111111111",
-      "address": "111111111111111111111111111111111111111111111111",
-      "quests": 4,
-      "points": 2500
-    },
-    {
-      "discord": "222222222222222",
-      "address": "222222222222222222222222222222222222222222222222",
-      "quests": 2,
-      "points": 1500
-    }
-  ]
+  "data": {
+    "levels": [
+      {
+        "id": 1,
+        "battlepassId": 1,
+        "name": "beginner",
+        "points": 100,
+        "totalPoints": 100,
+        "level": 1
+      },
+      {
+        "id": 2,
+        "battlepassId": 1,
+        "name": "amateur",
+        "points": 500,
+        "totalPoints": 600,
+        "level": 2
+      },
+      {
+        "id": 3,
+        "battlepassId": 1,
+        "name": "regular",
+        "points": 2500,
+        "totalPoints": 3100,
+        "level": 3
+      },
+      {
+        "id": 4,
+        "battlepassId": 1,
+        "name": "advanced",
+        "points": 10000,
+        "totalPoints": 13100,
+        "level": 4
+      }
+    ]
+  }
 }
 ```
+
+#### Create reward
+Create a reward to the battlepass, which then can be claimed by participants.  
+Input parameters:
+* `battlepass` - battlepass hash to attach reward to;
+* `name` - reward name;
+* `description` - additional description for the reward;
+* `cid` - content id to attach IPFS object to the reward;
+* `total` - total number of reward items, available to claim by users;
+* `points` - number of points required to be able to claim a reward;
+* `level` - level, required to be able to claim a reward. One of `level` or `points` should be specified to make reward valid.
+
+Request example:
+```gql
+mutation Reward {
+  reward(
+    battlepass: "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+    name: "Rare NFT graphics",
+    description: "Reach 10 level and win free NFT image",
+    cid: null,
+    total: 100,
+    points: null,
+    level: 10
+  ) {
+    id
+    battlepassId
+    name
+    description
+    cid
+    level
+    points
+    total
+    available
+  }
+}
+```
+
+Response example:
+```json
+{
+  "data": {
+    "reward": {
+      "id": 1,
+      "battlepassId": 1,
+      "name": "Rare NFT graphics",
+      "description": "Reach 10 level and win free NFT image",
+      "cid": null,
+      "level": 10,
+      "points": null,
+      "total": 100,
+      "available": 100
+    }
+  }
+}
+```
+
+#### Set free passes amount
+Allows to set number of free claimable battlepass access items for the battlepass.  
+Input parameters:
+* `battlepass` - battlepass hash to set free passes to;
+* `freePasses` - number of claimable free passes.
+
+Request example:
+```gql
+mutation FreePasses {
+  setFreePasses(
+    battlepass: "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+    freePasses: 100
+  ) {
+    id
+    chainId
+    name
+    cid
+    orgId
+    active
+    finalized
+    startDate
+    endDate
+  }
+```
+
+Response example: 
+```json
+{
+  "data": {
+    "setFreePasses": {
+      "id": 1,
+      "chainId": "0x612bbe0650317b75891c4e7e8316f97d3bd246220ae906a169cd22b124127c09",
+      "name": "",
+      "cid": "",
+      "orgId": "0x8699184524aed7d6f73e16a3510acaa58806130cc56fbadc50ee7af7893f6b74",
+      "active": true,
+      "finalized": false,
+      "startDate": "2023-02-13T13:31:06.011Z",
+      "freePasses": 100,
+      "passesClaimed": 0,
+      "endDate": null
+    }
+  }
+}
+```
+
 
 ### Generating API token
 Once API secret key is provided (via `API_SECRET_KEY` config), you will need to generate JWT token, which can be used in order to access the API.

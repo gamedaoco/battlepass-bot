@@ -40,6 +40,8 @@ async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
 		let req = client.tweets.usersIdTweets(twitterUserId, {
 			start_time: since.toISOString(),
 			end_time: before.toISOString(),
+			exclude: ['retweets', 'replies'],
+			max_results: 100
 		})
 		for await (let page of req) {
 			if (page.data) {
@@ -93,15 +95,15 @@ async function iteration(again: boolean) {
 		return
 	}
 	let usersMap = await getTwitterUserIdsByNames(Array.from(twitterUsernames.values()))
-	for (let [_, battlepass] of battlepasses) {
-		let quests = questsByBattlepass.get(battlepass.id)
-		if (!quests || !quests.length) {
-			continue
+	let tweets = new Map<string, string[]>()
+	let since = new Date()
+	let before = new Date()
+	for (let battlepass of battlepasses.values()) {
+		if (battlepass.startDate && battlepass.startDate < since) {
+			since = battlepass.startDate
 		}
-		let tweets = new Map<string, string[]>()
-		let since = battlepass.startDate || new Date()
-		let before = battlepass.endDate || new Date()
-		for (let [userid, username] of usersMap) {
+	}
+	for (let [userid, username] of usersMap) {
 			let userTweets = await getUserTweets(userid, since, before)
 			if (!userTweets) {
 				continue
@@ -111,6 +113,12 @@ async function iteration(again: boolean) {
 				tweetIds.push(tweet.id)
 			}
 			tweets.set(userid, tweetIds)
+		}
+
+	for (let battlepass of battlepasses.values()) {
+		let quests = questsByBattlepass.get(battlepass.id)
+		if (!quests || !quests.length) {
+			continue
 		}
 		await processTweetQuests(battlepass, quests, newItems)
 		await processLikeQuests(battlepass, quests, tweets, usersMap, newItems)

@@ -20,45 +20,68 @@ import { DiscordActivity, Identity } from '../db'
 import { ActivityRecord } from './interfaces'
 
 export async function syncGuildMembers(guild: Guild) {
-	let discordQuery = await Identity.findAll({
+	let q = await DiscordActivity.findAll({
 		where: {
-			discord: {
-				[Op.ne]: null,
-			},
+			guildId: guild.id
 		},
-		attributes: ['discord'],
+		include: [{
+			model: Identity,
+			required: true,
+			where: {
+				discord: {
+					[Op.ne]: null
+				}
+			},
+			attributes: ['id', 'discord']
+		}]
 	})
-	let existingDiscordUsers = new Set<string>()
-	discordQuery.map((i) => existingDiscordUsers.add(i.discord || ''))
-	let newIdentities = new Map<string, Date>()
+	let existingActivities = new Map<string, number>()
+	let newActivities = new Map<string, Date>()
+	q.map((i: any) => existingActivities.set(i.Identity.discord, i.identityId))
 	await guild.members.fetch()
 	for (let [_, member] of guild.members.cache) {
 		let userId = member.user.id
-		if (!existingDiscordUsers.has(userId)) {
-			newIdentities.set(userId, member?.joinedAt || new Date())
-			existingDiscordUsers.add(userId)
+		if (!existingActivities.has(userId)) {
+			newActivities.set(userId, member?.joinedAt || new Date())
 		}
 	}
-	let records = await Identity.bulkCreate(
-		[...newIdentities.keys()].map((i) => {
-			return {
-				discord: i,
-			}
-		}),
-	)
-	let newActivities = new Array<ActivityRecord>()
-	records.map((i) => {
-		newActivities.push({
-			identityId: i.id,
+	let newActivitiesUsers = await Identity.findAll({
+		where: {
+			discord: [...newActivities.keys()]
+		},
+		attributes: ['id', 'discord']
+	})
+	let newActivityUsers = new Map<number, Date>()
+	let newUsers = new Set<string>([...newActivities.keys()])
+	newActivitiesUsers.map((i) => {
+		newActivityUsers.set(i.id, newActivities.get(i.discord || '') || new Date())
+		newUsers.delete(i.discord || '')
+	})
+	if (newUsers) {
+		let created = await Identity.bulkCreate(
+			[...newUsers.values()].map(i => {
+				return { discord: i }
+			})
+		)
+		created.map((i) => {
+			newActivityUsers.set(i.id, newActivities.get(i.discord || '') || new Date())
+		})
+	}
+	let records = []
+	for (let [userId, createdAt] of newActivityUsers) {
+		records.push({
+			identityId: userId,
 			guildId: guild.id,
 			channelId: null,
 			activityId: '',
 			activityType: 'join',
-			createdAt: newIdentities.get(i.discord || '') || new Date(),
+			createdAt: createdAt,
 		})
-	})
-	await DiscordActivity.bulkCreate(newActivities)
-	logger.info('Found %s new users for discord guild %s (%s)', records.length, guild.id, guild.name)
+	}
+	if (records.length) {
+		await DiscordActivity.bulkCreate(records)
+		logger.info('Found %s new users for discord guild %s (%s)', records.length, guild.id, guild.name)
+	}
 }
 
 export async function getHistoricalEvents(guild: Guild) {

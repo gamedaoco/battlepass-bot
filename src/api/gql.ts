@@ -16,7 +16,7 @@ import {
 	CreateRewardSchema,
 	CreateLevelsSchema,
 	AddParticipantSchema,
-	QuestsSchema,
+	SetBattlepassFreePasses
 } from './validations'
 import {
 	getPoints,
@@ -27,6 +27,7 @@ import {
 	createReward,
 	createLevels,
 	addBattlepassParticipant,
+	setFreePasses
 } from './controllers'
 
 import {
@@ -144,6 +145,16 @@ const resolvers = {
 				})
 			}
 			return await createLevels(input.value)
+		},
+		setFreePasses: async (parent: any, args: any) => {
+			let input = SetBattlepassFreePasses.validate(args)
+			if (input.error) {
+				logger.debug('Invalid freePasses request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			return await setFreePasses(input.value)
 		},
 	},
 }

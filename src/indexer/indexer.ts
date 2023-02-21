@@ -13,6 +13,7 @@ function getBattlepassesQuery(fromBlock: number) {
 			id
 			name
 			cid
+			season
 			active_from_block
 			active_to_block
 			organization {
@@ -27,7 +28,8 @@ function getUsersQuery(battlePassId: string) {
 	return gql`
 	query Users {
 		battlepass_nft(where: {battlepass: {id: {_eq: "${battlePassId}"}}}) {
-			identity {
+			id
+			owner {
 				address
 			}
 		}
@@ -86,8 +88,9 @@ async function getBattlepasses(
 			chainId: bp.id,
 			cid: bp.cid,
 			name: bp.name,
+			season: bp.season ? parseInt(bp.season) : null,
 			orgId: bp.organization.id,
-			startDate: calculateBlockDate(knownDate, knownBlock, bp.active_from_block),
+			startDate: bp.active_from_block ? calculateBlockDate(knownDate, knownBlock, bp.active_from_block) : null,
 			endDate: bp.active_to_block ? calculateBlockDate(knownDate, knownBlock, bp.active_to_block) : null,
 		}
 		res.set(bp.id, item)
@@ -96,7 +99,7 @@ async function getBattlepasses(
 	return res
 }
 
-export async function getBattlepassUsers(battlePassId: string): Promise<string[] | null> {
+export async function getBattlepassUsers(battlePassId: string): Promise<Map<string,string> | null> {
 	let resp: any
 	try {
 		resp = await request(config.graph.url, getUsersQuery(battlePassId))
@@ -104,9 +107,9 @@ export async function getBattlepassUsers(battlePassId: string): Promise<string[]
 		logger.error('Failed to request battlepass users from graph %s', error)
 		return null
 	}
-	let res = new Array<string>()
+	let res = new Map<string, string>()
 	resp.battlepass_nft.forEach((nft: any) => {
-		res.push(nft.owner.address)
+		res.set(nft.owner.address, nft.id)
 	})
 	return res
 }
@@ -117,9 +120,11 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		logger.warn('Failed to get users for the battlepass %s', battlepass.chainId)
 		return
 	}
+	battlepass.passesClaimed = chainUsers.size
+	await battlepass.save()
 	let identities = await Identity.findAll({
 		where: {
-			address: chainUsers,
+			address: Array.from(chainUsers.keys()),
 		},
 	})
 	let identitiesMap = new Map<string, Identity>()
@@ -127,7 +132,7 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		if (i.address !== null) identitiesMap.set(i.address, i)
 	})
 	let newUsers = []
-	for (let chainUser of chainUsers) {
+	for (let [chainUser, nftId] of chainUsers) {
 		if (!identitiesMap.has(chainUser)) {
 			newUsers.push({ address: chainUser })
 		}
@@ -157,12 +162,23 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		participantsMap.set(i.identity.address, i)
 	})
 	let newParticipants: any = []
-	for (let address of chainUsers) {
+	for (let [address, nftId] of chainUsers) {
 		if (!participantsMap.has(address)) {
 			newParticipants.push({
 				battlepassId: battlepass.id,
 				identityId: identitiesMap.get(address)?.id,
+				premium: true,
+				passChainId: nftId
 			})
+		} else {
+			let participant = participantsMap.get(address)
+			if (participant) {
+				if (!participant.premium) {
+					participant.premium = true
+					participant.passChainId = nftId
+					await participant.save()
+				}
+			}
 		}
 	}
 	if (newParticipants) {
@@ -207,9 +223,12 @@ export async function processBattlepasses(
 			let bp = await Battlepass.create({
 				chainId: updatedId,
 				orgId: updatedBp.orgId,
+				name: updatedBp.name,
+				season: updatedBp.season,
+				cid: updatedBp.cid,
 				startDate: updatedBp.startDate,
 				endDate: updatedBp.endDate,
-				active: updatedBp.endDate == null,
+				active: (updatedBp.startDate != null && updatedBp.endDate == null),
 				finalized: false,
 			})
 			logger.debug('Found new battlepass %s', updatedId)
@@ -217,6 +236,9 @@ export async function processBattlepasses(
 		} else {
 			existingBp.endDate = updatedBp.endDate
 			existingBp.active = updatedBp.endDate == null
+			existingBp.name = updatedBp.name
+			existingBp.season = updatedBp.season
+			existingBp.cid = updatedBp.cid
 			await existingBp.save()
 			await processBattlepassParticipants(existingBp)
 			logger.debug('Updating info for %s battlepass', updatedId)

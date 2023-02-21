@@ -26,8 +26,12 @@ export const CreateQuestSchema = Joi.object({
 				{ is: 'gamedao', then: Joi.valid('connect') },
 			],
 		}),
+	guildId: Joi.when('type', {
+		is: Joi.valid('join', 'post'),
+		then: Joi.string().min(10).max(50).required(),
+	}),
 	channelId: Joi.when('type', {
-		is: 'discord',
+		is: 'post',
 		then: Joi.string().min(10).max(50),
 	}),
 	hashtag: Joi.when('type', {
@@ -36,7 +40,7 @@ export const CreateQuestSchema = Joi.object({
 	}),
 	twitterId: Joi.when('type', {
 		is: Joi.valid('retweet', 'follow', 'comment', 'like'),
-		then: Joi.string().min(3).max(100).required(),
+		then: Joi.string().min(3).max(100).alphanum().required(),
 	}),
 	quantity: Joi.when('type', {
 		is: Joi.valid('connect', 'join', 'follow'),
@@ -88,6 +92,7 @@ export const AddParticipantSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 })
 
-export const QuestsSchema = Joi.object({
+export const SetBattlepassFreePasses = Joi.object({
 	battlepass: Joi.string().required().length(66),
+	freePasses: Joi.number().integer().min(0).max(10000).required()
 })
