@@ -46,9 +46,13 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 		}
 		identity = await Identity.create(fields)
 	} else {
-		identity.discord = data.discord
+		if (data.discord && !identity.discord) {
+			identity.discord = data.discord
+		}
+		if (data.address && !identity.address) {
+			identity.address = data.address
+		}
 		identity.twitter = data.twitter
-		identity.address = data.address
 		identity.name = data.name
 		identity.email = data.email
 		identity.cid = data.cid
