@@ -3,7 +3,10 @@ import { ApiPromise } from '@polkadot/api'
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
 import { sequelize, initDB, ChainStatus } from '../db'
-import { connectToNode, listenNewEvents, getActiveBattlePasses } from './chain'
+import { getWorker } from '../queue'
+import { listenNewEvents, getActiveBattlePasses } from './chain'
+import { getClient } from './utils'
+import { worker } from './worker'
 import { getLastBlockTimestamp, processBattlepasses } from '../indexer/indexer'
 
 async function main() {
@@ -20,7 +23,7 @@ async function main() {
 	}
 	let chainApi: ApiPromise | null
 	try {
-		chainApi = await connectToNode()
+		chainApi = await getClient()
 	} catch (error) {
 		logger.error(error)
 		return -1
@@ -28,6 +31,7 @@ async function main() {
 
 	let activeBattlepasses = await getActiveBattlePasses()
 	await processBattlepasses(status.blockNumber, lastBlock[0], lastBlock[1], activeBattlepasses)
+	let tasksWorker = getWorker('chain', worker)
 	await listenNewEvents(chainApi, lastBlock[0], lastBlock[1])
 }
 

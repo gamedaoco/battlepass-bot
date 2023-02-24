@@ -14,6 +14,7 @@ function getBattlepassesQuery(fromBlock: number) {
 			name
 			cid
 			season
+			price
 			active_from_block
 			active_to_block
 			organization {
@@ -88,6 +89,7 @@ async function getBattlepasses(
 			chainId: bp.id,
 			cid: bp.cid,
 			name: bp.name,
+			price: bp.price ? parseInt(bp.price) : null,
 			season: bp.season ? parseInt(bp.season) : null,
 			orgId: bp.organization.id,
 			startDate: bp.active_from_block ? calculateBlockDate(knownDate, knownBlock, bp.active_from_block) : null,
@@ -120,7 +122,7 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		logger.warn('Failed to get users for the battlepass %s', battlepass.chainId)
 		return
 	}
-	battlepass.passesClaimed = chainUsers.size
+	battlepass.passesClaimed = chainUsers.size // todo: available?
 	await battlepass.save()
 	let identities = await Identity.findAll({
 		where: {
@@ -225,6 +227,7 @@ export async function processBattlepasses(
 				orgId: updatedBp.orgId,
 				name: updatedBp.name,
 				season: updatedBp.season,
+				price: updatedBp.price,
 				cid: updatedBp.cid,
 				startDate: updatedBp.startDate,
 				endDate: updatedBp.endDate,

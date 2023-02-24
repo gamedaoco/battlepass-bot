@@ -16,6 +16,12 @@ enum ActivityType {
 	like
 }
 
+enum SyncStatus {
+	pending
+	synced
+	failed
+}
+
 type BattlepassIdentity {
 	id: Int!
 	uuid: String!
@@ -34,6 +40,7 @@ type BattlepassQuest {
 	battlepassId: Int!
 	name: String
 	description: String
+	link: String
 	cid: String
 	repeat: Boolean!
 	source: Source!
@@ -44,6 +51,7 @@ type BattlepassQuest {
 	twitterId: String
 	quantity: Int!
 	points: Int!
+	max: Int
 	maxDaily: Int
 	battlepass: Battlepass!
 	progresses: [BattlepassQuestProgress]
@@ -65,6 +73,8 @@ type Battlepass {
 	cid: String
 	orgId: String!
 	season: Int
+	price: Int
+	currency: String
 	active: Boolean!
 	finalized: Boolean!
 	startDate: String
@@ -104,11 +114,23 @@ type BattlepassReward {
 	name: String
 	description: String
 	cid: String
+	chainId: String
 	level: Int
 	points: Int
 	total: Int!
 	available: Int!
+	syncStatus: SyncStatus!
 	battlepass: Battlepass!
+}
+
+type BattlepassRewardClaim {
+	id: Int!
+	nftId: Int
+	syncStatus: SyncStatus!
+	rewardId: Int!
+	participantId: Int!
+	reward: BattlepassReward!
+	member: BattlepassMember!
 }
 
 type BattlepassLevel {
@@ -118,7 +140,14 @@ type BattlepassLevel {
 	points: Int!
 	totalPoints: Int!
 	level: Int!
+	syncStatus: SyncStatus!
 	battlepass: Battlepass!
+}
+
+type Payment {
+	battlepass: String!
+	identityUuid: String!
+	paymentToken: String!
 }
 
 input BattlepassesFilter {
@@ -164,6 +193,11 @@ input IdentityFilter {
 	twitter: String
 }
 
+input RewardClaimFilter {
+	identityUuid: String
+	battlepassChainId: String
+}
+
 input PointsFilter {
 	identityId: Int
 	identityUuid: String
@@ -198,13 +232,17 @@ type Query {
 	BattlepassPoints(where: PointsFilter): [BattlepassPoint]
 	BattlepassRewards(where: RewardsFilter): [BattlepassReward]
 	BattlepassLevels(where: LevelsFilter): [BattlepassLevel]
+	BattlepassRewardClaims(where: RewardClaimFilter): [BattlepassRewardClaim]
 }
 
 type Mutation {
 	identity(uuid: String, discord: String, twitter: String, address: String, name: String, email: String, cid: String): BattlepassIdentity
 	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
-	quest(battlepass: String!, name: String, description: String, cid: String, daily: Boolean!, source: Source!, type: ActivityType!, guildId: String, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, maxDaily: Int): BattlepassQuest
+	joinPremium(battlepass: String!, identityUuid: String!): BattlepassIdentity
+	quest(battlepass: String!, name: String, description: String, link: String, cid: String, daily: Boolean!, source: Source!, type: ActivityType!, guildId: String, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, max: Int, maxDaily: Int): BattlepassQuest
 	reward(battlepass: String!, name: String, description: String, cid: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 	setFreePasses(battlepass: String!, freePasses: Int!): Battlepass
+	processPayment(securityToken: String!, battlepass: String!, identityUuid: String!, paymentToken: String!): Payment
+	claimReward(identityUuid: String!, reward: String!): BattlepassRewardClaim
 }

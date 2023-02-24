@@ -23,6 +23,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare name: string | null
 	declare cid: string | null
 	declare season: number | null
+	declare price: number | null
 	declare startDate: Date | null
 	declare endDate: Date | null
 	declare active: boolean
@@ -54,6 +55,10 @@ Battlepass.init(
 			allowNull: true,
 		},
 		season: {
+			type: DataTypes.INTEGER,
+			allowNull: true
+		},
+		price: {
 			type: DataTypes.INTEGER,
 			allowNull: true
 		},
@@ -179,6 +184,35 @@ TwitterActivity.init(
 	{ sequelize },
 )
 
+export class ChainActivity extends Model<InferAttributes<ChainActivity>, InferCreationAttributes<ChainActivity>> {
+	declare id: CreationOptional<number>
+	declare address: string
+	declare activityType: string
+	declare createdAt: CreationOptional<Date>
+}
+ChainActivity.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		address: {
+			type: DataTypes.CHAR(48),
+			allowNull: false,
+		},
+		activityType: {
+			type: DataTypes.ENUM,
+			values: ['connect', 'identity'],
+			allowNull: false
+		},
+		createdAt: {
+			type: DataTypes.DATE,
+		},
+	},
+	{ sequelize },
+)
+
 export class Identity extends Model<InferAttributes<Identity>, InferCreationAttributes<Identity>> {
 	declare id: CreationOptional<number>
 	declare uuid: string | null
@@ -245,6 +279,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 	declare id: CreationOptional<number>
 	declare name: string | null
 	declare description: string | null
+	declare link: string | null
 	declare cid: string | null
 	declare repeat: boolean
 	declare source: string
@@ -255,6 +290,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 	declare twitterId: string | null
 	declare quantity: number
 	declare points: number
+	declare max: number | null
 	declare maxDaily: number | null
 	declare battlepassId: ForeignKey<Battlepass['id']>
 }
@@ -270,6 +306,9 @@ Quest.init(
 		},
 		description: {
 			type: DataTypes.STRING(512),
+		},
+		link: {
+			type: DataTypes.STRING(150),
 		},
 		cid: {
 			type: DataTypes.STRING(50),
@@ -293,6 +332,7 @@ Quest.init(
 				'retweet',
 				'comment',
 				'follow', // twitter
+				'identity', // gamedao
 			],
 		},
 		guildId: {
@@ -316,6 +356,10 @@ Quest.init(
 		},
 		points: {
 			type: DataTypes.INTEGER.UNSIGNED,
+		},
+		max: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			allowNull: true,
 		},
 		maxDaily: {
 			type: DataTypes.INTEGER.UNSIGNED,
@@ -438,9 +482,9 @@ BattlepassParticipant.init(
 			defaultValue: false
 		},
 		passChainId: {
-			type: DataTypes.CHAR(66),  // todo: check type is correct once chain is populated,
+			type: DataTypes.CHAR(66),
 			allowNull: true
-		}
+		},
 	},
 	{ sequelize },
 )
@@ -459,10 +503,12 @@ export class BattlepassReward extends Model<
 	declare name: string | null
 	declare description: string | null
 	declare cid: string | null
+	declare chainId: string | null
 	declare points: number | null
 	declare level: number | null
 	declare total: number
 	declare available: number
+	declare syncStatus: CreationOptional<string>
 }
 BattlepassReward.init(
 	{
@@ -480,6 +526,10 @@ BattlepassReward.init(
 		cid: {
 			type: DataTypes.STRING(50),
 		},
+		chainId: {
+			type: DataTypes.CHAR(66),
+			allowNull: true,
+		},
 		points: {
 			type: DataTypes.INTEGER.UNSIGNED,
 		},
@@ -492,6 +542,11 @@ BattlepassReward.init(
 		available: {
 			type: DataTypes.INTEGER.UNSIGNED,
 		},
+		syncStatus: {
+			type: DataTypes.ENUM,
+			values: ['pending', 'synced', 'failed'],
+			defaultValue: 'pending'
+		}
 	},
 	{ sequelize },
 )
@@ -506,6 +561,7 @@ export class BattlepassLevel extends Model<InferAttributes<BattlepassLevel>, Inf
 	declare points: number
 	declare totalPoints: number
 	declare level: number
+	declare syncStatus: CreationOptional<string>
 }
 BattlepassLevel.init(
 	{
@@ -529,6 +585,11 @@ BattlepassLevel.init(
 			type: DataTypes.INTEGER.UNSIGNED,
 			allowNull: false,
 		},
+		syncStatus: {
+			type: DataTypes.ENUM,
+			values: ['pending', 'synced', 'failed'],
+			defaultValue: 'pending'
+		}
 	},
 	{ sequelize },
 )
@@ -558,6 +619,87 @@ TwitterSearch.init(
 	},
 	{ sequelize },
 )
+
+export class TwitterUser extends Model<InferAttributes<TwitterUser>, InferCreationAttributes<TwitterUser>> {
+	declare id: CreationOptional<number>
+	declare username: string
+	declare twitterId: string
+}
+TwitterUser.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		username: {
+			type: DataTypes.STRING(40),
+			allowNull: false
+		},
+		twitterId: {
+			type: DataTypes.STRING(40),
+			allowNull: false
+		},
+	},
+	{ sequelize },
+)
+
+export class Payment extends Model<InferAttributes<Payment>, InferCreationAttributes<Payment>> {
+	declare id: CreationOptional<number>
+	declare participantId: ForeignKey<BattlepassParticipant['id']>
+	declare paymentToken: string
+	declare createdAt: CreationOptional<Date>
+}
+Payment.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		paymentToken: {
+			type: DataTypes.STRING(120),
+			allowNull: false
+		},
+		createdAt: {
+			type: DataTypes.DATE,
+		},
+	},
+	{ sequelize }
+)
+Payment.belongsTo(BattlepassParticipant, { foreignKey: 'participantId' })
+BattlepassParticipant.hasOne(Payment, { foreignKey: 'participantId' })
+
+export class RewardClaim extends Model<InferAttributes<RewardClaim>, InferCreationAttributes<RewardClaim>> {
+	declare id: CreationOptional<number>
+	declare nftId: number | null
+	declare syncStatus: CreationOptional<string>
+	declare rewardId: ForeignKey<BattlepassReward['id']>
+	declare participantId: ForeignKey<BattlepassParticipant['id']>
+}
+RewardClaim.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		nftId: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			allowNull: true
+		},
+		syncStatus: {
+			type: DataTypes.ENUM,
+			values: ['pending', 'synced', 'failed'],
+			defaultValue: 'pending'
+		}
+	},
+	{ sequelize }
+)
+RewardClaim.belongsTo(BattlepassReward, { foreignKey: 'rewardId' })
+BattlepassReward.hasMany(RewardClaim, { foreignKey: 'rewardId' })
+RewardClaim.belongsTo(BattlepassParticipant, { foreignKey: 'participantId' })
+BattlepassParticipant.hasMany(RewardClaim, { foreignKey: 'participantId' })
 
 export async function initDB(): Promise<boolean> {
 	try {

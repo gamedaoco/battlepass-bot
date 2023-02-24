@@ -8,9 +8,10 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 			break
 		case 'api':
 			// no required variables
+			requiredEnvVariables.push('API_SECURITY_TOKEN')
 			break
 		case 'chain':
-			requiredEnvVariables.push(...['GRAPH_URL', 'CHAIN_RPC_URL'])
+			requiredEnvVariables.push(...['GRAPH_URL', 'CHAIN_RPC_URL', 'CHAIN_ACCOUNT'])
 			break
 		case 'discord':
 			requiredEnvVariables.push('DISCORD_BOT_KEY')
@@ -48,13 +49,21 @@ export const config = {
 	chain: {
 		blockTime: 12,
 		rpcUrl: process.env.CHAIN_RPC_URL || '',
+		account: process.env.CHAIN_ACCOUNT || ''
 	},
 	api: {
 		port: parseInt(process.env.API_PORT || '8080'),
 		secretKey: process.env.API_SECRET_KEY || '',
+		securityToken: process.env.API_SECURITY_TOKEN || '',
 		gqlUi: !!process.env.API_GRAPHQL_UI,
 	},
 	general: {
 		checkFrequency: parseInt(process.env.QUEST_CHECK_FREQUENCY || '60'),
+		redis: {
+			host: process.env.REDIS_HOST || 'redis',
+			port: parseInt(process.env.REDIS_PORT || '6379'),
+			db: 0
+			// todo: check connection is live when starting the service
+		}
 	},
 }

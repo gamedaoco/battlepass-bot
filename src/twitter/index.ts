@@ -1,35 +1,45 @@
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
-import { TwitterActivity } from '../db'
+import { TwitterActivity, TwitterUser } from '../db'
 import { getActiveBattlePasses } from '../chain/chain'
 import { sequelize, initDB, Quest, Battlepass } from '../db'
-import { getClient } from './client'
+import { getClient, getTwitterUserIdsByNames } from './client'
 import { processTweetQuests } from './tweets'
 import { processLikeQuests } from './likes'
-import { processCommentQuests } from './comments'
+import { processCommentQuests, processTweetComments } from './comments'
 import { processRetweetQuests } from './retweets'
 import { processFollowQuests } from './follows'
 
-async function getTwitterUserIdsByNames(usernames: string[]): Promise<Map<string, string>> {
-	if (usernames.length > 100) {
-		throw Error('Usernames must be not more then 100')
+async function getUsesrCache(usernames: string[]): Promise<Map<string, string>> {
+	let res = await TwitterUser.findAll({
+		where: { username: usernames }
+	})
+	let map = new Map<string, string>()
+	for (let user of res) {
+		map.set(user.twitterId, user.username)
 	}
-	let client = getClient()
-	let result = new Map<string, string>()
-	try {
-		let resp = await client.users.findUsersByUsername({ usernames })
-		if (resp.data) {
-			resp.data.map((i) => {
-				result.set(i.id, i.username)
-			})
-		} else {
-			logger.warn('Received invalid response for users by username twitter api call')
+	return map
+}
+
+async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>> {
+	let cache = await getUsesrCache(usernames)
+	let missingUsernames = []
+	for (let username of usernames) {
+		if (!cache.has(username)) {
+			missingUsernames.push(username)
 		}
-	} catch (error) {
-		logger.error('Failed to fetch user ids by names')
-		logger.error(error)
 	}
-	return result
+	if (missingUsernames) {
+		let newUsernames = await getTwitterUserIdsByNames(missingUsernames)
+		let toCreate = []
+		for (let [twitterId, username] of newUsernames) {
+			toCreate.push({ username, twitterId })
+			cache.set(twitterId, username)
+		}
+		await TwitterUser.bulkCreate(toCreate)
+		logger.debug('Created new twitter users map', toCreate.length)
+	}
+	return cache
 }
 
 async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
@@ -94,7 +104,7 @@ async function iteration(again: boolean) {
 		logger.debug('Skipping twitter activities processing due to no active quests')
 		return
 	}
-	let usersMap = await getTwitterUserIdsByNames(Array.from(twitterUsernames.values()))
+	let usersMap = await getTwitterUsers(Array.from(twitterUsernames.values()))
 	let tweets = new Map<string, string[]>()
 	let since = new Date()
 	let before = new Date()

@@ -16,7 +16,9 @@ import {
 	CreateRewardSchema,
 	CreateLevelsSchema,
 	AddParticipantSchema,
-	SetBattlepassFreePasses
+	SetBattlepassFreePassesSchema,
+	PaymentSchema,
+	ClaimRewardSchema
 } from './validations'
 import {
 	getPoints,
@@ -27,7 +29,10 @@ import {
 	createReward,
 	createLevels,
 	addBattlepassParticipant,
-	setFreePasses
+	setFreePasses,
+	processPayment,
+	joinPremium,
+	claimReward,
 } from './controllers'
 
 import {
@@ -36,6 +41,8 @@ import {
 	battlepassMembers,
 	battlepassRewards,
 	formattedDate,
+	formatPrice,
+	currency,
 } from './resolvers/battlepass'
 import { quests, questBattlepass, questProgress } from './resolvers/quests'
 import { members, memberBattlepass, memberIdentity, memberProgress, memberPoints } from './resolvers/members'
@@ -44,6 +51,7 @@ import { identities, identityMembers, identityProgress } from './resolvers/ident
 import { points, pointIdentity, pointBattlepass } from './resolvers/points'
 import { rewards, rewardBattlepass } from './resolvers/rewards'
 import { levels, levelBattlepass } from './resolvers/levels'
+import { rewardClaims, rewardClaimReward, rewardClaimMember } from './resolvers/rewardClaims'
 
 const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toString())
 
@@ -57,6 +65,7 @@ const resolvers = {
 		BattlepassPoints: points,
 		BattlepassRewards: rewards,
 		BattlepassLevels: levels,
+		BattlepassRewardClaims: rewardClaims
 	},
 	Battlepass: {
 		quests: battlepassQuests,
@@ -64,6 +73,8 @@ const resolvers = {
 		rewards: battlepassRewards,
 		startDate: formattedDate('startDate'),
 		endDate: formattedDate('endDate'),
+		price: formatPrice,
+		currency
 	},
 	BattlepassQuest: {
 		battlepass: questBattlepass,
@@ -89,6 +100,10 @@ const resolvers = {
 	},
 	BattlepassReward: {
 		battlepass: rewardBattlepass,
+	},
+	BattlepassRewardClaim: {
+		reward: rewardClaimReward,
+		member: rewardClaimMember
 	},
 	BattlepassLevel: {
 		battlepass: levelBattlepass,
@@ -126,6 +141,17 @@ const resolvers = {
 			let res = await addBattlepassParticipant(input.value)
 			return res
 		},
+		joinPremium: async (parent: any, args: any) => {
+			let input = AddParticipantSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid join request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			let res = await joinPremium(input.value)
+			return res
+		},
 		reward: async (parent: any, args: any) => {
 			let input = CreateRewardSchema.validate(args)
 			if (input.error) {
@@ -147,7 +173,7 @@ const resolvers = {
 			return await createLevels(input.value)
 		},
 		setFreePasses: async (parent: any, args: any) => {
-			let input = SetBattlepassFreePasses.validate(args)
+			let input = SetBattlepassFreePassesSchema.validate(args)
 			if (input.error) {
 				logger.debug('Invalid freePasses request %s', input.error)
 				throw new GraphQLError('Invalid input', {
@@ -156,6 +182,26 @@ const resolvers = {
 			}
 			return await setFreePasses(input.value)
 		},
+		processPayment: async (parent: any, args: any) => {
+			let input = PaymentSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid payment request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			return await processPayment(input.value)
+		},
+		claimReward: async (parent: any, args: any) => {
+			let input = ClaimRewardSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid claim reward request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			return await claimReward(input.value)
+		}
 	},
 }
 

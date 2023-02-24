@@ -1,3 +1,4 @@
+import { getQueue } from '../../queue'
 import { Battlepass, BattlepassLevel } from '../../db'
 
 interface LevelInterface {
@@ -33,5 +34,14 @@ export async function createLevels(data: CreateLevelsInterface): Promise<Battlep
 			...level
 		})
 	}
-	return await BattlepassLevel.bulkCreate(records)
+	let levels = await BattlepassLevel.bulkCreate(records)
+	let queue = getQueue('chain')
+	await queue.addBulk(levels.map((level) => {
+		return {
+			name: 'chain',
+			data: { type: 'level', levelId: level.id },
+			jobId: `level-${data.battlepass}-${level.id}`
+		}
+	}))
+	return levels
 }

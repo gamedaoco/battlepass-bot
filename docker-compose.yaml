@@ -8,6 +8,12 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: battlepass_dev
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+    command: redis-server --save 60 1 --loglevel warning
+
   api:
     image: battlepass-bot:local
     command:

@@ -14,6 +14,7 @@ export const CreateQuestSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	name: Joi.string().min(5).max(100).allow(null),
 	description: Joi.string().min(5).max(512).allow(null),
+	link: Joi.string().uri().min(10).max(150).allow(null),
 	cid: Joi.string().min(5).max(100).allow(null),
 	daily: Joi.boolean().default(false),
 	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
@@ -23,7 +24,7 @@ export const CreateQuestSchema = Joi.object({
 			switch: [
 				{ is: 'discord', then: Joi.valid('connect', 'join', 'post', 'reaction') },
 				{ is: 'twitter', then: Joi.valid('connect', 'tweet', 'retweet', 'follow', 'comment', 'like') },
-				{ is: 'gamedao', then: Joi.valid('connect') },
+				{ is: 'gamedao', then: Joi.valid('connect', 'identity') },
 			],
 		}),
 	guildId: Joi.when('type', {
@@ -48,6 +49,7 @@ export const CreateQuestSchema = Joi.object({
 		otherwise: Joi.number().integer().required(),
 	}),
 	points: Joi.number().integer().required(),
+	max: Joi.number().integer().allow(null),
 	maxDaily: Joi.when('daily', {
 		is: true,
 		then: Joi.number().integer().required(),
@@ -92,7 +94,19 @@ export const AddParticipantSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 })
 
-export const SetBattlepassFreePasses = Joi.object({
+export const SetBattlepassFreePassesSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	freePasses: Joi.number().integer().min(0).max(10000).required()
+})
+
+export const PaymentSchema = Joi.object({
+	securityToken: Joi.string().required().min(1).max(100),
+	battlepass: Joi.string().required().length(66),
+	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
+	paymentToken: Joi.string().required().min(1).max(120)
+})
+
+export const ClaimRewardSchema = Joi.object({
+	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
+	reward: Joi.string().required().length(66),
 })

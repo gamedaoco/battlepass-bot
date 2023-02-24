@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 
-import { Identity, DiscordActivity, TwitterActivity } from '../../db'
+import { Identity, DiscordActivity, TwitterActivity, ChainActivity } from '../../db'
 import { logger } from '../../logger'
 
 interface SaveIdentityInterface {
@@ -28,10 +28,16 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 			where.push({ address: data.address })
 		}
 	}
-	let identity: any = await Identity.findOne({ where: { [Op.or]: where } })
-	let created = identity ? false : true
-	let createDiscordActivity = true
-	let createTwitterActivity = true
+	let identities = await Identity.findAll({ where: { [Op.or]: where } })
+	if (identities.length > 1) {
+		logger.error('Save identity not possible due to multiple records returned %s', where)
+		return [null, false]
+	}
+	let identity: any
+	let created = identities.length ? false : true
+	let createDiscordActivity = true,
+		createTwitterActivity = true,
+		createChainActivity = true
 	if (created) {
 		let fields: any = {
 			discord: data.discord,
@@ -46,6 +52,7 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 		}
 		identity = await Identity.create(fields)
 	} else {
+		identity = identities[0]
 		if (data.discord && !identity.discord) {
 			identity.discord = data.discord
 		}
@@ -81,6 +88,19 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 				createTwitterActivity = false
 			}
 		}
+		if (data.address) {
+			let chainActivity = await ChainActivity.findOne({
+				attributes: ['id'],
+				where: {
+					address: data.address,
+					activityType: 'connect',
+				},
+			})
+			if (chainActivity) {
+				createChainActivity = false
+			}
+		}
+
 	}
 	if (data.discord && createDiscordActivity) {
 		await DiscordActivity.create({
@@ -98,6 +118,13 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 			authorId: data.twitter,
 		})
 		logger.debug('Created twitter connect activity for user %s', data.twitter)
+	}
+	if (data.address && createChainActivity) {
+		await ChainActivity.create({
+			activityType: 'connect',
+			address: data.address,
+		})
+		logger.debug('Created chain connect activity for user %s', data.address)
 	}
 	logger.debug('Stored identity')
 	return [identity, created]
