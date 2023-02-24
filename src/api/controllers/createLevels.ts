@@ -38,7 +38,7 @@ export async function createLevels(data: CreateLevelsInterface): Promise<Battlep
 	let queue = getQueue('chain')
 	await queue.addBulk(levels.map((level) => {
 		return {
-			name: 'chain',
+			name: 'level',
 			data: { type: 'level', levelId: level.id },
 			jobId: `level-${data.battlepass}-${level.id}`
 		}
