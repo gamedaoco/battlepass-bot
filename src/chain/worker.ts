@@ -88,55 +88,30 @@ async function storeRewardOnChain(api: ApiPromise, rewardId: number) {
 }
 
 async function storeUserPointsOnChain(api: ApiPromise, identityId: number, battlepassId: number) {
-	let bp = await Battlepass.findOne({
-		where: { id: battlepassId }
-	})
-	let points = await CompletedQuest.findAll({
+	let bp: any = await BattlepassParticipant.findOne({
+		where: { premium: true },
 		include: [{
 			model: Identity,
 			required: true,
-			attributes: [],
-			where: {
-				id: identityId,
-				address: {
-					[Op.ne]: null
-				}
-			}
+			where: { id: identityId, address: { [Op.ne]: null } },
+			attributes: ['address']
 		}, {
-			model: Quest,
+			model: Battlepass,
 			required: true,
-			attributes: [],
-			include: [{
-				model: Battlepass,
-				required: true,
-				attributes: [],
-				where: {
-					id: battlepassId
-				}
-			}]
-		}],
-		group: [
-			sequelize.col('Identity.address')
-		],
-		attributes: [
-			[sequelize.fn('sum', sequelize.col('Quest.points')), 'points'],
-			[sequelize.col('Identity.address'), 'address']
-		]
+			where: { id: battlepassId },
+			attributes: ['chainId']
+		}]
 	})
-	if (!bp || !points.length) {
+	if (!bp || !bp.points) {
 		logger.error('Attempt to store user points on chain without any records')
 		return
 	}
 	let account = getSigningAccount()
-	let tx = api.tx.battlepass.setPoints(
-		bp.chainId,
-		points[0].get('address'),
-		points[0].get('points')
-	)
+	let tx = api.tx.battlepass.setPoints(bp.Battlepass.chainId, bp.Identity.address, bp.points)
 	await executeTxWithResult(api, tx, api.events.battlepass.PointsUpdated).then((event) => {
 		logger.info(
 			"Points updated on chain for account %s and battlepass %s",
-			points[0].get('address'), bp?.chainId
+			bp.Identity.address, bp.Battlepass.chainId
 		)
 	}).catch((err) => {
 		logger.error(
@@ -158,14 +133,12 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 			required: true,
 			attributes: ['address'],
 			where: {
-				address: {
-					[Op.ne]: null
-				}
+				address: { [Op.ne]: null }
 			}
 		}]
 	})
 	if (!p || !p.Identity) {
-		logger.error('Not found setup identity to join battlepass for participant %s', participantId)
+		logger.error('Not found identity to join battlepass for participant %s', participantId)
 		return
 	}
 	let tx = api.tx.battlepass.claimBattlepass(p.Battlepass.chainId, p.Identity.address)

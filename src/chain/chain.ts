@@ -42,7 +42,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					active: false,
 					finalized: false,
 				})
-				logger.debug('Found new battlepass %s', bpId.toString())
+				logger.info('Found new battlepass %s', bpId.toString())
 			} else if (api.events.battlepass.BattlepassActivated.is(event)) {
 				let [byWho, orgId, bpId] = event.data
 				const chainBp: any = await api.query.battlepass.battlepasses(bpId.toString())
@@ -66,7 +66,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					bp.finalized = false
 					await bp.save()
 				}
-				logger.debug('Activating battlepass %s', bpId.toString())
+				logger.info('Activating battlepass %s', bpId.toString())
 			} else if (api.events.battlepass.BattlepassEnded.is(event)) {
 				let [byWho, orgId, bpId] = event.data
 				let bp = await Battlepass.findOne({
@@ -79,7 +79,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 				bp.endDate = calculateBlockDate(knownDate, knownBlock, header.number.toNumber())
 				bp.active = false
 				await bp.save()
-				logger.debug('Found ended battlepass %s', bpId.toString())
+				logger.info('Found ended battlepass %s', bpId.toString())
 			} else if (api.events.battlepass.BattlepassClaimed.is(event)) {
 				let [byWho, forWho, orgId, bpId, nftId] = event.data
 				let bp = await Battlepass.findOne({
@@ -94,7 +94,10 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					where: { address: forWho.toString() },
 				})
 				let [participant, created] = await BattlepassParticipant.findOrCreate({
-					where: { identityId: identity.id },
+					where: {
+						identityId: identity.id,
+						battlepassId: bp.id
+					},
 					defaults: {
 						identityId: identity.id,
 						battlepassId: bp.id,
@@ -115,7 +118,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 								progress: 0,
 							})
 						})
-						logger.debug(
+						logger.info(
 							'Creating new progress records for user %s and battlepass %s',
 							identity.address,
 							bp.chainId,
@@ -125,8 +128,8 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 				} else {
 					participant.premium = true
 					participant.passChainId = nftId.toString()
-					logger.debug(
-						'Updating participant status to premoim for user %s and battlepass %s',
+					logger.info(
+						'Updating participant status to premium for user %s and battlepass %s',
 						identity.address,
 						bp.chainId
 					)
@@ -135,7 +138,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 			} else if (api.events.identity.IdentitySet.is(event)) {
                 let address = event.data[0].toString();
                 await ChainActivity.create({ address, activityType: 'identity' })
-                logger.debug('Identity set activity for address %s', address)
+                logger.info('Identity set activity for address %s', address)
         	}
 		})
 		await ChainStatus.update({ blockNumber: header.number.toNumber() }, { where: { id: 1 } })
@@ -302,7 +305,12 @@ async function getCompletedQuestsForUser(
 		questId: quest.id,
 		guildId: userActivity[0].guildId,
 	}
-	return Array(completedCount - completedBefore).fill(record)
+	let newRecords = Array(completedCount - completedBefore).fill(record)
+	await BattlepassParticipant.increment(
+		{ points: quest.points * newRecords.length },
+		{ where: { identityId, battlepassId: quest.battlepassId } }
+	)
+	return newRecords
 }
 
 async function processBasicQuests(
@@ -341,6 +349,10 @@ async function processBasicQuests(
 			if (progress !== undefined) {
 				progress.progress = 1
 				await progress.save()
+				await BattlepassParticipant.increment(
+					{ points: quest.points },
+					{ where: { identityId: activity.identityId, battlepassId: quest.battlepassId } }
+				)
 			} else {
 				logger.warn('Basic quest has no progress for %s quest and %s identity', quest.id, activity.identityId)
 			}
@@ -406,6 +418,7 @@ async function processBattlepassTwitterQuests(
 	let twitterAuthors = new Set<string>()
 	let tweetIds = new Set<string>()
 	let questsMap = new Map<string, Quest[]>()
+	let questById = new Map<number, Quest>()
 	let tweetPattern = /^\d+$/
 	quests.map((q) => {
 		if (q.twitterId) {
@@ -422,6 +435,7 @@ async function processBattlepassTwitterQuests(
 			questsMap.set(key, localQuests)
 		}
 		localQuests.push(q)
+		questById.set(q.id, q)
 	})
 	if (!twitterAuthors.size && !tweetIds.size) {
 		return
@@ -505,6 +519,15 @@ async function processBattlepassTwitterQuests(
 					questId: parseInt(questId),
 					identityId: parseInt(identityId),
 				}
+				let quest = questById.get(item.questId)
+				if (quest) {
+					await BattlepassParticipant.increment(
+						{ points: quest.points * (completedValue - completedBeforeValue) },
+						{ where: { identityId: item.identityId, battlepassId: battlepass.id } }
+					)
+				} else {
+					logger.warn('Failed to increment points for identity %s and quest %s', identityId, questId)
+				}
 				newCompletedQuests.push(...Array(completedValue - completedBeforeValue).fill(item))
 			}
 		}
@@ -575,6 +598,10 @@ async function processBattlepassChainQuests(
 				questId: quest.id,
 				identityId: identityId
 			})
+			await BattlepassParticipant.increment(
+				{ points: quest.points },
+				{ where: { identityId, battlepassId: battlepass.id } }
+			)
 		}
 	}
 }

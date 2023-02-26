@@ -102,6 +102,7 @@ type BattlepassMember {
 	identityId: Int!
 	battlepassId: Int!
 	premium: Boolean!
+	points: Int!
 	passChainId: String
 	progress: [BattlepassQuestProgress]
 	battlepass: Battlepass!
