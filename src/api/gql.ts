@@ -84,7 +84,7 @@ const resolvers = {
 		battlepass: memberBattlepass,
 		identity: memberIdentity,
 		progress: memberProgress,
-		points: memberPoints,
+		// points: memberPoints,
 	},
 	BattlepassQuestProgress: {
 		quest: progressQuest,

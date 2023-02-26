@@ -107,7 +107,6 @@ type BattlepassMember {
 	progress: [BattlepassQuestProgress]
 	battlepass: Battlepass!
 	identity: BattlepassIdentity!
-	points: [BattlepassPoint]
 }
 
 type BattlepassReward {
