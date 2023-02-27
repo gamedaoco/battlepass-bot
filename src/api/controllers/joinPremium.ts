@@ -31,6 +31,11 @@ export async function joinPremium(data: JoinPremiumInterface) {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Participant not found' },
 		})
 	}
+	if (p.premium) {
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: 'Already premium' },
+		})
+	}
 	if (bp.freePasses <= bp.passesClaimed) {
 		let payment = await Payment.findOne({
 			attributes: ['id'],

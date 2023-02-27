@@ -13,15 +13,11 @@ export async function claimReward(data: ClaimRewardInterface) {
 		include: [{
 			model: Identity,
 			required: true,
-			where: {
-				uuid: data.identityUuid
-			}
+			where: { uuid: data.identityUuid }
 		}]
 	})
 	let reward = await BattlepassReward.findOne({
-		where: {
-			chainId: data.reward
-		}
+		where: { chainId: data.reward }
 	})
 	if (!participant || !reward) {
 		logger.warn('Attempt to claim reward for unknown participant or reward object %s', data)

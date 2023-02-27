@@ -36,28 +36,23 @@ export async function onMessageDeleted(msg: Message | PartialMessage) {
 }
 
 export async function onMemberJoin(member: GuildMember) {
-	logger.debug('Processing join member')
+	logger.info('Processing join member')
 	let [identity, created] = await Identity.findOrCreate({
 		where: { discord: member.user.id },
 	})
-	if (created) {
-		await DiscordActivity.bulkCreate([
-			{
-				identityId: identity.id,
-				guildId: '',
-				channelId: null,
-				activityId: '',
-				activityType: 'connect',
-				createdAt: new Date(),
-			},
-			{
-				identityId: identity.id,
-				guildId: member.guild?.id || '',
-				channelId: null,
-				activityId: '',
-				activityType: 'join',
-				createdAt: member.joinedAt || new Date(),
-			},
-		])
-	}
+	await DiscordActivity.findOrCreate({
+		where: {
+			identityId: identity.id,
+			guildId: member.guild?.id || '',
+			activityType: 'join',
+		},
+		defaults: {
+			identityId: identity.id,
+			guildId: member.guild?.id || '',
+			activityType: 'join',
+			channelId: null,
+			activityId: '',
+			createdAt: member.joinedAt || new Date(),
+		}
+	})
 }

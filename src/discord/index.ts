@@ -11,6 +11,7 @@ export function getClient() {
 		IntentsBitField.Flags.GuildMessages,
 		IntentsBitField.Flags.Guilds,
 		IntentsBitField.Flags.GuildMembers,
+		IntentsBitField.Flags.GuildPresences,
 	])
 	const client = new Client({ intents })
 	return client

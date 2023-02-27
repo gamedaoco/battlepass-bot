@@ -103,7 +103,10 @@ async function storeUserPointsOnChain(api: ApiPromise, identityId: number, battl
 		}]
 	})
 	if (!bp || !bp.points) {
-		logger.error('Attempt to store user points on chain without any records')
+		logger.error(
+			'Attempt to store user %s %s points on chain without any records',
+			identityId, battlepassId
+		)
 		return
 	}
 	let account = getSigningAccount()
@@ -141,6 +144,10 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 		logger.error('Not found identity to join battlepass for participant %s', participantId)
 		return
 	}
+	if (p.premium) {
+		logger.debug('Attempt to claim multiple battlepass access for same member %s', participantId)
+		return
+	}
 	let tx = api.tx.battlepass.claimBattlepass(p.Battlepass.chainId, p.Identity.address)
 	await executeTxWithResult(api, tx, api.events.battlepass.BattlepassClaimed).then((event) => {
 		logger.info('Participant %s successfully claimed battlepass access', participantId)
@@ -171,9 +178,16 @@ async function claimUserReward(api: ApiPromise, rewardClaimId: number) {
 		logger.error('Claim attempt for unknown reward %s', rewardClaimId)
 		return
 	}
+	if (claim.syncStatus != 'pending') {
+		logger.warn(
+			'Attempt to claim reward %s multiple times, status %s',
+			rewardClaimId, claim.syncStatus
+		)
+		return
+	}
 	let user = claim.BattlepassParticipant?.Identity
 	let reward = claim.BattlepassReward
-	if (!user || !reward) {
+	if (!user || !reward || reward.syncStatus != 'synced') {
 		logger.error('Failed to claim reward for unknown user or reward')
 		return
 	}
