@@ -16,7 +16,6 @@ export async function rewardClaims(parent: any, args: any, context: any, info: a
 		}, {
 			model: BattlepassParticipant,
 			required: true,
-			attributes: [],
 			include: [{
 				model: Identity,
 				required: true,

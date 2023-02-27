@@ -14,10 +14,12 @@ export async function claimReward(data: ClaimRewardInterface) {
 		include: [{
 			model: Identity,
 			required: true,
+			attributes: ['uuid'],
 			where: { uuid: data.identityUuid }
 		}, {
 			model: Battlepass,
 			required: true,
+			attributes: [],
 			where: { chainId: data.battlepass }
 		}]
 	})
