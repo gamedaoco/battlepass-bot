@@ -37,7 +37,11 @@ export async function rewardClaims(parent: any, args: any, context: any, info: a
 		return {
 			rewardChainId: i.BattlepassReward.chainId,
 			identityUuid: i.BattlepassParticipant.Identity.uuid,
-			...i
+			id: i.id,
+			nftId: i.nftId,
+			participantId: i.participantId,
+			rewardId: i.rewardId,
+			syncStatus: i.syncStatus
 		}
 	})
 }
