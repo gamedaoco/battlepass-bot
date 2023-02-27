@@ -107,6 +107,7 @@ export const PaymentSchema = Joi.object({
 })
 
 export const ClaimRewardSchema = Joi.object({
+	battlepass: Joi.string().required().length(66),
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 	reward: Joi.string().required().length(66),
 })

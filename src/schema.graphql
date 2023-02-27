@@ -129,6 +129,8 @@ type BattlepassRewardClaim {
 	nftId: Int
 	syncStatus: SyncStatus!
 	rewardId: Int!
+	rewardChainId: String
+	identityUuid: String!
 	participantId: Int!
 	reward: BattlepassReward!
 	member: BattlepassMember!
@@ -245,5 +247,5 @@ type Mutation {
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
 	setFreePasses(battlepass: String!, freePasses: Int!): Battlepass
 	processPayment(securityToken: String!, battlepass: String!, identityUuid: String!, paymentToken: String!): Payment
-	claimReward(identityUuid: String!, reward: String!): BattlepassRewardClaim
+	claimReward(battlepass: String!, identityUuid: String!, reward: String!): BattlepassRewardClaim
 }

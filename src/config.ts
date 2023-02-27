@@ -48,6 +48,7 @@ export const config = {
 	},
 	chain: {
 		blockTime: 12,
+		prefix: 25,
 		rpcUrl: process.env.CHAIN_RPC_URL || '',
 		account: process.env.CHAIN_ACCOUNT || ''
 	},

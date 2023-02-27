@@ -1,7 +1,10 @@
 import { Op } from 'sequelize'
+import { GraphQLError } from 'graphql'
+import { decodeAddress, encodeAddress } from '@polkadot/util-crypto';
 
-import { Identity, DiscordActivity, TwitterActivity, ChainActivity } from '../../db'
+import { config } from '../../config'
 import { logger } from '../../logger'
+import { Identity, DiscordActivity, TwitterActivity, ChainActivity } from '../../db'
 
 interface SaveIdentityInterface {
 	uuid: string | null
@@ -14,6 +17,15 @@ interface SaveIdentityInterface {
 }
 
 export async function saveIdentity(data: SaveIdentityInterface) {
+	if (data.address) {
+		try {
+			data.address = encodeAddress(decodeAddress(data.address), config.chain.prefix)
+		} catch (err) {
+			throw new GraphQLError('Invalid input', {
+				extensions: { code: 'BAD_USER_INPUT', description: 'Invalid address' },
+			})
+		}
+	}
 	let where = []
 	if (data.uuid) {
 		where.push({ uuid: data.uuid })
