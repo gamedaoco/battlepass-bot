@@ -13,19 +13,18 @@ export async function iteration(again: boolean) {
 		logger.debug('Iteration')
 	}
 	for (let [bpId, battlepass] of battlepasses) {
-		const identities = (
-			await BattlepassParticipant.findAll({
+		const identities = await Identity.findAll({
+			include: [{
+				model: BattlepassParticipant,
 				where: { battlepassId: battlepass.id },
-				attributes: ['identityId'],
-			})
-		).map((item) => item.identityId)
+				attributes: []
+			}]
+		})
 		if (!identities.length) {
 			// means there are no participants in the battlepass
 			continue
 		}
-		if (identities.length) {
-			await processBattlepassQuests(battlepass, identities)
-		}
+		await processBattlepassQuests(battlepass, identities)
 	}
 	if (again) {
 		setTimeout(async () => {

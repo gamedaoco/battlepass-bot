@@ -91,7 +91,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'connect',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -99,7 +99,7 @@ describe('Quests matching logic', () => {
 				activityId: '',
 				activityType: 'join',
 				createdAt: new Date('2022-08-09T10:11:12Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -107,7 +107,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:00Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -115,11 +115,11 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '8'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:56:00Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 		])
 
-		await processBattlepassQuests(bp, [identity1.id])
+		await processBattlepassQuests(bp, [identity1])
 		let completedQuests = await CompletedQuest.findAll()
 		expect(completedQuests.length).toBe(3)
 		expect(completedQuests[0].questId).toBe(quest1.id)
@@ -138,7 +138,7 @@ describe('Quests matching logic', () => {
 		expect(progress[1].progress).toBe(1)
 		expect(progress[2].progress).toBe(1)
 
-		await processBattlepassQuests(bp, [identity1.id])
+		await processBattlepassQuests(bp, [identity1])
 		let newCompletedQuestsCount = await CompletedQuest.count()
 		expect(newCompletedQuestsCount).toBe(completedQuests.length)
 	})
@@ -176,7 +176,7 @@ describe('Quests matching logic', () => {
 			activityId: ''.padEnd(20, '6'),
 			activityType: 'post',
 			createdAt: new Date('2023-01-01T11:55:00Z'),
-			identityId: identity1.id,
+			discordId: identity1.discord || '',
 		})
 		await DiscordActivity.create({
 			guildId: ''.padEnd(15, '4'),
@@ -184,10 +184,10 @@ describe('Quests matching logic', () => {
 			activityId: ''.padEnd(20, '7'),
 			activityType: 'post',
 			createdAt: new Date('2023-01-01T11:56:00Z'),
-			identityId: identity1.id,
+			discordId: identity1.discord || '',
 		})
 
-		await processBattlepassQuests(bp, [identity1.id])
+		await processBattlepassQuests(bp, [identity1])
 		let completedQuests = await CompletedQuest.findAll()
 		expect(completedQuests.length).toBe(0)
 	})
@@ -244,7 +244,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:00Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -252,7 +252,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:01Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -260,7 +260,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:02Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -268,7 +268,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:03Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -276,7 +276,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:04Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -284,7 +284,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:05Z'),
-				identityId: identity1.id,
+				discordId: identity1.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -292,7 +292,7 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:06Z'),
-				identityId: identity2.id,
+				discordId: identity2.discord || '',
 			},
 			{
 				guildId: ''.padEnd(15, '4'),
@@ -300,11 +300,11 @@ describe('Quests matching logic', () => {
 				activityId: ''.padEnd(20, '6'),
 				activityType: 'post',
 				createdAt: new Date('2023-01-01T11:55:07Z'),
-				identityId: identity2.id,
+				discordId: identity2.discord || '',
 			},
 		])
 
-		await processBattlepassQuests(bp, [identity1.id, identity2.id])
+		await processBattlepassQuests(bp, [identity1, identity2])
 		let completedQuests = await CompletedQuest.findAll()
 		expect(completedQuests.length).toBe(3)
 		expect(completedQuests[0].identityId).toBe(identity1.id)
@@ -326,7 +326,7 @@ describe('Quests matching logic', () => {
 		expect(progress[1].identityId).toBe(identity2.id)
 		expect(progress[1].progress).toBe(1)
 
-		await processBattlepassQuests(bp, [identity1.id, identity2.id])
+		await processBattlepassQuests(bp, [identity1, identity2])
 		let newCompletedQuestsCount = await CompletedQuest.count()
 		expect(newCompletedQuestsCount).toBe(completedQuests.length)
 	})

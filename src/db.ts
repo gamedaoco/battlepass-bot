@@ -102,12 +102,12 @@ Battlepass.init(
 
 export class DiscordActivity extends Model<InferAttributes<DiscordActivity>, InferCreationAttributes<DiscordActivity>> {
 	declare id: CreationOptional<number>
+	declare discordId: string
 	declare guildId: string
 	declare channelId: string | null
 	declare activityId: string
 	declare activityType: string
 	declare createdAt: CreationOptional<Date>
-	declare identityId: ForeignKey<Identity['id']>
 }
 DiscordActivity.init(
 	{
@@ -115,6 +115,10 @@ DiscordActivity.init(
 			type: DataTypes.INTEGER.UNSIGNED,
 			autoIncrement: true,
 			primaryKey: true,
+		},
+		discordId: {
+			type: DataTypes.STRING(20),
+			allowNull: false,
 		},
 		guildId: {
 			type: DataTypes.STRING(20),
@@ -271,9 +275,6 @@ Identity.init(
 		],
 	},
 )
-
-Identity.hasMany(DiscordActivity, { foreignKey: 'identityId' })
-DiscordActivity.belongsTo(Identity, { foreignKey: 'identityId' })
 
 export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes<Quest>> {
 	declare id: CreationOptional<number>

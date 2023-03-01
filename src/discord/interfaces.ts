@@ -1,5 +1,5 @@
 export interface ActivityRecord {
-	identityId: number
+	discordId: string
 	guildId: string
 	channelId: string | null
 	activityId: string

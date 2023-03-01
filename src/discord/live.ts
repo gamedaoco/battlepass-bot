@@ -14,12 +14,7 @@ export async function onMessage(msg: Message) {
 		logger.debug('Skip message for non-text channel')
 		return
 	}
-	let [identity, created] = await Identity.findOrCreate({
-		where: {
-			discord: msg.author.id,
-		},
-	})
-	await DiscordActivity.create(discordMessageToActivity(msg, identity))
+	await DiscordActivity.create(discordMessageToActivity(msg))
 }
 
 export async function onMessageDeleted(msg: Message | PartialMessage) {
@@ -42,12 +37,12 @@ export async function onMemberJoin(member: GuildMember) {
 	})
 	await DiscordActivity.findOrCreate({
 		where: {
-			identityId: identity.id,
+			discordId: member.user.id,
 			guildId: member.guild?.id || '',
 			activityType: 'join',
 		},
 		defaults: {
-			identityId: identity.id,
+			discordId: member.user.id,
 			guildId: member.guild?.id || '',
 			activityType: 'join',
 			channelId: null,

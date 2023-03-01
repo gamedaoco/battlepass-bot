@@ -43,9 +43,11 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 	let identities = await Identity.findAll({ where: { [Op.or]: where } })
 	if (identities.length > 1) {
 		logger.error('Save identity not possible due to multiple records returned %s', where)
-		return [null, false]
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: 'Account already assigned' },
+		})
 	}
-	let identity: any
+	let identity: Identity
 	let created = identities.length ? false : true
 	let createDiscordActivity = true,
 		createTwitterActivity = true,
@@ -80,7 +82,7 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 			let discordActivity = await DiscordActivity.findOne({
 				attributes: ['id'],
 				where: {
-					identityId: identity.id,
+					discordId: data.discord,
 					activityType: 'connect',
 				},
 			})
@@ -116,7 +118,7 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 	}
 	if (data.discord && createDiscordActivity) {
 		await DiscordActivity.create({
-			identityId: identity.id,
+			discordId: data.discord,
 			activityType: 'connect',
 			guildId: '',
 			channelId: null,
