@@ -55,7 +55,11 @@ export async function claimReward(data: ClaimRewardInterface) {
 		return {
 			rewardChainId: reward.chainId,
 			identityUuid: participant.Identity.uuid,
-			...pendingClaim
+			id: pendingClaim.id,
+			nftId: pendingClaim.nftId,
+			participantId: pendingClaim.participantId,
+			rewardId: pendingClaim.rewardId,
+			syncStatus: pendingClaim.syncStatus
 		}
 	}
 	let claim = await RewardClaim.create({
@@ -76,6 +80,10 @@ export async function claimReward(data: ClaimRewardInterface) {
 	return {
 		rewardChainId: reward.chainId,
 		identityUuid: participant.Identity.uuid,
-		...claim
+		id: claim.id,
+		nftId: claim.nftId,
+		participantId: claim.participantId,
+		rewardId: claim.rewardId,
+		syncStatus: claim.syncStatus
 	}
 }

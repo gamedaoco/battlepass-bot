@@ -33,7 +33,7 @@ async function storeLevelOnChain(api: ApiPromise, levelId: number) {
 			attributes: ['chainId']
 		}]
 	})
-	let tx = api.tx.battlepass.addLevel(level.Battlepass.chainId, level.level, level.points)
+	let tx = api.tx.battlepass.addLevel(level.Battlepass.chainId, level.level, level.totalPoints)
 	await executeTxWithResult(api, tx, api.events.battlepass.LevelAdded).then(async (event) => {
 		logger.info(
 			"Level %s %s for bp %s stored on chain",
