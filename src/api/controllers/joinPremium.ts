@@ -24,8 +24,7 @@ export async function joinPremium(data: JoinPremiumInterface) {
 			}
 		}]
 	})
-	let bp = p.Battlepass
-	if (!p || !bp || !p.Identity) {
+	if (!p || !p.Battlepass || !p.Identity) {
 		logger.warn('Attempt to claim reward for unknown identity or reward object %s', data)
 		throw new GraphQLError('Invalid input', {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Participant not found' },
@@ -36,6 +35,12 @@ export async function joinPremium(data: JoinPremiumInterface) {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Already premium' },
 		})
 	}
+	if (!p.Identity.address) {
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: 'No address provided' },
+		})
+	}
+	let bp = p.Battlepass
 	if (bp.freePasses <= bp.passesClaimed) {
 		let payment = await Payment.findOne({
 			attributes: ['id'],
@@ -59,6 +64,11 @@ export async function joinPremium(data: JoinPremiumInterface) {
 		{
 			jobId: `claimBattlepass-${p.id}`
 		}
+	)
+	queue.add(
+		'points'
+		{ type: 'points', identityId: p.identityId, battlepassId: p.battlepassId },
+		{ jobId: `points-${p.Battlepass.chainId}-${p.identityId}` },
 	)
 	return p.Identity
 }
