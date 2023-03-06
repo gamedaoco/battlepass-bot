@@ -66,7 +66,7 @@ export async function joinPremium(data: JoinPremiumInterface) {
 		}
 	)
 	queue.add(
-		'points'
+		'points',
 		{ type: 'points', identityId: p.identityId, battlepassId: p.battlepassId },
 		{ jobId: `points-${p.Battlepass.chainId}-${p.identityId}` },
 	)
