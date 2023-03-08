@@ -172,11 +172,13 @@ Input parameters:
 * `battlepass` - battlepass id (hash), as stored on the chain;
 * `name` - quest name or title;
 * `description` - additional quest description;
+* `link` - optional link for user to follow to complete the quest;
 * `cid` - content id on IPFS, associated with the quest;
 * `source` - which source quest applies to: `discord`, `twitter` or `gamedao`;
 * `quantity` - how many times activity should be perfromed to complete quest (for example, send `100` messages to complete);
 * `points` - specify amount of points, which will be received by completing the quest;
 * `daily` - boolean flag, indicating if quest is available for daily completion (`true`) or it's a one-time action (`false`);
+* `max` - if quest is repeatable, specify how many times it may be completed at max;
 * `maxDaily` - if quest is daily, specify amount of times it can be completed per day;
 * `type` - which quest type is it, or which action should be performed to complete the quest.
   There are few types, which can be used, depending on the `source` value.  
@@ -216,6 +218,7 @@ mutation Mutation {
     battlepassId
     name
     description
+    link
     cid
     repeat
     source
@@ -226,6 +229,7 @@ mutation Mutation {
     twitterId
     quantity
     points
+    max
     maxDaily
   }
 }
@@ -240,6 +244,7 @@ Response example:
         "battlepassId": 1,
         "name": "Connect your Discord account",
         "description": null,
+        "link": null,
         "cid": null,
         "repeat": false,
         "source": "discord",
@@ -250,6 +255,7 @@ Response example:
         "twitterId": null,
         "quantity": 1,
         "points": 1000,
+        "max": null,
         "maxDaily": null
     }
   }

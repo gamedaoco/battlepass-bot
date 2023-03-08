@@ -1,13 +1,17 @@
 import { Op } from 'sequelize'
 
 import { logger } from '../logger'
-import { Quest, TwitterSearch, TwitterActivity, Battlepass } from '../db'
-import { getClient } from './client'
+import { Quest, TwitterSearch, TwitterActivity, TwitterUser, Battlepass } from '../db'
+import { getClient, getTwitterUserIdsByNames } from './client'
 
-async function getNewComments(tweetId: string, since: Date | null) {
+async function getNewComments(tweetId: string, hashtag: string | null, since: Date | null) {
 	const client = getClient()
+	let query = `conversation_id:${tweetId}`
+	if (hashtag) {
+		query += ` #${hashtag}`
+	}
 	let params: any = {
-		query: `conversation_id:${tweetId}`,
+		query,
 		expansions: ['author_id'],
 		'tweet.fields': ['created_at'],
 	}
@@ -23,7 +27,7 @@ async function getNewComments(tweetId: string, since: Date | null) {
 		}
 		return results
 	} catch (error) {
-		logger.error('Failed to fetch retweets')
+		logger.error('Failed to fetch comments')
 		logger.error(error)
 		return null
 	}
@@ -31,16 +35,20 @@ async function getNewComments(tweetId: string, since: Date | null) {
 
 async function getExistingComments(
 	twitterUsernames: string[],
+	tweetIds: string[],
 	since: Date,
 	before: Date,
 ): Promise<Map<string, Set<string>>> {
 	let existingComments = await TwitterActivity.findAll({
 		where: {
 			activityType: 'comment',
-			objectAuthor: twitterUsernames,
 			createdAt: {
 				[Op.between]: [since, before],
 			},
+			[Op.or]: [
+				{ objectAuthor: twitterUsernames },
+				{ objectId: tweetIds }
+			]
 		},
 		attributes: ['authorId', 'objectId'],
 	})
@@ -56,20 +64,36 @@ async function getExistingComments(
 	return map
 }
 
-async function processTweetComments(
+export async function processTweetComments(
 	tweetId: string,
-	tweetAuthor: string,
-	existingLikes: Set<string>,
+	existingComments: Set<string>,
 	since: Date | null,
 	newObjects: any[],
+	twitterUsers: Map<string, string>,
+	tweetAuthor: string | null,
+	hashtag: string | null,
 ) {
 	// todo: `since` parameter from last update time
-	let comments = await getNewComments(tweetId, since)
+	let comments = await getNewComments(tweetId, hashtag, since)
 	if (!comments) {
 		return
 	}
 	for (let record of comments) {
-		if (record.id == tweetId || existingLikes.has(record.author_id || '')) {
+		let authorId = record.author_id || ''
+		if (record.id == tweetId) {
+			if (!tweetAuthor) {
+				tweetAuthor = twitterUsers.get(authorId) || ''
+				if (!tweetAuthor) {
+					let data = await getTwitterUserIdsByNames([tweetAuthor])
+					for (let [twitterId, username] of data) {
+						twitterUsers.set(twitterId, username)
+						await TwitterUser.create({ username, twitterId })
+					}
+					tweetAuthor = twitterUsers.get(authorId) || ''
+				}
+			}
+			continue
+		} else if (existingComments.has(authorId)) {
 			continue
 		}
 		let item = {
@@ -91,16 +115,27 @@ export async function processCommentQuests(
 	newObjects: any[],
 ) {
 	let usersToCheck = new Set<string>()
+	let tweetsToCheck = new Map<string, string>()  // tweet id <-> hashtag to be present
+	let tweetPattern = /^\d+$/
 	for (let quest of commentQuests) {
 		if (quest.source === 'twitter' && quest.type === 'comment' && quest.twitterId) {
-			usersToCheck.add(quest.twitterId)
+			if (tweetPattern.test(quest.twitterId)) {
+				let hashtag = quest.hashtag || ''
+				if (hashtag.charAt(0) == '#') {
+					hashtag = hashtag.substring(1)
+				}
+				tweetsToCheck.set(quest.twitterId, hashtag)
+			} else {
+				usersToCheck.add(quest.twitterId)
+			}
 		}
 	}
-	if (!usersToCheck.size) {
+	if (!usersToCheck.size && !tweetsToCheck.size) {
 		return
 	}
 	let existingComments = await getExistingComments(
 		Array.from(usersToCheck.values()),
+		Array.from(tweetsToCheck.keys()),
 		battlepass.startDate || new Date(),
 		battlepass.endDate || new Date(),
 	)
@@ -114,12 +149,23 @@ export async function processCommentQuests(
 			continue
 		}
 		for (let tweetId of tweetIds) {
+			if (tweetsToCheck.has(tweetId)) {
+				continue
+			}
 			let existing = existingComments.get(tweetId)
 			if (!existing) {
 				existing = new Set<string>()
 				existingComments.set(tweetId, existing)
 			}
-			await processTweetComments(tweetId, username, existing, battlepass.startDate, newObjects)
+			await processTweetComments(tweetId, existing, battlepass.startDate, newObjects, twitterUsers, username, null)
 		}
+	}
+	for (let [tweetId, hashtag] of tweetsToCheck) {
+		let existing = existingComments.get(tweetId)
+			if (!existing) {
+				existing = new Set<string>()
+				existingComments.set(tweetId, existing)
+			}
+			await processTweetComments(tweetId, existing, battlepass.startDate, newObjects, twitterUsers, null, hashtag)
 	}
 }

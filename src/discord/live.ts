@@ -14,12 +14,7 @@ export async function onMessage(msg: Message) {
 		logger.debug('Skip message for non-text channel')
 		return
 	}
-	let [identity, created] = await Identity.findOrCreate({
-		where: {
-			discord: msg.author.id,
-		},
-	})
-	await DiscordActivity.create(discordMessageToActivity(msg, identity))
+	await DiscordActivity.create(discordMessageToActivity(msg))
 }
 
 export async function onMessageDeleted(msg: Message | PartialMessage) {
@@ -36,28 +31,23 @@ export async function onMessageDeleted(msg: Message | PartialMessage) {
 }
 
 export async function onMemberJoin(member: GuildMember) {
-	logger.debug('Processing join member')
+	logger.info('Processing join member')
 	let [identity, created] = await Identity.findOrCreate({
 		where: { discord: member.user.id },
 	})
-	if (created) {
-		await DiscordActivity.bulkCreate([
-			{
-				identityId: identity.id,
-				guildId: '',
-				channelId: null,
-				activityId: '',
-				activityType: 'connect',
-				createdAt: new Date(),
-			},
-			{
-				identityId: identity.id,
-				guildId: member.guild?.id || '',
-				channelId: null,
-				activityId: '',
-				activityType: 'join',
-				createdAt: member.joinedAt || new Date(),
-			},
-		])
-	}
+	await DiscordActivity.findOrCreate({
+		where: {
+			discordId: member.user.id,
+			guildId: member.guild?.id || '',
+			activityType: 'join',
+		},
+		defaults: {
+			discordId: member.user.id,
+			guildId: member.guild?.id || '',
+			activityType: 'join',
+			channelId: null,
+			activityId: '',
+			createdAt: member.joinedAt || new Date(),
+		}
+	})
 }

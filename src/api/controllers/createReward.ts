@@ -1,3 +1,4 @@
+import { getQueue } from '../../queue'
 import { Battlepass, BattlepassReward } from '../../db'
 
 interface CreateRewardInterface {
@@ -24,5 +25,11 @@ export async function createReward(data: CreateRewardInterface): Promise<Battlep
 		available: data.total,
 		...data
 	})
+	let queue = getQueue('chain')
+	await queue.add(
+		'reward',
+		{ type: 'reward', rewardId: reward.id },
+		{ jobId: `reward-${data.battlepass}-${reward.id}` }
+	)
 	return reward
 }

@@ -68,3 +68,15 @@ export function formattedDate(fieldName: string) {
 		}
 	}
 }
+
+export function formatPrice(parent: any, args: any, context: any, info: any) {
+	let price = parent.price
+	if (price) {
+		price *= 100
+	}
+	return price
+}
+
+export function currency() {
+	return 'EUR'
+}

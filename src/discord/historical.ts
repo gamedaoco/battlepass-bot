@@ -16,28 +16,20 @@ import { Op } from 'sequelize'
 
 import { config } from '../config'
 import { logger } from '../logger'
-import { DiscordActivity, Identity } from '../db'
+import { DiscordActivity } from '../db'
 import { ActivityRecord } from './interfaces'
 
 export async function syncGuildMembers(guild: Guild) {
 	let q = await DiscordActivity.findAll({
 		where: {
-			guildId: guild.id
+			guildId: guild.id,
+			activityType: 'join'
 		},
-		include: [{
-			model: Identity,
-			required: true,
-			where: {
-				discord: {
-					[Op.ne]: null
-				}
-			},
-			attributes: ['id', 'discord']
-		}]
+		attributes: ['discordId']
 	})
-	let existingActivities = new Map<string, number>()
+	let existingActivities = new Set<string>()
+	q.map((i: any) => existingActivities.add(i.discordId))
 	let newActivities = new Map<string, Date>()
-	q.map((i: any) => existingActivities.set(i.Identity.discord, i.identityId))
 	await guild.members.fetch()
 	for (let [_, member] of guild.members.cache) {
 		let userId = member.user.id
@@ -45,32 +37,10 @@ export async function syncGuildMembers(guild: Guild) {
 			newActivities.set(userId, member?.joinedAt || new Date())
 		}
 	}
-	let newActivitiesUsers = await Identity.findAll({
-		where: {
-			discord: [...newActivities.keys()]
-		},
-		attributes: ['id', 'discord']
-	})
-	let newActivityUsers = new Map<number, Date>()
-	let newUsers = new Set<string>([...newActivities.keys()])
-	newActivitiesUsers.map((i) => {
-		newActivityUsers.set(i.id, newActivities.get(i.discord || '') || new Date())
-		newUsers.delete(i.discord || '')
-	})
-	if (newUsers) {
-		let created = await Identity.bulkCreate(
-			[...newUsers.values()].map(i => {
-				return { discord: i }
-			})
-		)
-		created.map((i) => {
-			newActivityUsers.set(i.id, newActivities.get(i.discord || '') || new Date())
-		})
-	}
 	let records = []
-	for (let [userId, createdAt] of newActivityUsers) {
+	for (let [discordId, createdAt] of newActivities) {
 		records.push({
-			identityId: userId,
+			discordId,
 			guildId: guild.id,
 			channelId: null,
 			activityId: '',
@@ -86,17 +56,6 @@ export async function syncGuildMembers(guild: Guild) {
 
 export async function getHistoricalEvents(guild: Guild) {
 	let newActivities = new Array<ActivityRecord>()
-	let identityCache = new Map<string, Identity>()
-	let identities = await Identity.findAll({
-		where: {
-			discord: {
-				[Op.ne]: null,
-			},
-		},
-	})
-	identities.map((i: Identity) => {
-		identityCache.set(i.discord || '', i)
-	})
 	let p = Promise.resolve()
 	await guild.channels.fetch().then(async (channels) => {
 		await channels.forEach(async (channel) => {
@@ -105,7 +64,7 @@ export async function getHistoricalEvents(guild: Guild) {
 					guild.members.me &&
 					guild.members.me.permissionsIn(channel).has(['ReadMessageHistory', 'ViewChannel'])
 				) {
-					p = p.then(() => syncChannelMessages(channel, newActivities, identityCache))
+					p = p.then(() => syncChannelMessages(channel, newActivities))
 				}
 			}
 		})
@@ -125,11 +84,7 @@ export async function getHistoricalEvents(guild: Guild) {
 	})
 }
 
-async function syncChannelMessages(
-	channel: TextChannel,
-	newActivities: ActivityRecord[],
-	identityCache: Map<string, Identity>,
-) {
+async function syncChannelMessages(channel: TextChannel, newActivities: ActivityRecord[]) {
 	if (channel === null) {
 		logger.debug('Sync channel is empty')
 		return
@@ -165,8 +120,7 @@ async function syncChannelMessages(
 				if (lastActivity) {
 					for (let msg of pageCollection.values()) {
 						options.after = msg.id
-						let identity = await getIdentity(msg, identityCache, newActivities)
-						newActivities.push(discordMessageToActivity(msg, identity))
+						newActivities.push(discordMessageToActivity(msg))
 					}
 				} else {
 					for (let msg of pageCollection.values()) {
@@ -179,8 +133,7 @@ async function syncChannelMessages(
 							options.before = msg.id
 							lastMessageDate = msg.createdAt
 						}
-						let identity = await getIdentity(msg, identityCache, newActivities)
-						newActivities.push(discordMessageToActivity(msg, identity))
+						newActivities.push(discordMessageToActivity(msg))
 					}
 				}
 			})
@@ -192,44 +145,9 @@ async function syncChannelMessages(
 	}
 }
 
-async function getIdentity(
-	discordMessage: Message,
-	cache: Map<string, Identity>,
-	newActivities: ActivityRecord[],
-): Promise<Identity> {
-	let discordId = discordMessage.author.id
-	let identity: Identity | undefined = cache.get(discordId)
-	if (identity instanceof Identity) {
-		return identity
-	}
-	identity = await Identity.create({ discord: discordId })
-	newActivities.push(
-		...[
-			{
-				identityId: identity.id,
-				guildId: '',
-				channelId: null,
-				activityId: '',
-				activityType: 'connect',
-				createdAt: new Date(),
-			},
-			{
-				identityId: identity.id,
-				guildId: discordMessage.guild?.id || '',
-				channelId: null,
-				activityId: '',
-				activityType: 'join',
-				createdAt: discordMessage.member?.joinedAt || new Date(),
-			},
-		],
-	)
-	cache.set(discordId, identity)
-	return identity
-}
-
-export function discordMessageToActivity(msg: Message, identity: Identity): ActivityRecord {
+export function discordMessageToActivity(msg: Message): ActivityRecord {
 	return {
-		identityId: identity.id,
+		discordId: msg.author.id,
 		guildId: msg.guild === null ? '0' : msg.guild.id,
 		channelId: msg.channel instanceof TextChannel ? msg.channel.id : null,
 		activityId: msg.id,
