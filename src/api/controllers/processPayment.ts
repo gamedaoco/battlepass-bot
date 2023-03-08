@@ -1,5 +1,7 @@
 import { GraphQLError } from 'graphql'
 import { config } from '../../config'
+import { logger } from '../../logger'
+import { getQueue } from '../../queue'
 import { Battlepass, BattlepassParticipant, Payment, Identity } from '../../db'
 
 interface ProcessPaymentInterface {
@@ -15,7 +17,7 @@ export async function processPayment(data: ProcessPaymentInterface) {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Invalid security token' },
 		})
 	}
-	let p = await BattlepassParticipant.findOne({
+	let p: any = await BattlepassParticipant.findOne({
 		include: [{
 			model: Battlepass,
 			required: true,
@@ -35,15 +37,49 @@ export async function processPayment(data: ProcessPaymentInterface) {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Participant not found' },
 		})
 	}
+	if (p.status != 'pendingPayment') {
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: `Participant status invalid "${p.status}"` },
+		})
+	}
 	let [payment, created] = await Payment.findOrCreate({
 		where: {
-			paymentToken: data.paymentToken,
 			participantId: p.id,
 		},
+		defaults: {
+			paymentToken: data.paymentToken,
+			participantId: p.id,
+		}
 	})
+	if (created) {
+		p.status = 'pending'
+		await p.save()
+		logger.info(
+			'Received payment for participant %s, battlepass %s, identity %s',
+			p.id, p.Battlepass.chainId, p.Identity.uuid
+		)
+	}
+	else {
+		logger.info('Received multiple payments for participant %s with data %s', p.id, data)
+	}
+	let queue = getQueue('chain')
+	queue.add(
+		'claimBattlepass',
+		{
+			type: 'claimBattlepass',
+			participantId: p.id
+		},
+		{ jobId: `claimBattlepass-${p.id}` }
+	)
+	queue.add(
+		'points',
+		{ type: 'points', identityId: p.identityId, battlepassId: p.battlepassId },
+		{ jobId: `points-${p.Battlepass.chainId}-${p.identityId}` },
+	)
 	return {
-		battlepass: data.battlepass,
-		identityUuid: data.identityUuid,
-		paymentToken: data.paymentToken
+		battlepass: p.Battlepass.chainId,
+		identityUuid: p.Identity.uuid,
+		paymentToken: payment.paymentToken,
+		status: p.status
 	}
 }

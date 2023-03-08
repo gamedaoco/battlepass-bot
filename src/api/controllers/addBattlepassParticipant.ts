@@ -8,7 +8,7 @@ interface AddParticipantInterface {
 	identityUuid: string
 }
 
-export async function addBattlepassParticipant(data: AddParticipantInterface): Promise<Identity | null> {
+export async function addBattlepassParticipant(data: AddParticipantInterface): Promise<BattlepassParticipant | null> {
 	let bp = await Battlepass.findOne({
 		where: { chainId: data.battlepass },
 	})
@@ -21,7 +21,7 @@ export async function addBattlepassParticipant(data: AddParticipantInterface): P
 	if (existingUser === null) {
 		return null
 	}
-	let [_, created] = await BattlepassParticipant.findOrCreate({
+	let [p, created] = await BattlepassParticipant.findOrCreate({
 		where: {
 			identityId: existingUser.id,
 			battlepassId: bp.id,
@@ -47,5 +47,5 @@ export async function addBattlepassParticipant(data: AddParticipantInterface): P
 			await QuestProgress.bulkCreate(progress)
 		}
 	}
-	return existingUser
+	return p
 }
