@@ -467,6 +467,7 @@ export class BattlepassParticipant extends Model<
 > {
 	declare id: CreationOptional<number>
 	declare premium: boolean
+	declare status: CreationOptional<string>
 	declare points: CreationOptional<number>
 	declare passChainId: string | null
 	declare identityId: ForeignKey<Identity['id']>
@@ -487,6 +488,12 @@ BattlepassParticipant.init(
 		premium: {
 			type: DataTypes.BOOLEAN,
 			defaultValue: false
+		},
+		status: {
+			type: DataTypes.ENUM,
+			values: ['free', 'pendingPayment', 'pending', 'synced'],
+			defaultValue: 'free',
+			allowNull: false,
 		},
 		passChainId: {
 			type: DataTypes.CHAR(66),

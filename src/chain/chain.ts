@@ -102,6 +102,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						identityId: identity.id,
 						battlepassId: bp.id,
 						premium: true,
+						status: 'synced',
 						passChainId: nftId.toString()
 					},
 				})
@@ -127,6 +128,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					}
 				} else {
 					participant.premium = true
+					participant.status = 'synced'
 					participant.passChainId = nftId.toString()
 					logger.info(
 						'Updating participant status to premium for user %s and battlepass %s',
@@ -136,7 +138,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					await participant.save()
 				}
 			} else if (api.events.identity.IdentitySet.is(event)) {
-                let address = event.data[0].toString();
+                let address = event.data[0].toString()
                 await ChainActivity.create({ address, activityType: 'identity' })
                 logger.info('Identity set activity for address %s', address)
         	}

@@ -2,7 +2,7 @@ import { Op } from 'sequelize'
 import { Job } from 'bullmq'
 import { ApiPromise } from '@polkadot/api'
 import { logger } from '../logger'
-import { Battlepass, BattlepassLevel, BattlepassReward, BattlepassParticipant, CompletedQuest, Identity, RewardClaim, Quest, sequelize } from '../db'
+import { Battlepass, BattlepassLevel, BattlepassReward, BattlepassParticipant, CompletedQuest, Identity, RewardClaim, Quest, Payment, sequelize } from '../db'
 import { getSigningAccount, isEventError, getEventError, getClient, executeTxWithResult } from './utils'
 
 export async function worker(job: Job) {
@@ -148,6 +148,19 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 		logger.debug('Attempt to claim multiple battlepass access for same member %s', participantId)
 		return
 	}
+	if (p.Battlepass.freePasses <= p.Battlepass.passesClaimed) {
+		let payment = await Payment.findOne({
+			where: { participantId: p.id }
+		})
+		if (!payment) {
+			logger.warn('Attempt to claim battlepass without payment and no free passes left')
+			p.status = 'free'
+			await p.save()
+			return
+		}
+	}
+	p.status = 'pending'
+	await p.save()
 	let tx = api.tx.battlepass.claimBattlepass(p.Battlepass.chainId, p.Identity.address)
 	await executeTxWithResult(api, tx, api.events.battlepass.BattlepassClaimed).then((event) => {
 		logger.info('Participant %s successfully claimed battlepass access', participantId)

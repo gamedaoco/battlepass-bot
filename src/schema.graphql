@@ -102,6 +102,7 @@ type BattlepassMember {
 	identityId: Int!
 	battlepassId: Int!
 	premium: Boolean!
+	status: String!
 	points: Int!
 	passChainId: String
 	progress: [BattlepassQuestProgress]
@@ -151,6 +152,7 @@ type Payment {
 	battlepass: String!
 	identityUuid: String!
 	paymentToken: String!
+	status: String!
 }
 
 input BattlepassesFilter {
@@ -240,8 +242,8 @@ type Query {
 
 type Mutation {
 	identity(uuid: String, discord: String, twitter: String, address: String, name: String, email: String, cid: String): BattlepassIdentity
-	join(battlepass: String!, identityUuid: String!): BattlepassIdentity
-	joinPremium(battlepass: String!, identityUuid: String!): BattlepassIdentity
+	join(battlepass: String!, identityUuid: String!): BattlepassMember
+	joinPremium(battlepass: String!, identityUuid: String!): BattlepassMember
 	quest(battlepass: String!, name: String, description: String, link: String, cid: String, daily: Boolean!, source: Source!, type: ActivityType!, guildId: String, channelId: String, hashtag: String, twitterId: String, quantity: Int!, points: Int!, max: Int, maxDaily: Int): BattlepassQuest
 	reward(battlepass: String!, name: String, description: String, cid: String, points: Int, level: Int, total: Int!): BattlepassReward
 	levels(battlepass: String!, levels: [Level]!): [BattlepassLevel]
