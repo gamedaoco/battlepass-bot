@@ -23,6 +23,13 @@ enum SyncStatus {
 	failed
 }
 
+enum MemberStatus {
+	free
+	pendingPayment
+	pending
+	synced
+}
+
 type BattlepassIdentity {
 	id: Int!
 	uuid: String!
@@ -81,7 +88,11 @@ type Battlepass {
 	startDate: String
 	endDate: String
 	freePasses: Int!
-	passesClaimed: Int!
+	freeClaimed: Int!
+	premiumPasses: Int
+	premiumClaimed: Int!
+	totalJoined: Int!
+	joinable: Boolean!
 	quests: [BattlepassQuest]
 	members: [BattlepassMember]
 	rewards: [BattlepassReward]
@@ -102,7 +113,7 @@ type BattlepassMember {
 	identityId: Int!
 	battlepassId: Int!
 	premium: Boolean!
-	status: String!
+	status: MemberStatus!
 	points: Int!
 	passChainId: String
 	progress: [BattlepassQuestProgress]
@@ -152,7 +163,7 @@ type Payment {
 	battlepass: String!
 	identityUuid: String!
 	paymentToken: String!
-	status: String!
+	status: MemberStatus!
 }
 
 input BattlepassesFilter {
@@ -250,4 +261,5 @@ type Mutation {
 	setFreePasses(battlepass: String!, freePasses: Int!): Battlepass
 	processPayment(securityToken: String!, battlepass: String!, identityUuid: String!, paymentToken: String!): Payment
 	claimReward(battlepass: String!, identityUuid: String!, reward: String!): BattlepassRewardClaim
+	updateBattlepass(battlepass: String!, joinable: Boolean, freePasses: Int, premiumPasses: Int): Battlepass
 }

@@ -122,7 +122,7 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 		logger.warn('Failed to get users for the battlepass %s', battlepass.chainId)
 		return
 	}
-	battlepass.passesClaimed = chainUsers.size // todo: available?
+	battlepass.premiumClaimed = chainUsers.size // todo: available?
 	await battlepass.save()
 	let identities = await Identity.findAll({
 		where: {

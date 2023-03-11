@@ -138,6 +138,9 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 			where: {
 				address: { [Op.ne]: null }
 			}
+		}, {
+			model: Payment,
+			required: false
 		}]
 	})
 	if (!p || !p.Identity) {
@@ -148,11 +151,8 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 		logger.debug('Attempt to claim multiple battlepass access for same member %s', participantId)
 		return
 	}
-	if (p.Battlepass.freePasses <= p.Battlepass.passesClaimed) {
-		let payment = await Payment.findOne({
-			where: { participantId: p.id }
-		})
-		if (!payment) {
+	if (p.Battlepass.freeClaimed >= p.Battlepass.freePasses) {
+		if (!p.Payment) {
 			logger.warn('Attempt to claim battlepass without payment and no free passes left')
 			p.status = 'free'
 			await p.save()

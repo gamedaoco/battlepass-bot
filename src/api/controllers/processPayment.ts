@@ -63,7 +63,7 @@ export async function processPayment(data: ProcessPaymentInterface) {
 		logger.info('Received multiple payments for participant %s with data %s', p.id, data)
 	}
 	let queue = getQueue('chain')
-	queue.add(
+	await queue.add(
 		'claimBattlepass',
 		{
 			type: 'claimBattlepass',
@@ -71,7 +71,7 @@ export async function processPayment(data: ProcessPaymentInterface) {
 		},
 		{ jobId: `claimBattlepass-${p.id}` }
 	)
-	queue.add(
+	await queue.add(
 		'points',
 		{ type: 'points', identityId: p.identityId, battlepassId: p.battlepassId },
 		{ jobId: `points-${p.Battlepass.chainId}-${p.identityId}` },
