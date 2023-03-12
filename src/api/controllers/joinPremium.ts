@@ -33,6 +33,13 @@ export async function joinPremium(data: JoinPremiumInterface) {
 	if (p.status == 'pendingPayment') {
 		return p
 	}
+	let bp = p.Battlepass
+	if (bp.freeClaimed >= bp.freePasses && (!bp.premiumPasses || bp.premiumClaimed >= bp.premiumPasses)) {
+		logger.info('Attempt to join battlepass without free passes')
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: `No passes available` },
+		})
+	}
 	if (p.premium || p.status != 'free') {
 		throw new GraphQLError('Invalid input', {
 			extensions: { code: 'BAD_USER_INPUT', description: `Member status invalid "${p.status}"` },
@@ -43,25 +50,19 @@ export async function joinPremium(data: JoinPremiumInterface) {
 			extensions: { code: 'BAD_USER_INPUT', description: 'No address provided' },
 		})
 	}
-	let bp = p.Battlepass
-	if (bp.freePasses <= bp.passesClaimed) {
+	if (bp.freeClaimed >= bp.freePasses) {
 		logger.info('No free passes available, awaiting for user payment %s', data)
 		p.status = 'pendingPayment'
 	} else {
 		logger.info('Claiming free pass for the user %s', data)
 		p.status = 'pending'
 		let queue = getQueue('chain')
-		queue.add(
+		await queue.add(
 			'claimBattlepass',
-			{
-				type: 'claimBattlepass',
-				participantId: p.id
-			},
-			{
-				jobId: `claimBattlepass-${p.id}`
-			}
+			{ type: 'claimBattlepass', participantId: p.id },
+			{ jobId: `claimBattlepass-${p.id}` }
 		)
-		queue.add(
+		await queue.add(
 			'points',
 			{ type: 'points', identityId: p.identityId, battlepassId: p.battlepassId },
 			{ jobId: `points-${p.Battlepass.chainId}-${p.identityId}` },

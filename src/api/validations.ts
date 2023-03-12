@@ -111,3 +111,10 @@ export const ClaimRewardSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 	reward: Joi.string().required().length(66),
 })
+
+export const UpdateBattlepassSchema = Joi.object({
+	battlepass: Joi.string().required().length(66),
+	freePasses: Joi.number().integer().min(0).max(10000),
+	premiumPasses: Joi.number().integer().min(0).max(10000),
+	joinable: Joi.boolean(),
+})

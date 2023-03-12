@@ -18,7 +18,8 @@ import {
 	AddParticipantSchema,
 	SetBattlepassFreePassesSchema,
 	PaymentSchema,
-	ClaimRewardSchema
+	ClaimRewardSchema,
+	UpdateBattlepassSchema
 } from './validations'
 import {
 	getPoints,
@@ -33,6 +34,7 @@ import {
 	processPayment,
 	joinPremium,
 	claimReward,
+	updateBattlepass
 } from './controllers'
 
 import {
@@ -201,7 +203,17 @@ const resolvers = {
 				})
 			}
 			return await claimReward(input.value)
-		}
+		},
+		updateBattlepass: async (parent: any, args: any) => {
+			let input = UpdateBattlepassSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid update battlepass request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			return await updateBattlepass(input.value)
+		},
 	},
 }
 

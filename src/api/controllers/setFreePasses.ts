@@ -2,7 +2,7 @@ import { logger } from '../../logger'
 import { Battlepass, sequelize } from '../../db'
 
 interface SetFreePassesInterface {
-	battlepass: string,
+	battlepass: string
 	freePasses: number
 }
 
@@ -20,7 +20,7 @@ export async function setFreePasses(data: SetFreePassesInterface): Promise<Battl
 			return null
 		}
 		let freePassesBefore = bp.freePasses
-		if (data.freePasses >= bp.passesClaimed) {
+		if (data.freePasses > bp.freeClaimed) {
 			bp.freePasses = data.freePasses
 			await bp.save({
 				transaction: t

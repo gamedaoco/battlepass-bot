@@ -18,6 +18,7 @@ import {
 	BattlepassParticipant,
 	BattlepassReward,
 	RewardClaim,
+	Payment,
 	sequelize,
 } from '../db'
 import { calculateBlockDate } from '../indexer/indexer'
@@ -89,24 +90,37 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					logger.error('Found chain event about claimed unknown battlepass')
 					return
 				}
-				await Battlepass.increment({ passesClaimed: 1 }, { where: { id: bp.id } })
 				let [identity, _] = await Identity.findOrCreate({
 					where: { address: forWho.toString() },
 				})
-				let [participant, created] = await BattlepassParticipant.findOrCreate({
+				let participant: any = await BattlepassParticipant.findOne({
 					where: {
 						identityId: identity.id,
 						battlepassId: bp.id
 					},
-					defaults: {
+					include: [{
+						model: Payment,
+						required: false,
+					}]
+				})
+				if (participant) {
+					participant.premium = true
+					participant.status = 'synced'
+					participant.passChainId = nftId.toString()
+					logger.info(
+						'Updating participant status to premium for user %s and battlepass %s',
+						identity.address,
+						bp.chainId
+					)
+					await participant.save()
+				} else {
+					participant = await BattlepassParticipant.create({
 						identityId: identity.id,
 						battlepassId: bp.id,
 						premium: true,
 						status: 'synced',
 						passChainId: nftId.toString()
-					},
-				})
-				if (created) {
+					})
 					let quests = await Quest.findAll({
 						where: { battlepassId: bp.id },
 					})
@@ -126,16 +140,11 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						)
 						await QuestProgress.bulkCreate(newProgress)
 					}
+				}
+				if (participant && participant.Payment) {
+					await Battlepass.increment({ premiumClaimed: 1 }, { where: { id: bp.id } })
 				} else {
-					participant.premium = true
-					participant.status = 'synced'
-					participant.passChainId = nftId.toString()
-					logger.info(
-						'Updating participant status to premium for user %s and battlepass %s',
-						identity.address,
-						bp.chainId
-					)
-					await participant.save()
+					await Battlepass.increment({ freeClaimed: 1 }, { where: { id: bp.id } })
 				}
 			} else if (api.events.identity.IdentitySet.is(event)) {
                 let address = event.data[0].toString()

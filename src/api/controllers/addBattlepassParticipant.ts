@@ -1,4 +1,5 @@
 import { Op } from 'sequelize'
+import { GraphQLError } from 'graphql'
 
 import { logger } from '../../logger'
 import { Identity, Battlepass, BattlepassParticipant, DiscordActivity, Quest, QuestProgress } from '../../db'
@@ -14,6 +15,11 @@ export async function addBattlepassParticipant(data: AddParticipantInterface): P
 	})
 	if (!bp) {
 		return null
+	}
+	if (!bp.joinable) {
+		throw new GraphQLError('Invalid input', {
+			extensions: { code: 'BAD_USER_INPUT', description: 'Battlepass is not joinable' },
+		})
 	}
 	let existingUser = await Identity.findOne({
 		where: { uuid: data.identityUuid },
@@ -31,6 +37,10 @@ export async function addBattlepassParticipant(data: AddParticipantInterface): P
 		}
 	})
 	if (created) {
+		await Battlepass.increment(
+			{ totalJoined: 1 },
+			{ where: { id: bp.id } }
+		)
 		let quests = await Quest.findAll({
 			where: { battlepassId: bp.id },
 			attributes: ['id'],

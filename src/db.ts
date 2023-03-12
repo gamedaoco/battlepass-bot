@@ -28,8 +28,12 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare endDate: Date | null
 	declare active: boolean
 	declare finalized: boolean
+	declare joinable: CreationOptional<boolean>
+	declare totalJoined: CreationOptional<number>
 	declare freePasses: CreationOptional<number>
-	declare passesClaimed: CreationOptional<number>
+	declare freeClaimed: CreationOptional<number>
+	declare premiumPasses: CreationOptional<number>
+	declare premiumClaimed: CreationOptional<number>
 }
 Battlepass.init(
 	{
@@ -78,12 +82,32 @@ Battlepass.init(
 			type: DataTypes.BOOLEAN,
 			allowNull: false,
 		},
+		joinable: {
+			type: DataTypes.BOOLEAN,
+			allowNull: false,
+			defaultValue: true
+		},
+		totalJoined: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+		},
 		freePasses: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			defaultValue: 0
 		},
-		passesClaimed: {
+		freeClaimed: {
+			type: DataTypes.INTEGER,
+			allowNull: false,
+			defaultValue: 0
+		},
+		premiumPasses: {
+			type: DataTypes.INTEGER,
+			allowNull: true,
+			defaultValue: null
+		},
+		premiumClaimed: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
 			defaultValue: 0
