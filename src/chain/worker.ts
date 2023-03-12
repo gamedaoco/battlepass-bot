@@ -89,7 +89,6 @@ async function storeRewardOnChain(api: ApiPromise, rewardId: number) {
 
 async function storeUserPointsOnChain(api: ApiPromise, identityId: number, battlepassId: number) {
 	let bp: any = await BattlepassParticipant.findOne({
-		where: { premium: true },
 		include: [{
 			model: Identity,
 			required: true,
@@ -105,6 +104,13 @@ async function storeUserPointsOnChain(api: ApiPromise, identityId: number, battl
 	if (!bp || !bp.points) {
 		logger.error(
 			'Attempt to store user %s %s points on chain without any records',
+			identityId, battlepassId
+		)
+		return
+	}
+	if (bp.status != 'synced' && bp.status != 'pending') {
+		logger.error(
+			'Attempt to store user %s %s points on chain without premium access',
 			identityId, battlepassId
 		)
 		return
