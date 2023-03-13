@@ -34,7 +34,7 @@ export async function joinPremium(data: JoinPremiumInterface) {
 		return p
 	}
 	let bp = p.Battlepass
-	if (bp.freeClaimed >= bp.freePasses && (!bp.premiumPasses || bp.premiumClaimed >= bp.premiumPasses)) {
+	if (bp.freeClaimed >= bp.freePasses && (bp.premiumPasses != null && bp.premiumClaimed >= bp.premiumPasses)) {
 		logger.info('Attempt to join battlepass without free passes')
 		throw new GraphQLError('Invalid input', {
 			extensions: { code: 'BAD_USER_INPUT', description: `No passes available` },
