@@ -32,13 +32,12 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 	}
 	if (data.discord) {
 		where.push({ discord: data.discord })
-	} else {
-		if (data.twitter) {
-			where.push({ twitter: data.twitter })
-		}
-		if (data.address) {
-			where.push({ address: data.address })
-		}
+	}
+	if (data.twitter) {
+		where.push({ twitter: data.twitter })
+	}
+	if (data.address) {
+		where.push({ address: data.address })
 	}
 	let identities = await Identity.findAll({ where: { [Op.or]: where } })
 	if (identities.length > 1) {
