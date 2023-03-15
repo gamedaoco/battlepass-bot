@@ -19,7 +19,8 @@ import {
 	SetBattlepassFreePassesSchema,
 	PaymentSchema,
 	ClaimRewardSchema,
-	UpdateBattlepassSchema
+	UpdateBattlepassSchema,
+	UserTokenSchema
 } from './validations'
 import {
 	getPoints,
@@ -34,7 +35,8 @@ import {
 	processPayment,
 	joinPremium,
 	claimReward,
-	updateBattlepass
+	updateBattlepass,
+	provideUserToken,
 } from './controllers'
 
 import {
@@ -213,6 +215,16 @@ const resolvers = {
 				})
 			}
 			return await updateBattlepass(input.value)
+		},
+		provideUserToken: async (parent: any, args: any) => {
+			let input = UserTokenSchema.validate(args)
+			if (input.error) {
+				logger.debug('Invalid user token request %s', input.error)
+				throw new GraphQLError('Invalid input', {
+					extensions: { code: 'BAD_USER_INPUT', description: input.error.toString() },
+				})
+			}
+			return await provideUserToken(input.value)
 		},
 	},
 }
