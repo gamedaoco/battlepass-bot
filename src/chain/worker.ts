@@ -167,7 +167,7 @@ async function claimBattlepassAccess(api: ApiPromise, participantId: number) {
 	}
 	p.status = 'pending'
 	await p.save()
-	let tx = api.tx.battlepass.claimBattlepass(p.Battlepass.chainId, p.Identity.address)
+	let tx = api.tx.battlepass.claimBattlepass(p.Battlepass.chainId, p.Identity.address, null)
 	await executeTxWithResult(api, tx, api.events.battlepass.BattlepassClaimed).then((event) => {
 		logger.info('Participant %s successfully claimed battlepass access', participantId)
 	}).catch((err) => {
@@ -210,7 +210,7 @@ async function claimUserReward(api: ApiPromise, rewardClaimId: number) {
 		logger.error('Failed to claim reward for unknown user or reward')
 		return
 	}
-	let tx = api.tx.battlepass.claimReward(reward.chainId, user.address)
+	let tx = api.tx.battlepass.claimReward(reward.chainId, user.address, null)
 	await executeTxWithResult(api, tx, api.events.battlepass.RewardClaimed).then(async (event) => {
 		await BattlepassReward.increment({ available: -1 }, { where: { id: claim.BattlepassReward.id } })
 		let [rewardChainId, claimer, collectionId, nftId] = event.data
