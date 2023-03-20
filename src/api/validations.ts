@@ -122,5 +122,5 @@ export const UpdateBattlepassSchema = Joi.object({
 export const UserTokenSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
 	source: Joi.string().required().valid('twitter'),
-	token: Joi.string().required().min(1).max(100)
+	token: Joi.string().required().min(1).max(500)
 })

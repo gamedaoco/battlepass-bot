@@ -758,7 +758,7 @@ UserToken.init(
 			allowNull: false
 		},
 		token: {
-			type: DataTypes.STRING(100),
+			type: DataTypes.STRING(500),
 			allowNull: false
 		}
 	},
