@@ -3,12 +3,14 @@ import { logger } from '../logger'
 import { TwitterActivity, TwitterUser } from '../db'
 import { getActiveBattlePasses } from '../chain/chain'
 import { sequelize, initDB, Quest, Battlepass } from '../db'
+import { getWorker } from '../queue'
 import { getClient, getTwitterUserIdsByNames } from './client'
 import { processTweetQuests } from './tweets'
 import { processLikeQuests } from './likes'
 import { processCommentQuests, processTweetComments } from './comments'
 import { processRetweetQuests } from './retweets'
 import { processFollowQuests } from './follows'
+import { worker } from './worker'
 
 async function getUsesrCache(usernames: string[]): Promise<Map<string, string>> {
 	let res = await TwitterUser.findAll({
@@ -114,16 +116,16 @@ async function iteration(again: boolean) {
 		}
 	}
 	for (let [userid, username] of usersMap) {
-			let userTweets = await getUserTweets(userid, since, before)
-			if (!userTweets) {
-				continue
-			}
-			let tweetIds = new Array<string>()
-			for (let tweet of userTweets) {
-				tweetIds.push(tweet.id)
-			}
-			tweets.set(userid, tweetIds)
+		let userTweets = await getUserTweets(userid, since, before)
+		if (!userTweets) {
+			continue
 		}
+		let tweetIds = new Array<string>()
+		for (let tweet of userTweets) {
+			tweetIds.push(tweet.id)
+		}
+		tweets.set(userid, tweetIds)
+	}
 
 	for (let battlepass of battlepasses.values()) {
 		let quests = questsByBattlepass.get(battlepass.id)
@@ -154,6 +156,7 @@ async function main() {
 		return -1
 	}
 	await sequelize.sync()
+	let tasksWorker = getWorker('twitter', worker)
 	await iteration(true)
 }
 

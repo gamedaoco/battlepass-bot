@@ -17,7 +17,7 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 			requiredEnvVariables.push('DISCORD_BOT_KEY')
 			break
 		case 'twitter':
-			requiredEnvVariables.push('TWITTER_BEARER_TOKEN')
+			requiredEnvVariables.push(...['TWITTER_BEARER_TOKEN', 'TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET', 'TWITTER_REDIRECT_URI'])
 			break
 	}
 	requiredEnvVariables.forEach((name) => {
@@ -34,6 +34,9 @@ export const config = {
 	},
 	twitter: {
 		bearerToken: process.env.TWITTER_BEARER_TOKEN || '',
+		clientId: process.env.TWITTER_CLIENT_ID || '',
+		clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
+		redirectUri: process.env.TWITTER_REDIRECT_URI || '',
 		checkFrequency: parseInt(process.env.TWITTER_UPDATES_CHECK_FREQUENCY || '960'),
 	},
 	logging: {

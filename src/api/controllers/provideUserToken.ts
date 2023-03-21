@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql'
 import { logger } from '../../logger'
 import { Identity, UserToken, sequelize } from '../../db'
+import { getQueue } from '../../queue'
 
 interface UserTokenInterface {
 	identityUuid: string
@@ -15,15 +16,19 @@ export async function provideUserToken(data: UserTokenInterface): Promise<Identi
 			extensions: { code: 'BAD_USER_INPUT', description: 'Identity does not exist' },
 		})
 	}
-	let existingToken = await UserToken.findOne({ where: { identityId: identity.id, source: data.source }})
-	if (existingToken) {
-		existingToken.token = data.token
-		await existingToken.save()
-	} else {
-		await UserToken.create({
-			identityId: identity.id,
-			...data
-		})
+	if (data.source == 'twitter') {
+		let queue = getQueue('twitter')
+		await queue.add(
+			'authCode',
+			{
+				type: 'authCode',
+				identityUuid: data.identityUuid,
+				code: data.token
+			},
+			{
+				jobId: `authCode-${data.source}-${identity.id}`
+			}
+		)
 	}
 	return identity
 }

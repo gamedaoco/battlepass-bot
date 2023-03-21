@@ -2,7 +2,7 @@ import { Queue, Worker, Processor } from 'bullmq'
 import { config } from './config'
 import { logger } from './logger'
 
-export function getQueue(name: 'chain') {
+export function getQueue(name: 'chain' | 'twitter') {
 	let q = new Queue(name, {
 		connection: config.general.redis,
 		defaultJobOptions: {
@@ -16,7 +16,7 @@ export function getQueue(name: 'chain') {
 	return q
 }
 
-export function getWorker(name: 'chain', worker: Processor) {
+export function getWorker(name: 'chain' | 'twitter', worker: Processor) {
 	let w = new Worker(name, worker, {
 		connection: config.general.redis,
 		concurrency: 1
