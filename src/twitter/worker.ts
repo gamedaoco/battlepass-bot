@@ -1,5 +1,7 @@
 import * as crypto from 'crypto';
 import { Job } from 'bullmq'
+import { Op } from 'sequelize'
+import { Client, auth } from 'twitter-api-sdk'
 import { config } from '../config'
 import { logger } from '../logger'
 import { Identity, UserToken } from '../db'
@@ -55,7 +57,7 @@ async function twitterAuth(authCode: string, verifier: string) {
 	let json = await resp.json()
 	if (!resp.ok) {
 		logger.error('Failed to obtain twitter token')
-		logger.error(json)
+		logger.error(json.toString())
 		throw Error('Invalid twitter auth response')
 	}
 	return json
@@ -70,7 +72,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 	let verifier = crypto.createHash('sha256').update(i.uuid || '').digest('hex')
 	let resp
 	try {
-		let resp = await twitterAuth(code, verifier)
+		resp = await twitterAuth(code, verifier)
 	} catch (e) {
 		logger.error('Error during twitter auth token retrieval for %s', identityUuid)
 		logger.error(e)
@@ -78,8 +80,41 @@ async function processAuthCode(identityUuid: string, code: string) {
 	}
 	let tokenData = processTokenResponse(resp)
 	if (!tokenData) {
+		logger.error(resp)
 		return
 	}
+	let authCli = new auth.OAuth2User({
+		client_id: config.twitter.clientId,
+		client_secret: config.twitter.clientSecret,
+		callback: config.twitter.redirectUri,
+		scopes: ['follows.read', 'offline.access', 'like.read', 'users.read', 'tweet.read']
+	})
+	authCli.token = tokenData
+	let client = new Client(authCli)
+	let userData
+	try {
+		userData = await client.users.findMyUser()
+	} catch (e) {
+		logger.error('Failed to fetch user details')
+		logger.error(e)
+		return
+	}
+	if (!userData || ! userData.data) {
+		logger.error('Empty user data received %s', userData)
+		return
+	}
+	if (await Identity.findOne({
+		where: {
+			id: { [Op.ne]: i.id },
+			twitter: userData.data.id
+		}
+	})) {
+		logger.error('Attempt to use same twitter account for multiple identities %s', userData)
+		// todo: invalidate token for other user?
+		return
+	}
+	i.twitter = userData.data.id
+	await i.save()
 	let tokenStr = JSON.stringify(tokenData)
 	let token = await UserToken.findOne({
 		where: { source: 'twitter', identityId: i.id },
