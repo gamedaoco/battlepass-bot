@@ -1,15 +1,18 @@
 version: "3.7"
 services:
+
   db:
-    image: postgres:12-alpine
+    image: postgres:14-alpine
     environment:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: battlepass_dev
+
   redis:
     image: redis:7-alpine
     ports:
       - 6379:6379
     command: redis-server --save 60 1 --loglevel warning
+
   api:
     image: battlepass-bot:local
     command:
@@ -18,12 +21,13 @@ services:
       - api
     environment:
       LOGGING_LEVEL: info
-      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      DATABASE_URL: postgres://{POSTGRES_USER}:{POSTGRES_PASS}@db:5432/{POSTGRES_DB}
       API_PORT: 8080
     ports:
       - 8080:8080
     depends_on:
       - db
+
   discord:
     image: battlepass-bot:local
     command:
@@ -32,11 +36,12 @@ services:
       - discord
     environment:
       LOGGING_LEVEL: info
-      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
-      DISCORD_BOT_KEY: 
+      DATABASE_URL: postgres://{POSTGRES_USER}:{POSTGRES_PASS}@db:5432/{POSTGRES_DB}
+      DISCORD_BOT_KEY:
     depends_on:
       - db
       - api
+
   twitter:
     image: battlepass-bot:local
     command:
@@ -46,10 +51,11 @@ services:
     environment:
       LOGGING_LEVEL: info
       DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
-      TWITTER_BEARER_TOKEN: 
+      TWITTER_BEARER_TOKEN:
     depends_on:
       - db
       - api
+
   chain:
     image: battlepass-bot:local
     command:
@@ -58,12 +64,13 @@ services:
       - chain
     environment:
       LOGGING_LEVEL: info
-      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
-      GRAPH_URL: 
-      CHAIN_RPC_URL: 
+      DATABASE_URL: postgres://{POSTGRES_USER}:{POSTGRES_PASS}@db:5432/{POSTGRES_DB}
+      GRAPH_URL:
+      CHAIN_RPC_URL:
     depends_on:
       - db
       - api
+
   aggregation:
     image: battlepass-bot:local
     command:
@@ -72,10 +79,11 @@ services:
       - service
     environment:
       LOGGING_LEVEL: info
-      DATABASE_URL: postgres://postgres:postgres@db:5432/battlepass_dev
+      DATABASE_URL: postgres://{POSTGRES_USER}:{POSTGRES_PASS}@db:5432/{POSTGRES_DB}
     depends_on:
       - db
       - api
+
   epic-games:
     image: battlepass-bot:local
     command:
