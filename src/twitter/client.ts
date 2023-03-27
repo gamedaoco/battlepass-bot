@@ -138,4 +138,7 @@ class RotatingClient {
 	get size() {
 		return this.items.length
 	}
+	get waitTime() {
+		return Math.max(config.twitter.checkFrequency - (this.items.length - 1) * 30, 30)
+	}
 }

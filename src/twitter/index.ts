@@ -153,7 +153,7 @@ async function iteration(again: boolean) {
 	if (again) {
 		setTimeout(async () => {
 			await iteration(true)
-		}, config.twitter.checkFrequency * 1000)
+		}, cli.waitTime * 1000)
 	}
 }
 

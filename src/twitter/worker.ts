@@ -4,7 +4,7 @@ import { Op } from 'sequelize'
 import { Client, auth } from 'twitter-api-sdk'
 import { config } from '../config'
 import { logger } from '../logger'
-import { Identity, UserToken } from '../db'
+import { Identity, TwitterActivity, UserToken } from '../db'
 
 export async function worker(job: Job) {
 	let type = job.data.type
@@ -132,5 +132,11 @@ async function processAuthCode(identityUuid: string, code: string) {
 			token: tokenStr
 		})
 	}
+	await TwitterActivity.findOrCreate({
+		where: {
+			activityType: 'connect',
+			authorId: i.id
+		},
+	})
 	logger.info('Stored twitter token for user %s', identityUuid)
 }
