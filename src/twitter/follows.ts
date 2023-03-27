@@ -1,9 +1,9 @@
 import { logger } from '../logger'
 import { Quest, TwitterActivity, Battlepass } from '../db'
-import { getClient } from './client'
+import { getClient, apiWrapper } from './client'
 
 async function getUserFollowers(userId: string) {
-	let client = getClient()
+	let client = getClient().getNextClient()
 	let follows = []
 	try {
 		for await (let page of client.users.usersIdFollowers(userId, { max_results: 1000 })) {
@@ -45,7 +45,7 @@ async function processUserFollowers(
 	existingFollowers: Set<string>,
 	newObjects: any[],
 ) {
-	let allFollowers = await getUserFollowers(userId)
+	let allFollowers = await apiWrapper(getUserFollowers(userId))
 	if (!allFollowers) {
 		return
 	}

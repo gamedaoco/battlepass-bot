@@ -72,10 +72,18 @@ export async function saveIdentity(data: SaveIdentityInterface) {
 		if (data.address && !identity.address) {
 			identity.address = data.address
 		}
-		identity.twitter = data.twitter
-		identity.name = data.name
-		identity.email = data.email
-		identity.cid = data.cid
+		if (data.twitter) {
+			identity.twitter = data.twitter
+		}
+		if (data.name) {
+			identity.name = data.name
+		}
+		if (data.email) {
+			identity.email = data.email
+		}
+		if (data.cid) {
+			identity.cid = data.cid
+		}
 		await identity.save()
 		if (data.discord) {
 			let discordActivity = await DiscordActivity.findOne({

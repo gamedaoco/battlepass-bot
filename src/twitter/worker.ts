@@ -35,14 +35,15 @@ function processTokenResponse(token: any): any {
 	}
 }
 
-async function twitterAuth(authCode: string, verifier: string) {
+async function twitterAuth(authCode: string, verifier: string, redirectUri: string | null) {
 	const params = {
       code: authCode,
       grant_type: "authorization_code",
       code_verifier: verifier,
       client_id: config.twitter.clientId,
-      redirect_uri: config.twitter.redirectUri,
+      redirect_uri: redirectUri || config.twitter.redirectUri,
     }
+    logger.debug('Twitter auth params %s', params)
     const url = 'https://api.twitter.com/2/oauth2/token'
     let resp = await fetch(
     	url + '?' + new URLSearchParams(params),
@@ -57,7 +58,7 @@ async function twitterAuth(authCode: string, verifier: string) {
 	let json = await resp.json()
 	if (!resp.ok) {
 		logger.error('Failed to obtain twitter token')
-		logger.error(json.toString())
+		logger.error(JSON.stringify(json))
 		throw Error('Invalid twitter auth response')
 	}
 	return json
@@ -70,9 +71,10 @@ async function processAuthCode(identityUuid: string, code: string) {
 		return
 	}
 	let verifier = crypto.createHash('sha256').update(i.uuid || '').digest('hex')
+	let parts = code.split('::::')
 	let resp
 	try {
-		resp = await twitterAuth(code, verifier)
+		resp = await twitterAuth(parts[0], verifier, parts.length > 1 ? parts[1] : null)
 	} catch (e) {
 		logger.error('Error during twitter auth token retrieval for %s', identityUuid)
 		logger.error(e)
@@ -113,6 +115,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 		// todo: invalidate token for other user?
 		return
 	}
+	// todo: store identity name from twitter?
 	i.twitter = userData.data.id
 	await i.save()
 	let tokenStr = JSON.stringify(tokenData)

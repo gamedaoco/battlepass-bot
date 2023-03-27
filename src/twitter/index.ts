@@ -4,7 +4,7 @@ import { TwitterActivity, TwitterUser } from '../db'
 import { getActiveBattlePasses } from '../chain/chain'
 import { sequelize, initDB, Quest, Battlepass } from '../db'
 import { getWorker } from '../queue'
-import { getClient, getTwitterUserIdsByNames } from './client'
+import { getClient, apiWrapper, getTwitterUserIdsByNames } from './client'
 import { processTweetQuests } from './tweets'
 import { processLikeQuests } from './likes'
 import { processCommentQuests, processTweetComments } from './comments'
@@ -45,7 +45,7 @@ async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>
 }
 
 async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
-	let client = getClient()
+	let client = getClient().getNextClient()
 	let twitterAccountId: string
 	let tweets = []
 	try {
@@ -106,7 +106,10 @@ async function iteration(again: boolean) {
 		logger.debug('Skipping twitter activities processing due to no active quests')
 		return
 	}
+	let cli = getClient()
+	await cli.populateTokens()
 	let usersMap = await getTwitterUsers(Array.from(twitterUsernames.values()))
+	cli.reset()
 	let tweets = new Map<string, string[]>()
 	let since = new Date()
 	let before = new Date()
@@ -116,7 +119,7 @@ async function iteration(again: boolean) {
 		}
 	}
 	for (let [userid, username] of usersMap) {
-		let userTweets = await getUserTweets(userid, since, before)
+		let userTweets = await apiWrapper(getUserTweets(userid, since, before))
 		if (!userTweets) {
 			continue
 		}
@@ -126,6 +129,7 @@ async function iteration(again: boolean) {
 		}
 		tweets.set(userid, tweetIds)
 	}
+	cli.reset()
 
 	for (let battlepass of battlepasses.values()) {
 		let quests = questsByBattlepass.get(battlepass.id)
@@ -133,9 +137,13 @@ async function iteration(again: boolean) {
 			continue
 		}
 		await processTweetQuests(battlepass, quests, newItems)
+		cli.reset()
 		await processLikeQuests(battlepass, quests, tweets, usersMap, newItems)
+		cli.reset()
 		await processCommentQuests(battlepass, quests, tweets, usersMap, newItems)
+		cli.reset()
 		await processRetweetQuests(battlepass, quests, tweets, usersMap, newItems)
+		cli.reset()
 		await processFollowQuests(battlepass, quests, usersMap, newItems)
 	}
 	if (newItems.length) {

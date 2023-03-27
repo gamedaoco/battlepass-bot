@@ -2,10 +2,10 @@ import { Op } from 'sequelize'
 
 import { logger } from '../logger'
 import { Quest, TwitterSearch, TwitterActivity, Battlepass } from '../db'
-import { getClient } from './client'
+import { getClient, apiWrapper } from './client'
 
 async function getRetweets(tweetId: string) {
-	let client = getClient()
+	let client = getClient().getNextClient()
 	let retweets = []
 	try {
 		for await (let page of client.users.tweetsIdRetweetingUsers(tweetId)) {
@@ -54,7 +54,7 @@ async function processTweetRetweets(
 	existingRetweets: Set<string>,
 	newObjects: any[],
 ) {
-	let retweetUsers = await getRetweets(tweetId)
+	let retweetUsers = await apiWrapper(getRetweets(tweetId))
 	if (!retweetUsers) {
 		return
 	}
