@@ -20,11 +20,11 @@ export async function apiWrapper(call: Promise<any>) {
 	} finally {
 		let changed = client?.isTokenChanged()
 		if (changed) {
-			logger.info('Twitter user token updated')
 			let item = client?.currentItem
 			if (item) {
+				logger.info('Twitter user token updated for %s user', item.identityId || '0')
 				let cli = item.token
-				if (cli instanceof auth.OAuth2User) {
+				if (cli instanceof auth.OAuth2User && cli.token) {
 					let token = JSON.stringify(cli.token)
 					await UserToken.update(
 						{ token },
