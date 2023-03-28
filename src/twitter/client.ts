@@ -76,7 +76,8 @@ class RotatingClient {
 		if (this.currentIndex >= this.items.length) {
 			this.currentIndex = 0
 		}
-		let client = new Client(this.items[this.currentIndex].token)
+		this.currentItem = this.items[this.currentIndex]
+		let client = new Client(this.currentItem.token)
 		return client
 	}
 	addToken(token: Token, identityId: number) {
