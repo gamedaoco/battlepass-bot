@@ -10,8 +10,8 @@ export function getClient(): RotatingClient {
 	if (client) {
 		return client
 	}
-	let cli = new RotatingClient()
-	return cli
+	client = new RotatingClient()
+	return client
 }
 
 export async function apiWrapper(call: Promise<any>) {
