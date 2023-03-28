@@ -25,9 +25,10 @@ async function getUsesrCache(usernames: string[]): Promise<Map<string, string>> 
 
 async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>> {
 	let cache = await getUsesrCache(usernames)
+	let values = new Set<string>(cache.values())
 	let missingUsernames = []
 	for (let username of usernames) {
-		if (!cache.has(username)) {
+		if (!values.has(username)) {
 			missingUsernames.push(username)
 		}
 	}
