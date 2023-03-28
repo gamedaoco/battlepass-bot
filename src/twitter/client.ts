@@ -18,20 +18,8 @@ export async function apiWrapper(call: Promise<any>) {
 	try {
 		return await call
 	} finally {
-		let changed = client?.isTokenChanged()
-		if (changed) {
-			let item = client?.currentItem
-			if (item) {
-				logger.info('Twitter user token updated for %s user', item.identityId || '0')
-				let cli = item.token
-				if (cli instanceof auth.OAuth2User && cli.token) {
-					let token = JSON.stringify(cli.token)
-					await UserToken.update(
-						{ token },
-						{ where: { identityId: item.identityId, source: 'twitter' }, limit: 1}
-					)
-				}
-			}
+		if (client && client.isTokenChanged()) {
+			await client.updateCurrentToken()
 		}
 	}
 }
@@ -101,6 +89,18 @@ class RotatingClient {
 		authCli.token = token
 		this.items.push({ token: authCli, identityId })
 		this.expiries.push(token.expires_at)
+	}
+	async updateCurrentToken() {
+		let cli = this.currentItem.token
+		if (cli instanceof auth.OAuth2User && cli.token) {
+			logger.info('Twitter user token updated for %s user', this.currentItem.identityId || '0')
+			let token = cli.token
+			this.expiries[this.currentIndex] = token.expires_at || 0
+			await UserToken.update(
+				{ token: JSON.stringify(token) },
+				{ where: { identityId: this.currentItem.identityId, source: 'twitter' }, limit: 1}
+			)
+		}
 	}
 	isTokenChanged(): boolean {
 		let cli = this.currentItem.token
