@@ -135,7 +135,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 	await TwitterActivity.findOrCreate({
 		where: {
 			activityType: 'connect',
-			authorId: i.id
+			authorId: userData.data.id
 		},
 	})
 	logger.info('Stored twitter token for user %s', identityUuid)

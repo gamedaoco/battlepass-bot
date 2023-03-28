@@ -124,7 +124,7 @@ class RotatingClient {
 				source: 'twitter'
 			},
 			attributes: ['identityId', 'token'],
-			order: sequelize.literal('rand()')
+			order: sequelize.literal('RANDOM()')
 		})
 		for (let record of tokens) {
 			let token = JSON.parse(record.token)
