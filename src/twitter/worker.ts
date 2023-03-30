@@ -127,12 +127,14 @@ async function processAuthCode(identityUuid: string, code: string) {
 	})
 	if (token) {
 		token.token = tokenStr
+		token.expiry = new Date(tokenData.expires_at)
 		await token.save()
 	} else {
 		await UserToken.create({
 			identityId: i.id,
 			source: 'twitter',
-			token: tokenStr
+			token: tokenStr,
+			expiry: new Date(tokenData.expires_at)
 		})
 	}
 	await TwitterActivity.findOrCreate({
