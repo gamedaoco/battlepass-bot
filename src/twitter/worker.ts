@@ -4,6 +4,7 @@ import { Op } from 'sequelize'
 import { Client, auth } from 'twitter-api-sdk'
 import { config } from '../config'
 import { logger } from '../logger'
+import { getQueue } from '../queue'
 import { Identity, TwitterActivity, UserToken } from '../db'
 
 export async function worker(job: Job) {
@@ -11,6 +12,8 @@ export async function worker(job: Job) {
 	logger.debug('Received %s task', type)
 	if (type == 'authCode') {
 		await processAuthCode(job.data.identityUuid, job.data.code)
+	} else if (type == 'refreshCode') {
+		await processRefreshCode(job.data.identityUuid)
 	} else {
 		logger.error('Received task of uknown type %s', job.data)
 	}
@@ -139,4 +142,74 @@ async function processAuthCode(identityUuid: string, code: string) {
 		},
 	})
 	logger.info('Stored twitter token for user %s', identityUuid)
+	let queue = await getQueue('twitter')
+	let now = Date.now()
+	await queue.add(
+		'refreshCode',
+		{
+			type: 'refreshCode',
+			identityUuid,
+		},
+		{
+			jobId: `refreshCode-twitter-${i.id}`,
+			delay: tokenData.expires_at - now - (60 * 1000)
+		}
+	)
+}
+
+async function processRefreshCode(identityUuid: string) {
+	let record: any = await UserToken.findOne({
+		where: { source: 'twitter' },
+		include: [{
+			model: Identity,
+			required: true,
+			attributes: ['id'],
+			where: { uuid: identityUuid }
+		}]
+	})
+	if (!record) {
+		logger.error('Attempt to refresh token for non-existing twitter user %s', identityUuid)
+		return
+	}
+	let authCli = new auth.OAuth2User({
+		client_id: config.twitter.clientId,
+		client_secret: config.twitter.clientSecret,
+		callback: config.twitter.redirectUri,
+		scopes: ['follows.read', 'offline.access', 'like.read', 'users.read', 'tweet.read']
+	})
+	authCli.token = JSON.parse(record.token)
+	let newToken
+	try {
+		newToken = await authCli.refreshAccessToken()
+	} catch (e: any) {
+		logger.error('Error during token refresh for user %s', identityUuid)
+		logger.error(e)
+		return
+	}
+	if (!newToken || !newToken.token) {
+		logger.error('Failed to refresh token for %s', identityUuid)
+		return
+	}
+	if (newToken.token.expires_at) {
+		record.token = JSON.stringify(newToken.token)
+		record.expiry = new Date(newToken.token.expires_at)
+		await record.save()
+		logger.info('Refreshed token for user %s', identityUuid)
+	} else {
+		logger.error('No expiry provided for refresh token request user %s', identityUuid)
+		return
+	}
+	let queue = await getQueue('twitter')
+	let now = Date.now()
+	await queue.add(
+		'refreshCode',
+		{
+			type: 'refreshCode',
+			identityUuid,
+		},
+		{
+			jobId: `refreshCode-twitter-${record.Identity.id}`,
+			delay: newToken.token.expires_at - now - (60 * 1000)
+		}
+	)
 }

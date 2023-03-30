@@ -32,7 +32,7 @@ async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>
 			missingUsernames.push(username)
 		}
 	}
-	if (missingUsernames) {
+	if (missingUsernames.length) {
 		let newUsernames = await getTwitterUserIdsByNames(missingUsernames)
 		let toCreate = []
 		for (let [twitterId, username] of newUsernames) {
@@ -61,9 +61,9 @@ async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
 				tweets.push(...page.data)
 			}
 		}
-	} catch (error) {
+	} catch (error: any) {
 		logger.error('Failed to get user %s recent tweets', twitterUserId)
-		logger.error(error)
+		logger.error(error.toString())
 	}
 
 	return tweets

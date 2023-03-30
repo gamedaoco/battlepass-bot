@@ -744,6 +744,7 @@ export class UserToken extends Model<InferAttributes<UserToken>, InferCreationAt
 	declare source: string
 	declare token: string
 	declare identityId: ForeignKey<Identity['id']>
+	declare expiry: Date | null
 }
 UserToken.init(
 	{
@@ -760,6 +761,10 @@ UserToken.init(
 		token: {
 			type: DataTypes.STRING(500),
 			allowNull: false
+		},
+		expiry: {
+			type: DataTypes.DATE,
+			allowNull: true
 		}
 	},
 	{ sequelize }

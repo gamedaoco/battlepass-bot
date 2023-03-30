@@ -120,9 +120,12 @@ class RotatingClient {
 	async populateTokens() {
 		this.items.length = 0
 		this.expiries.length = 0
+		let expiry = new Date()
+		expiry.setSeconds(expiry.getSeconds() - 60)
 		let tokens = await UserToken.findAll({
 			where: {
-				source: 'twitter'
+				source: 'twitter',
+				expiry
 			},
 			attributes: ['identityId', 'token'],
 			order: sequelize.literal('RANDOM()')
