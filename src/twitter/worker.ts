@@ -153,7 +153,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 			identityUuid,
 		},
 		{
-			jobId: `refreshCode-twitter-${i.id}`,
+			jobId: `refreshCode-twitter-${i.id}-${tokenData.expires_at}`,
 			delay: tokenData.expires_at - now - (60 * 1000)
 		}
 	)
@@ -201,8 +201,8 @@ async function processRefreshCode(identityUuid: string) {
 		logger.error('No expiry provided for refresh token request user %s', identityUuid)
 		return
 	}
-	let queue = await getQueue('twitter')
 	let now = Date.now()
+	let queue = await getQueue('twitter')
 	await queue.add(
 		'refreshCode',
 		{
@@ -210,7 +210,7 @@ async function processRefreshCode(identityUuid: string) {
 			identityUuid,
 		},
 		{
-			jobId: `refreshCode-twitter-${record.Identity.id}`,
+			jobId: `refreshCode-twitter-${record.Identity.id}-${newToken.token.expires_at}`,
 			delay: newToken.token.expires_at - now - (60 * 1000)
 		}
 	)
