@@ -1,4 +1,5 @@
 import { Client, auth } from 'twitter-api-sdk'
+import { Op } from 'sequelize'
 
 import { config } from '../config'
 import { logger } from '../logger'
@@ -125,7 +126,7 @@ class RotatingClient {
 		let tokens = await UserToken.findAll({
 			where: {
 				source: 'twitter',
-				expiry
+				expiry: { [Op.gte]: expiry }
 			},
 			attributes: ['identityId', 'token'],
 			order: sequelize.literal('RANDOM()')
