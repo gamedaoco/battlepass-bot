@@ -40,16 +40,15 @@ async function getExistingComments(
 	since: Date,
 	before: Date,
 ): Promise<Map<string, Set<string>>> {
+	let or: any = [{ objectId: tweetIds }]
+	if (tweetIds.length) {
+		or.push({ objectAuthor: twitterUsernames })
+	}
 	let existingComments = await TwitterActivity.findAll({
 		where: {
 			activityType: 'comment',
-			createdAt: {
-				[Op.between]: [since, before],
-			},
-			[Op.or]: [
-				{ objectAuthor: twitterUsernames },
-				{ objectId: tweetIds }
-			]
+			createdAt: { [Op.between]: [since, before]},
+			[Op.or]: or
 		},
 		attributes: ['authorId', 'objectId'],
 	})
@@ -87,6 +86,7 @@ export async function processTweetComments(
 				if (!tweetAuthor) {
 					let data = await getTwitterUserIdsByNames([tweetAuthor])
 					for (let [twitterId, username] of data) {
+						username = username.toLowerCase()
 						twitterUsers.set(twitterId, username)
 						await TwitterUser.create({ username, twitterId })
 					}

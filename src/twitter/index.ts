@@ -36,6 +36,7 @@ async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>
 		let newUsernames = await getTwitterUserIdsByNames(missingUsernames)
 		let toCreate = []
 		for (let [twitterId, username] of newUsernames) {
+			username = username.toLowerCase()
 			toCreate.push({ username, twitterId })
 			cache.set(twitterId, username)
 		}
@@ -99,7 +100,7 @@ async function iteration(again: boolean) {
 				followUsername = followUsername.substring(1)
 			}
 			if (followUsername) {
-				twitterUsernames.add(followUsername)
+				twitterUsernames.add(followUsername.toLowerCase())
 			}
 		}
 	}

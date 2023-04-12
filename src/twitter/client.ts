@@ -35,7 +35,7 @@ export async function getTwitterUserIdsByNames(usernames: string[]): Promise<Map
 		let resp = await apiWrapper(client.users.findUsersByUsername({ usernames }))
 		if (resp.data) {
 			resp.data.map((i: any) => {
-				result.set(i.id, i.username)
+				result.set(i.id, i.username.toLowerCase())
 			})
 		} else {
 			logger.warn('Received invalid response for users by username twitter api call')
@@ -147,3 +147,5 @@ class RotatingClient {
 		return Math.max(config.twitter.checkFrequency - (this.items.length - 1) * 30, 30)
 	}
 }
+
+// todo: log actual errors of twitter once they happen
