@@ -145,9 +145,8 @@ async function iteration(again: boolean) {
 		await processCommentQuests(battlepass, quests, tweets, usersMap, newItems)
 		cli.reset()
 		await processRetweetQuests(battlepass, quests, tweets, usersMap, newItems)
-		cli.reset()
-		await processFollowQuests(battlepass, quests, usersMap, newItems)
 	}
+	await processFollowQuests(newItems)
 	if (newItems.length) {
 		logger.debug('Saving %s new twitter acitvities', newItems.length)
 		await TwitterActivity.bulkCreate(newItems)

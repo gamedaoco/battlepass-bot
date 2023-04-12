@@ -1,6 +1,6 @@
 import { Op } from 'sequelize'
 import { logger } from '../logger'
-import { Quest, TwitterActivity, Battlepass, BattlepassParticipant, Identity } from '../db'
+import { Quest, TwitterActivity, BattlepassParticipant, Identity } from '../db'
 import { getClient, apiWrapper } from './client'
 
 async function getFollowingAccounts(userId: string) {
@@ -67,29 +67,19 @@ async function processUserFollowings(
 }
 
 export async function processFollowQuests(
-	battlepass: Battlepass,
-	followQuests: Quest[],
-	twitterUsers: Map<string, string>, // userId: userName
 	newObjects: any[],
 ) {
-	let usersToCheck = new Set<string>()
-	for (let quest of followQuests) {
-		if (quest.source === 'twitter' && quest.type === 'follow' && quest.twitterId) {
-			usersToCheck.add(quest.twitterId)
-		}
-	}
-	if (!usersToCheck.size) {
-		return
-	}
 	let users = await Identity.findAll({
 		where: { twitter: { [Op.ne]: null } },
 		include: [{
 			model: BattlepassParticipant,
 			required: true,
-			where: { battlepassId: battlepass.id }
 		}],
 		attributes: ['twitter']
 	})
+	if(!users.length) {
+		return
+	}
 	let existing = await getExistingFollows(users)
 	for (let identity of users) {
 		if (identity.twitter)
