@@ -41,7 +41,7 @@ async function getExistingComments(
 	before: Date,
 ): Promise<Map<string, Set<string>>> {
 	let or: any = [{ objectId: tweetIds }]
-	if (tweetIds.length) {
+	if (twitterUsernames.length) {
 		or.push({ objectAuthor: twitterUsernames })
 	}
 	let existingComments = await TwitterActivity.findAll({
