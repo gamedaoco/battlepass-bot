@@ -1,100 +1,88 @@
+import { Op } from 'sequelize'
 import { logger } from '../logger'
-import { Quest, TwitterActivity, Battlepass } from '../db'
-import { getClient } from './client'
+import { Quest, TwitterActivity, BattlepassParticipant, Identity } from '../db'
+import { getClient, apiWrapper } from './client'
 
-async function getUserFollowers(userId: string) {
-	let client = getClient()
+async function getFollowingAccounts(userId: string) {
+	let client = getClient().getNextClient()
 	let follows = []
 	try {
-		for await (let page of client.users.usersIdFollowers(userId, { max_results: 1000 })) {
+		for await (let page of client.users.usersIdFollowing(userId, { max_results: 1000 })) {
 			if (page.data) {
 				follows.push(...page.data)
 			}
 		}
 		return follows
 	} catch (error) {
-		logger.error('Failed to fetch user followers')
-		logger.error(error)
+		logger.error('Failed to fetch user following accounts')
+		logger.error(JSON.stringify(error))
 		return null
 	}
 }
 
-async function getExistingFollowers(usernames: string[]): Promise<Map<string, Set<string>>> {
-	let existingFollowers = await TwitterActivity.findAll({
+async function getExistingFollows(twitterUsers: Identity[]): Promise<Set<string>> {
+	let followers = await TwitterActivity.findAll({
 		where: {
 			activityType: 'follow',
-			objectAuthor: usernames,
+			authorId: twitterUsers.map(i => i.twitter || '')
 		},
-		attributes: ['authorId', 'objectId'],
+		attributes: ['authorId', 'objectId']
 	})
-	let map = new Map<string, Set<string>>()
-	existingFollowers.map((i) => {
-		let arr = map.get(i.objectId || '')
-		if (!arr) {
-			arr = new Set<string>()
-			map.set(i.objectId || '', arr)
-		}
-		arr.add(i.authorId || '')
+	let set = new Set<string>()
+	followers.map((i) => {
+		set.add(`${i.authorId}:${i.objectId}`)
 	})
-	return map
+	return set
 }
 
-async function processUserFollowers(
+async function processUserFollowings(
 	userId: string,
-	userName: string,
-	existingFollowers: Set<string>,
+	existingFollows: Set<string>,  // followerId:followingId
 	newObjects: any[],
 ) {
-	let allFollowers = await getUserFollowers(userId)
-	if (!allFollowers) {
+	let allFollows = await apiWrapper(getFollowingAccounts(userId))
+	if (!allFollows) {
 		return
 	}
 	let newFollowersCnt = 0
-	for (let record of allFollowers) {
+	for (let record of allFollows) {
 		let followerUserId = record.id
-		if (existingFollowers.has(followerUserId)) {
+		let followId = `${userId}:${record.id}`
+		if (existingFollows.has(followId)) {
 			continue
 		}
-		existingFollowers.add(followerUserId)
+		existingFollows.add(followId)
 		let item = {
-			objectAuthor: userName,
-			objectId: userId,
-			authorId: followerUserId,
+			objectAuthor: record.username.toLowerCase(),
+			objectId: record.id,
+			authorId: userId,
 			activityType: 'follow',
 		}
 		newObjects.push(item)
 		newFollowersCnt += 1
 	}
 	if (newFollowersCnt) {
-		logger.debug('Collected %s new followers for user %s', newFollowersCnt, userName)
+		logger.debug('Collected %s new follows for user %s', newFollowersCnt, userId)
 	}
 }
 
 export async function processFollowQuests(
-	battlepass: Battlepass,
-	followQuests: Quest[],
-	twitterUsers: Map<string, string>, // userId: userName
 	newObjects: any[],
 ) {
-	let usersToCheck = new Set<string>()
-	for (let quest of followQuests) {
-		if (quest.source === 'twitter' && quest.type === 'follow' && quest.twitterId) {
-			usersToCheck.add(quest.twitterId)
-		}
-	}
-	if (!usersToCheck.size) {
+	let users = await Identity.findAll({
+		where: { twitter: { [Op.ne]: null } },
+		include: [{
+			model: BattlepassParticipant,
+			required: true,
+		}],
+		attributes: ['twitter']
+	})
+	if(!users.length) {
 		return
 	}
-	let existing = await getExistingFollowers(Array.from(twitterUsers.values()))
-	for (let [userId, username] of twitterUsers) {
-		if (!usersToCheck.has(username)) {
-			continue
-		}
-		let existingUserFollowers = existing.get(userId)
-		if (!existingUserFollowers) {
-			existingUserFollowers = new Set<string>()
-			existing.set(userId, existingUserFollowers)
-		}
-		await processUserFollowers(userId, username, existingUserFollowers, newObjects)
+	let existing = await getExistingFollows(users)
+	for (let identity of users) {
+		if (identity.twitter)
+			await processUserFollowings(identity.twitter, existing, newObjects)
 	}
 }

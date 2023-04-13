@@ -262,4 +262,5 @@ type Mutation {
 	processPayment(securityToken: String!, battlepass: String!, identityUuid: String!, paymentToken: String!): Payment
 	claimReward(battlepass: String!, identityUuid: String!, reward: String!): BattlepassRewardClaim
 	updateBattlepass(battlepass: String!, joinable: Boolean, freePasses: Int, premiumPasses: Int): Battlepass
+	provideUserToken(identityUuid: String!, source: Source!, token: String!): BattlepassIdentity
 }

@@ -3,12 +3,14 @@ import { logger } from '../logger'
 import { TwitterActivity, TwitterUser } from '../db'
 import { getActiveBattlePasses } from '../chain/chain'
 import { sequelize, initDB, Quest, Battlepass } from '../db'
-import { getClient, getTwitterUserIdsByNames } from './client'
+import { getWorker } from '../queue'
+import { getClient, apiWrapper, getTwitterUserIdsByNames } from './client'
 import { processTweetQuests } from './tweets'
 import { processLikeQuests } from './likes'
 import { processCommentQuests, processTweetComments } from './comments'
 import { processRetweetQuests } from './retweets'
 import { processFollowQuests } from './follows'
+import { worker } from './worker'
 
 async function getUsesrCache(usernames: string[]): Promise<Map<string, string>> {
 	let res = await TwitterUser.findAll({
@@ -23,16 +25,18 @@ async function getUsesrCache(usernames: string[]): Promise<Map<string, string>> 
 
 async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>> {
 	let cache = await getUsesrCache(usernames)
+	let values = new Set<string>(cache.values())
 	let missingUsernames = []
 	for (let username of usernames) {
-		if (!cache.has(username)) {
+		if (!values.has(username)) {
 			missingUsernames.push(username)
 		}
 	}
-	if (missingUsernames) {
+	if (missingUsernames.length) {
 		let newUsernames = await getTwitterUserIdsByNames(missingUsernames)
 		let toCreate = []
 		for (let [twitterId, username] of newUsernames) {
+			username = username.toLowerCase()
 			toCreate.push({ username, twitterId })
 			cache.set(twitterId, username)
 		}
@@ -43,7 +47,7 @@ async function getTwitterUsers(usernames: string[]): Promise<Map<string, string>
 }
 
 async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
-	let client = getClient()
+	let client = getClient().getNextClient()
 	let twitterAccountId: string
 	let tweets = []
 	try {
@@ -58,9 +62,9 @@ async function getUserTweets(twitterUserId: string, since: Date, before: Date) {
 				tweets.push(...page.data)
 			}
 		}
-	} catch (error) {
+	} catch (error: any) {
 		logger.error('Failed to get user %s recent tweets', twitterUserId)
-		logger.error(error)
+		logger.error(error.toString())
 	}
 
 	return tweets
@@ -96,7 +100,7 @@ async function iteration(again: boolean) {
 				followUsername = followUsername.substring(1)
 			}
 			if (followUsername) {
-				twitterUsernames.add(followUsername)
+				twitterUsernames.add(followUsername.toLowerCase())
 			}
 		}
 	}
@@ -104,7 +108,10 @@ async function iteration(again: boolean) {
 		logger.debug('Skipping twitter activities processing due to no active quests')
 		return
 	}
+	let cli = getClient()
+	await cli.populateTokens()
 	let usersMap = await getTwitterUsers(Array.from(twitterUsernames.values()))
+	cli.reset()
 	let tweets = new Map<string, string[]>()
 	let since = new Date()
 	let before = new Date()
@@ -114,16 +121,17 @@ async function iteration(again: boolean) {
 		}
 	}
 	for (let [userid, username] of usersMap) {
-			let userTweets = await getUserTweets(userid, since, before)
-			if (!userTweets) {
-				continue
-			}
-			let tweetIds = new Array<string>()
-			for (let tweet of userTweets) {
-				tweetIds.push(tweet.id)
-			}
-			tweets.set(userid, tweetIds)
+		let userTweets = await apiWrapper(getUserTweets(userid, since, before))
+		if (!userTweets) {
+			continue
 		}
+		let tweetIds = new Array<string>()
+		for (let tweet of userTweets) {
+			tweetIds.push(tweet.id)
+		}
+		tweets.set(userid, tweetIds)
+	}
+	cli.reset()
 
 	for (let battlepass of battlepasses.values()) {
 		let quests = questsByBattlepass.get(battlepass.id)
@@ -131,11 +139,14 @@ async function iteration(again: boolean) {
 			continue
 		}
 		await processTweetQuests(battlepass, quests, newItems)
+		cli.reset()
 		await processLikeQuests(battlepass, quests, tweets, usersMap, newItems)
+		cli.reset()
 		await processCommentQuests(battlepass, quests, tweets, usersMap, newItems)
+		cli.reset()
 		await processRetweetQuests(battlepass, quests, tweets, usersMap, newItems)
-		await processFollowQuests(battlepass, quests, usersMap, newItems)
 	}
+	await processFollowQuests(newItems)
 	if (newItems.length) {
 		logger.debug('Saving %s new twitter acitvities', newItems.length)
 		await TwitterActivity.bulkCreate(newItems)
@@ -143,7 +154,7 @@ async function iteration(again: boolean) {
 	if (again) {
 		setTimeout(async () => {
 			await iteration(true)
-		}, config.twitter.checkFrequency * 1000)
+		}, cli.waitTime * 1000)
 	}
 }
 
@@ -154,6 +165,7 @@ async function main() {
 		return -1
 	}
 	await sequelize.sync()
+	let tasksWorker = getWorker('twitter', worker)
 	await iteration(true)
 }
 

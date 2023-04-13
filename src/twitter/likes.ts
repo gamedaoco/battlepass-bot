@@ -2,10 +2,10 @@ import { Op } from 'sequelize'
 
 import { TwitterActivity, Battlepass, Quest } from '../db'
 import { logger } from '../logger'
-import { getClient } from './client'
+import { getClient, apiWrapper } from './client'
 
 async function getTweetLikes(tweetId: string) {
-	let client = getClient()
+	let client = getClient().getNextClient()
 	let likes = []
 	try {
 		for await (let page of client.users.tweetsIdLikingUsers(tweetId)) {
@@ -49,7 +49,7 @@ async function getExistingLikes(
 }
 
 async function processTweetLikes(tweetId: string, tweetAuthor: string, existingLikes: Set<string>, newObjects: any[]) {
-	let tweetLikes = await getTweetLikes(tweetId)
+	let tweetLikes = await apiWrapper(getTweetLikes(tweetId))
 	if (tweetLikes) {
 		let newCnt = 0
 		for (let record of tweetLikes) {

@@ -67,7 +67,7 @@ export async function claimReward(data: ClaimRewardInterface) {
 		rewardId: reward.id,
 	})
 	let queue = getQueue('chain')
-	queue.add(
+	await queue.add(
 		'claimReward',
 		{
 			type: 'claimReward',

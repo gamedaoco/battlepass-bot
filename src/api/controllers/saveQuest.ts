@@ -34,6 +34,9 @@ export async function saveQuest(data: CreateQuestInterface): Promise<Quest> {
 	if (data.hashtag && data.hashtag.charAt(0) == '#') {
 		data.hashtag = data.hashtag.substring(1)
 	}
+	if (data.twitterId) {
+		data.twitterId = data.twitterId.toLowerCase()
+	}
 	let quest = await Quest.create({
 		battlepassId: bp.id,
 		repeat: data.daily,

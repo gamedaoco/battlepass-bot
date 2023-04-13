@@ -1,9 +1,9 @@
 import { logger } from '../logger'
 import { Quest, TwitterSearch, Battlepass } from '../db'
-import { getClient } from './client'
+import { getClient, apiWrapper } from './client'
 
 async function getNewTweets(since: Date | null, query: string) {
-	const client = getClient()
+	const client = getClient().getNextClient()
 	let params: any = {
 		query: `${query} -is:retweet`,
 		expansions: ['author_id'],

@@ -739,6 +739,39 @@ BattlepassReward.hasMany(RewardClaim, { foreignKey: 'rewardId' })
 RewardClaim.belongsTo(BattlepassParticipant, { foreignKey: 'participantId' })
 BattlepassParticipant.hasMany(RewardClaim, { foreignKey: 'participantId' })
 
+export class UserToken extends Model<InferAttributes<UserToken>, InferCreationAttributes<UserToken>> {
+	declare id: CreationOptional<number>
+	declare source: string
+	declare token: string
+	declare identityId: ForeignKey<Identity['id']>
+	declare expiry: Date | null
+}
+UserToken.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		source: {
+			type: DataTypes.ENUM,
+			values: ['twitter'],
+			allowNull: false
+		},
+		token: {
+			type: DataTypes.STRING(500),
+			allowNull: false
+		},
+		expiry: {
+			type: DataTypes.DATE,
+			allowNull: true
+		}
+	},
+	{ sequelize }
+)
+UserToken.belongsTo(Identity, { foreignKey: 'identityId' })
+Identity.hasMany(UserToken, { foreignKey: 'identityId' })
+
 export async function initDB(): Promise<boolean> {
 	try {
 		await sequelize.authenticate()

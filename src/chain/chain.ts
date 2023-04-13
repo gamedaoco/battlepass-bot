@@ -514,6 +514,8 @@ async function processBattlepassTwitterQuests(
 			newQuestProgress = (newQuestProgress * quest.quantity + parseInt(activityCnt)) / quest.quantity
 			if (quest.max && newQuestProgress > quest.max) {
 				newQuestProgress = quest.max
+			} else if (!quest.repeat && newQuestProgress > 1) {
+				newQuestProgress = 1
 			}
 			newProgress.set(key, newQuestProgress)
 		}

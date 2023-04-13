@@ -1,11 +1,12 @@
 import { Op } from 'sequelize'
+import { auth } from 'twitter-api-sdk'
 
 import { logger } from '../logger'
 import { Quest, TwitterSearch, TwitterActivity, TwitterUser, Battlepass } from '../db'
-import { getClient, getTwitterUserIdsByNames } from './client'
+import { getClient, getTwitterUserIdsByNames, apiWrapper } from './client'
 
 async function getNewComments(tweetId: string, hashtag: string | null, since: Date | null) {
-	const client = getClient()
+	const api = getClient().getNextClient()
 	let query = `conversation_id:${tweetId}`
 	if (hashtag) {
 		query += ` #${hashtag}`
@@ -20,7 +21,7 @@ async function getNewComments(tweetId: string, hashtag: string | null, since: Da
 	}
 	let results = []
 	try {
-		for await (const page of client.tweets.tweetsRecentSearch(params)) {
+		for await (const page of api.tweets.tweetsRecentSearch(params)) {
 			if (page.data) {
 				results.push(...page.data)
 			}
@@ -39,16 +40,15 @@ async function getExistingComments(
 	since: Date,
 	before: Date,
 ): Promise<Map<string, Set<string>>> {
+	let or: any = [{ objectId: tweetIds }]
+	if (twitterUsernames.length) {
+		or.push({ objectAuthor: twitterUsernames })
+	}
 	let existingComments = await TwitterActivity.findAll({
 		where: {
 			activityType: 'comment',
-			createdAt: {
-				[Op.between]: [since, before],
-			},
-			[Op.or]: [
-				{ objectAuthor: twitterUsernames },
-				{ objectId: tweetIds }
-			]
+			createdAt: { [Op.between]: [since, before]},
+			[Op.or]: or
 		},
 		attributes: ['authorId', 'objectId'],
 	})
@@ -74,7 +74,7 @@ export async function processTweetComments(
 	hashtag: string | null,
 ) {
 	// todo: `since` parameter from last update time
-	let comments = await getNewComments(tweetId, hashtag, since)
+	let comments = await apiWrapper(getNewComments(tweetId, hashtag, since))
 	if (!comments) {
 		return
 	}
@@ -86,6 +86,7 @@ export async function processTweetComments(
 				if (!tweetAuthor) {
 					let data = await getTwitterUserIdsByNames([tweetAuthor])
 					for (let [twitterId, username] of data) {
+						username = username.toLowerCase()
 						twitterUsers.set(twitterId, username)
 						await TwitterUser.create({ username, twitterId })
 					}
