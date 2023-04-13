@@ -41,7 +41,7 @@ export const CreateQuestSchema = Joi.object({
 	}),
 	twitterId: Joi.when('type', {
 		is: Joi.valid('retweet', 'follow', 'comment', 'like'),
-		then: Joi.string().min(3).max(100).alphanum().required(),
+		then: Joi.string().min(3).max(100).regex(/^[_a-zA-Z0-9]+$/).required(),
 	}),
 	quantity: Joi.when('type', {
 		is: Joi.valid('connect', 'join', 'follow'),
