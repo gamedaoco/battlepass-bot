@@ -5,7 +5,7 @@ export const CreateIdentitySchema = Joi.object({
 	discord: Joi.string().alphanum().min(10).max(20).allow(null),
 	twitter: Joi.string().alphanum().min(10).max(20).allow(null),
 	address: Joi.string().alphanum().length(48).allow(null),
-	name: Joi.string().min(3).max(32).trim().allow(null),
+	name: Joi.string().min(1).max(32).trim().allow(null),
 	email: Joi.string().max(50).email().allow(null),
 	cid: Joi.string().min(3).max(50).allow(null),
 }).or('discord', 'twitter', 'address')
