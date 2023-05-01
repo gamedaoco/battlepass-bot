@@ -11,7 +11,6 @@ import { logger } from '../logger'
 import {
 	CreateIdentitySchema,
 	PointUpdatesSchema,
-	QuestUpdatesSchema,
 	CreateQuestSchema,
 	CreateRewardSchema,
 	CreateLevelsSchema,

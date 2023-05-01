@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord' | 'twitter') {
+export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord' | 'twitter' | 'epicGames') {
 	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
@@ -18,6 +18,9 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 			break
 		case 'twitter':
 			requiredEnvVariables.push(...['TWITTER_BEARER_TOKEN', 'TWITTER_CLIENT_ID', 'TWITTER_CLIENT_SECRET', 'TWITTER_REDIRECT_URI'])
+			break
+		case 'epicGames':
+			requiredEnvVariables.push(...['EPIC_GAMES_DEPLOYMENT_ID', 'EPIC_GAMES_CLIENT_ID', 'EPIC_GAMES_CLIENT_SECRET'])
 			break
 	}
 	requiredEnvVariables.forEach((name) => {
@@ -38,6 +41,12 @@ export const config = {
 		clientSecret: process.env.TWITTER_CLIENT_SECRET || '',
 		redirectUri: process.env.TWITTER_REDIRECT_URI || '',
 		checkFrequency: parseInt(process.env.TWITTER_UPDATES_CHECK_FREQUENCY || '960'),
+	},
+	epicGames: {
+		deploymentId: process.env.EPIC_GAMES_DEPLOYMENT_ID || '',
+		clientId: process.env.EPIC_GAMES_CLIENT_ID || '',
+		clientSecret: process.env.EPIC_GAMES_CLIENT_SECRET || '',
+		tokenUri: process.env.EPIC_GAMES_TOKEN_URI || 'https://api.epicgames.dev/epic/oauth/v1/token',
 	},
 	logging: {
 		level: process.env.LOGGING_LEVEL || 'debug',

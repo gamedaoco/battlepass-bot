@@ -17,7 +17,7 @@ export const CreateQuestSchema = Joi.object({
 	link: Joi.string().uri().min(10).max(150).allow(null),
 	cid: Joi.string().min(5).max(100).allow(null),
 	daily: Joi.boolean().default(false),
-	source: Joi.string().required().valid('discord', 'twitter', 'gamedao'),
+	source: Joi.string().required().valid('discord', 'twitter', 'gamedao', 'epicGames'),
 	type: Joi.string()
 		.required()
 		.when('source', {
@@ -25,6 +25,7 @@ export const CreateQuestSchema = Joi.object({
 				{ is: 'discord', then: Joi.valid('connect', 'join', 'post', 'reaction') },
 				{ is: 'twitter', then: Joi.valid('connect', 'tweet', 'retweet', 'follow', 'comment', 'like') },
 				{ is: 'gamedao', then: Joi.valid('connect', 'identity') },
+				{ is: 'epicGames', then: Joi.valid('connect') },
 			],
 		}),
 	guildId: Joi.when('type', {
@@ -77,12 +78,6 @@ export const CreateLevelsSchema = Joi.object({
 	levels: Joi.array().items(Level),
 })
 
-export const QuestUpdatesSchema = Joi.object({
-	battlepass: Joi.string().required().length(66),
-	since: Joi.date().iso(),
-	address: Joi.string().alphanum().length(48),
-})
-
 export const PointUpdatesSchema = Joi.object({
 	battlepass: Joi.string().required().length(66),
 	since: Joi.date().iso(),
@@ -121,6 +116,6 @@ export const UpdateBattlepassSchema = Joi.object({
 
 export const UserTokenSchema = Joi.object({
 	identityUuid: Joi.string().required().guid({ version: 'uuidv4' }),
-	source: Joi.string().required().valid('twitter'),
+	source: Joi.string().required().valid('twitter', 'epicGames'),
 	token: Joi.string().required().min(1).max(500)
 })

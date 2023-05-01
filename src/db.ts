@@ -212,6 +212,45 @@ TwitterActivity.init(
 	{ sequelize },
 )
 
+export class GenericActivity extends Model<InferAttributes<GenericActivity>, InferCreationAttributes<GenericActivity>> {
+	declare id: CreationOptional<number>
+	declare source: string
+	declare authorId: string
+	declare activityType: string
+	declare extra: any | null
+	declare createdAt: CreationOptional<Date>
+}
+GenericActivity.init(
+	{
+		id: {
+			type: DataTypes.INTEGER.UNSIGNED,
+			autoIncrement: true,
+			primaryKey: true,
+		},
+		source: {
+			type: DataTypes.ENUM,
+			values: ['epicGames'],
+			allowNull: false,
+		},
+		authorId: {
+			type: DataTypes.STRING(50),
+			allowNull: false,
+		},
+		activityType: {
+			type: DataTypes.STRING(20),
+			allowNull: false,
+		},
+		extra: {
+			type: DataTypes.JSON,
+			allowNull: true
+		},
+		createdAt: {
+			type: DataTypes.DATE,
+		},
+	},
+	{ sequelize }
+)
+
 export class ChainActivity extends Model<InferAttributes<ChainActivity>, InferCreationAttributes<ChainActivity>> {
 	declare id: CreationOptional<number>
 	declare address: string
@@ -247,6 +286,7 @@ export class Identity extends Model<InferAttributes<Identity>, InferCreationAttr
 	declare address: string | null // chain address
 	declare discord: string | null
 	declare twitter: string | null
+	declare epicGames: string | null
 	declare cid: string | null
 	declare name: string | null
 	declare email: string | null
@@ -274,6 +314,10 @@ Identity.init(
 		},
 		twitter: {
 			type: DataTypes.STRING(20),
+			allowNull: true,
+		},
+		epicGames: {
+			type: DataTypes.STRING(40),
 			allowNull: true,
 		},
 		cid: {
@@ -343,7 +387,7 @@ Quest.init(
 		},
 		source: {
 			type: DataTypes.ENUM,
-			values: ['discord', 'twitter', 'gamedao'],
+			values: ['discord', 'twitter', 'gamedao', 'epicGames'],
 		},
 		type: {
 			type: DataTypes.ENUM,
@@ -755,7 +799,7 @@ UserToken.init(
 		},
 		source: {
 			type: DataTypes.ENUM,
-			values: ['twitter'],
+			values: ['twitter', 'epicGames'],
 			allowNull: false
 		},
 		token: {
