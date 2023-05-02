@@ -69,6 +69,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 		return
 	}
 	let userEpicId = resp.account_id
+	let expiry = new Date(resp.expires_at)
 	if (!userEpicId) {
 		logger.error('User response data does not contain account id')
 		logger.error(resp)
@@ -92,14 +93,14 @@ async function processAuthCode(identityUuid: string, code: string) {
 	})
 	if (token) {
 		token.token = tokenStr
-		token.expiry = new Date(resp.expires_at)
+		token.expiry = expiry
 		await token.save()
 	} else {
 		await UserToken.create({
 			identityId: i.id,
 			source: 'epicGames',
 			token: tokenStr,
-			expiry: new Date(resp.expires_at)
+			expiry: expiry
 		})
 	}
 	await GenericActivity.findOrCreate({
@@ -119,8 +120,8 @@ async function processAuthCode(identityUuid: string, code: string) {
 			identityUuid,
 		},
 		{
-			jobId: `refreshCode-epicGames-${i.id}-${resp.expires_at}`,
-			delay: resp.expires_at - now - (60 * 1000)
+			jobId: `refreshCode-epicGames-${i.id}-${expiry.valueOf()}`,
+			delay: expiry.valueOf() - now - (60 * 1000)
 		}
 	)
 }
@@ -141,9 +142,9 @@ async function processRefreshCode(identityUuid: string) {
 	}
 	let token = JSON.parse(record.token)
 	let resp = await epicAuth(token.refresh_token, true)
-	if (token.expires_at) {
-		record.token = JSON.stringify(token)
-		record.expiry = new Date(token.expires_at)
+	if (resp.expires_at) {
+		record.token = JSON.stringify(resp)
+		record.expiry = new Date(resp.expires_at)
 		await record.save()
 		logger.info('Refreshed token for user %s', identityUuid)
 	} else {
@@ -159,8 +160,8 @@ async function processRefreshCode(identityUuid: string) {
 			identityUuid,
 		},
 		{
-			jobId: `refreshCode-epicGames-${record.Identity.id}-${token.expires_at}`,
-			delay: token.expires_at - now - (60 * 1000)
+			jobId: `refreshCode-epicGames-${record.Identity.id}-${record.expiry.valueOf()}`,
+			delay: record.expiry.valueOf() - now - (60 * 1000)
 		}
 	)
 }

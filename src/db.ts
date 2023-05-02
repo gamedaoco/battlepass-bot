@@ -803,7 +803,7 @@ UserToken.init(
 			allowNull: false
 		},
 		token: {
-			type: DataTypes.STRING(2500),
+			type: DataTypes.STRING(3000),
 			allowNull: false
 		},
 		expiry: {
