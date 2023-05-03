@@ -4,7 +4,7 @@ import { Op } from 'sequelize'
 import { config } from '../config'
 import { logger } from '../logger'
 import { getQueue } from '../queue'
-import { Identity, GenericActivity, UserToken } from '../db'
+import { Identity, GenericActivity, UserToken, Quest, CompletedQuest, QuestProgress } from '../db'
 
 export async function worker(job: Job) {
 	let type = job.data.type
@@ -111,6 +111,7 @@ async function processAuthCode(identityUuid: string, code: string) {
 		},
 	})
 	logger.info('Stored token for user %s', identityUuid)
+	await processConnectQuests(i)
 	let queue = await getQueue('epicGames')
 	let now = Date.now()
 	await queue.add(
@@ -164,4 +165,37 @@ async function processRefreshCode(identityUuid: string) {
 			delay: record.expiry.valueOf() - now - (60 * 1000)
 		}
 	)
+}
+
+async function processConnectQuests(i: Identity) {
+	let progress = await QuestProgress.findAll({
+		where: {
+			identityId: i.id,
+			progress: 0
+		},
+		include: [{
+			model: Quest,
+			required: true,
+			where: {
+				source: 'epicGames',
+				type: 'connect'
+			}
+		}]
+	})
+	if (!progress.length) {
+		return
+	}
+	let completedQuests = new Array<any>()
+	for (let p of progress) {
+		p.progress = 1
+		await p.save()
+		completedQuests.push({
+			identityId: i.id,
+			questId: p.questId
+		})
+	}
+	if (completedQuests.length) {
+		await CompletedQuest.bulkCreate(completedQuests)
+	}
+	logger.info('Completing connect epic quests for identity %s', i.uuid)
 }

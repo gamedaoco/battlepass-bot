@@ -495,7 +495,7 @@ ChainStatus.init(
 
 export class CompletedQuest extends Model<InferAttributes<CompletedQuest>, InferCreationAttributes<CompletedQuest>> {
 	declare id: CreationOptional<number>
-	declare guildId: string
+	declare guildId: string | null
 	declare createdAt: CreationOptional<Date>
 	declare updatedAt: CreationOptional<Date>
 	declare identityId: ForeignKey<Identity['id']>
