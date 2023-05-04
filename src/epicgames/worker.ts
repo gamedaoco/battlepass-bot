@@ -4,7 +4,7 @@ import { Op } from 'sequelize'
 import { config } from '../config'
 import { logger } from '../logger'
 import { getQueue } from '../queue'
-import { Identity, GenericActivity, UserToken, Quest, CompletedQuest, QuestProgress } from '../db'
+import { Identity, GenericActivity, UserToken, Quest, CompletedQuest, QuestProgress, BattlepassParticipant } from '../db'
 
 export async function worker(job: Job) {
 	let type = job.data.type
@@ -168,7 +168,7 @@ async function processRefreshCode(identityUuid: string) {
 }
 
 async function processConnectQuests(i: Identity) {
-	let progress = await QuestProgress.findAll({
+	let progress: Array<any> = await QuestProgress.findAll({
 		where: {
 			identityId: i.id,
 			progress: 0
@@ -189,6 +189,15 @@ async function processConnectQuests(i: Identity) {
 	for (let p of progress) {
 		p.progress = 1
 		await p.save()
+		await BattlepassParticipant.increment(
+			{ points: p.Quest.points },
+			{
+				where: {
+					identityId: i.id,
+					battlepassId: p.Quest.battlepassId,
+				}
+			}
+		)
 		completedQuests.push({
 			identityId: i.id,
 			questId: p.questId
