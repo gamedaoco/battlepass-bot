@@ -29,6 +29,21 @@ export async function provideUserToken(data: UserTokenInterface): Promise<Identi
 				jobId: `authCode-${data.source}-${identity.id}`
 			}
 		)
+	} else if (data.source == 'epicGames') {
+		let queue = getQueue('epicGames')
+		await queue.add(
+			'authCode',
+			{
+				type: 'authCode',
+				identityUuid: data.identityUuid,
+				code: data.token
+			},
+			{
+				jobId: `authCode-${data.source}-${identity.id}`
+			}
+		)
+	} else {
+		logger.error('Received token for unknown source %s', data)
 	}
 	return identity
 }
