@@ -32,6 +32,7 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 			if (api.events.battlepass.BattlepassCreated.is(event)) {
 				let [orgId, bpId, season] = event.data
 				const chainBp: any = await api.query.battlepass.battlepasses(bpId.toString())
+				const bpState: any = await api.query.battlepass.battlepassStates(bpId.toString())
 				await Battlepass.create({
 					chainId: bpId.toString(),
 					startDate: null,
@@ -41,6 +42,8 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 					price: chainBp ? parseInt(chainBp.value.price?.toString()) : null,
 					season: parseInt(season.toString()),
 					active: false,
+					// correct?
+					state: bpState ? Buffer.from(bpState.value, 'hex').toString() : 'DRAFT',
 					finalized: false,
 				})
 				logger.info('Found new battlepass %s', bpId.toString())
@@ -58,12 +61,16 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 						name: chainBp ? Buffer.from(chainBp.value.name, 'hex').toString() : null,
 						cid: chainBp ? Buffer.from(chainBp.value.cid, 'hex').toString() : null,
 						active: true,
+						// correct? should be derived from chain...
+						state: 'DRAFT',
 						finalized: false,
 					},
 				})
 				if (!created) {
 					bp.startDate = calculateBlockDate(knownDate, knownBlock, header.number.toNumber())
 					bp.active = true
+					// correct? should be derived from chain...
+					bp.state = 'ACTIVE'
 					bp.finalized = false
 					await bp.save()
 				}
@@ -79,6 +86,8 @@ export async function listenNewEvents(api: ApiPromise, knownBlock: number, known
 				}
 				bp.endDate = calculateBlockDate(knownDate, knownBlock, header.number.toNumber())
 				bp.active = false
+				// correct? should be derived from chain...
+				bp.state = 'ENDED'
 				await bp.save()
 				logger.info('Found ended battlepass %s', bpId.toString())
 			} else if (api.events.battlepass.BattlepassClaimed.is(event)) {
