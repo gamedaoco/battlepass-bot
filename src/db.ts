@@ -27,6 +27,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 	declare startDate: Date | null
 	declare endDate: Date | null
 	declare active: boolean
+	declare state: string
 	declare finalized: boolean
 	declare joinable: CreationOptional<boolean>
 	declare totalJoined: CreationOptional<number>
@@ -76,6 +77,10 @@ Battlepass.init(
 		},
 		active: {
 			type: DataTypes.BOOLEAN,
+			allowNull: false,
+		},
+		state: {
+			type: DataTypes.STRING(16),
 			allowNull: false,
 		},
 		finalized: {
