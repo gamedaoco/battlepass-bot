@@ -1,5 +1,5 @@
 import { Client, Guild, IntentsBitField, Events } from 'discord.js'
-
+import pkg from '../../package.json'
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
 import { sequelize, initDB } from '../db'
@@ -18,6 +18,8 @@ export function getClient() {
 }
 
 async function main() {
+	logger.info(`${pkg.name} ${pkg.version}`)
+	logger.info('initializing...')
 	validateConfigs('discord')
 	if (!(await initDB())) {
 		logger.error('Failed to connect to database.')

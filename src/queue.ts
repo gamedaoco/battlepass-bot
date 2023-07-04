@@ -2,7 +2,7 @@ import { Queue, Worker, Processor } from 'bullmq'
 import { config } from './config'
 import { logger } from './logger'
 
-export function getQueue(name: 'chain' | 'twitter' | 'epicGames') {
+export function getQueue(name: 'chain' | 'twitter' | 'epicGames' | 'gamedao' ) {
 	let q = new Queue(name, {
 		connection: config.general.redis,
 		defaultJobOptions: {
@@ -16,7 +16,7 @@ export function getQueue(name: 'chain' | 'twitter' | 'epicGames') {
 	return q
 }
 
-export function getWorker(name: 'chain' | 'twitter' | 'epicGames', worker: Processor) {
+export function getWorker(name: 'chain' | 'twitter' | 'epicGames' | 'gamedao', worker: Processor) {
 	let w = new Worker(name, worker, {
 		connection: config.general.redis,
 		concurrency: 1

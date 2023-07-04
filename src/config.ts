@@ -1,7 +1,7 @@
 import * as dotenv from 'dotenv'
 dotenv.config()
 
-export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord' | 'twitter' | 'epicGames') {
+export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'discord' | 'twitter' | 'epicGames' | 'gamedao') {
 	let requiredEnvVariables = new Array<string>()
 	switch (service) {
 		case 'aggregation':
@@ -22,6 +22,10 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 		case 'epicGames':
 			requiredEnvVariables.push(...['EPIC_GAMES_DEPLOYMENT_ID', 'EPIC_GAMES_CLIENT_ID', 'EPIC_GAMES_CLIENT_SECRET'])
 			break
+		case 'gamedao':
+			break
+		default:
+			break
 	}
 	requiredEnvVariables.forEach((name) => {
 		if (!process.env[name]) {
@@ -31,6 +35,8 @@ export function validateConfigs(service: 'aggregation' | 'api' | 'chain' | 'disc
 }
 
 export const config = {
+	gamedao:{
+	},
 	discord: {
 		botKey: process.env.DISCORD_BOT_KEY,
 		fetchMessagesSince: parseInt(process.env.DISCORD_FETCH_MESSAGES_SINCE || '2'),
