@@ -242,15 +242,15 @@ input LevelsFilter {
 }
 
 type Query {
-	Battlepasses(where: BattlepassesFilter): [Battlepass]
-	BattlepassMembers(where: MemberFilter): [BattlepassMember]
-	BattlepassProgresses(where: ProgressFilter): [BattlepassQuestProgress]
-	BattlepassQuests(where: QuestFilter): [BattlepassQuest]
-	BattlepassIdentities(where: IdentityFilter): [BattlepassIdentity]
-	BattlepassPoints(where: PointsFilter): [BattlepassPoint]
-	BattlepassRewards(where: RewardsFilter): [BattlepassReward]
-	BattlepassLevels(where: LevelsFilter): [BattlepassLevel]
-	BattlepassRewardClaims(where: RewardClaimFilter): [BattlepassRewardClaim]
+	battlepasses(where: BattlepassesFilter): [Battlepass]
+	members(where: MemberFilter): [BattlepassMember]
+	progresses(where: ProgressFilter): [BattlepassQuestProgress]
+	quests(where: QuestFilter): [BattlepassQuest]
+	identities(where: IdentityFilter): [BattlepassIdentity]
+	points(where: PointsFilter): [BattlepassPoint]
+	rewards(where: RewardsFilter): [BattlepassReward]
+	levels(where: LevelsFilter): [BattlepassLevel]
+	reward_claims(where: RewardClaimFilter): [BattlepassRewardClaim]
 }
 
 type Mutation {

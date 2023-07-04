@@ -5,7 +5,7 @@ let client: ApiPromise | null
 
 async function connectToNode(): Promise<ApiPromise> {
 	const provider = new WsProvider(config.chain.rpcUrl)
-	const api = await ApiPromise.create({ provider })
+	const api = await ApiPromise.create({ provider, noInitWarn: true })
 	if (!api.isConnected) {
 		throw new Error('Failed to connect to chain RPC node.')
 	}

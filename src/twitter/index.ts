@@ -1,3 +1,4 @@
+import pkg from '../../package.json'
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
 import { TwitterActivity, TwitterUser } from '../db'
@@ -159,6 +160,8 @@ async function iteration(again: boolean) {
 }
 
 async function main() {
+	logger.info(`${pkg.name} ${pkg.version}`)
+	logger.info('initializing...')
 	validateConfigs('twitter')
 	if (!(await initDB())) {
 		logger.error('Failed to connect to database.')

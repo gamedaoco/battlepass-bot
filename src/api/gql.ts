@@ -60,15 +60,15 @@ const typeDefs = gql(fs.readFileSync(process.cwd() + '/src/schema.graphql').toSt
 
 const resolvers = {
 	Query: {
-		Battlepasses: battlepasses,
-		BattlepassQuests: quests,
-		BattlepassMembers: members,
-		BattlepassProgresses: progress,
-		BattlepassIdentities: identities,
-		BattlepassPoints: points,
-		BattlepassRewards: rewards,
-		BattlepassLevels: levels,
-		BattlepassRewardClaims: rewardClaims
+		battlepasses: battlepasses,
+		quests: quests,
+		members: members,
+		progresses: progress,
+		identities: identities,
+		points: points,
+		rewards: rewards,
+		levels: levels,
+		reward_claims: rewardClaims
 	},
 	Battlepass: {
 		quests: battlepassQuests,

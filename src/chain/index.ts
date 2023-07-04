@@ -1,5 +1,5 @@
 import { ApiPromise } from '@polkadot/api'
-
+import pkg from '../../package.json'
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
 import { sequelize, initDB, ChainStatus } from '../db'
@@ -10,6 +10,8 @@ import { worker } from './worker'
 import { getLastBlockTimestamp, processBattlepasses } from '../indexer/indexer'
 
 async function main() {
+	logger.info(`${pkg.name} ${pkg.version}`)
+	logger.info('initializing...')
 	validateConfigs('chain')
 	if (!(await initDB())) {
 		logger.error('Failed to connect to database.')
