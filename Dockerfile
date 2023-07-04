@@ -3,12 +3,13 @@
 FROM --platform=linux/amd64 node:lts-alpine
 # FROM node:lts-alpine
 
-WORKDIR /app
-COPY src /app/src
-COPY *.json /app/
-COPY jest.config.js /app/
+RUN apk add --no-cache --virtual python make g++
+RUN apk add --no-cache --virtual .gyp
 
-RUN npm install
-RUN npm run build
+WORKDIR /app
+COPY . .
+
+RUN npm install && apk del .gyp
+# RUN npm run build
 
 CMD ["npm", "run-script", "api"]

@@ -1,0 +1,10 @@
+dist
+lib
+.editorconfig
+.gitignore
+.docker
+.trunk
+.env*
+.gitignore
+Dockerfile
+README.md
