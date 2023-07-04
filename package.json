@@ -6,7 +6,7 @@
   "license": "ISC",
   "main": "src/index.ts",
   "scripts": {
-    "dev": "concurrently --kill-others 'npm run dev:service' 'npm run dev:chain' 'npm run dev:api'",
+    "dev": "concurrently -k -l 4 -p [{name}] -n 'core ',chain,graph 'npm run dev:service' 'npm run dev:chain' 'npm run dev:api'",
     "dev:service": "npx nodemon src/index.ts",
     "dev:discord": "npx nodemon src/discord/index.ts",
     "dev:twitter": "npx nodemon src/twitter/index.ts",

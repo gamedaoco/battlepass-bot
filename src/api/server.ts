@@ -29,7 +29,7 @@ async function main() {
 		return -1
 	}
 	await sequelize.sync()
-	app.listen(config.api.port, () => logger.info('listening on port %s', config.api.port))
+	app.listen(config.api.port, () => logger.info('service available on http://localhost:%s/graphql', config.api.port))
 }
 
 main().catch((error) => logger.error(error)) // todo: make it work with tests
