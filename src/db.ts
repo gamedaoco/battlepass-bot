@@ -38,7 +38,7 @@ export class Battlepass extends Model<InferAttributes<Battlepass>, InferCreation
 Battlepass.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -136,7 +136,7 @@ export class DiscordActivity extends Model<InferAttributes<DiscordActivity>, Inf
 DiscordActivity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -181,7 +181,7 @@ export class TwitterActivity extends Model<InferAttributes<TwitterActivity>, Inf
 TwitterActivity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -223,7 +223,7 @@ export class GenericActivity extends Model<InferAttributes<GenericActivity>, Inf
 GenericActivity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -260,7 +260,7 @@ export class ChainActivity extends Model<InferAttributes<ChainActivity>, InferCr
 ChainActivity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -295,7 +295,7 @@ export class Identity extends Model<InferAttributes<Identity>, InferCreationAttr
 Identity.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -366,7 +366,7 @@ export class Quest extends Model<InferAttributes<Quest>, InferCreationAttributes
 Quest.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -421,17 +421,17 @@ Quest.init(
 			allowNull: true,
 		},
 		quantity: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		points: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		max: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: true,
 		},
 		maxDaily: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: true,
 		},
 	},
@@ -452,7 +452,7 @@ export class QuestProgress extends Model<InferAttributes<QuestProgress>, InferCr
 QuestProgress.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -479,12 +479,12 @@ export class ChainStatus extends Model<InferAttributes<ChainStatus>, InferCreati
 ChainStatus.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
 		blockNumber: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
 	},
@@ -504,7 +504,7 @@ export class CompletedQuest extends Model<InferAttributes<CompletedQuest>, Infer
 CompletedQuest.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -544,7 +544,7 @@ export class BattlepassParticipant extends Model<
 BattlepassParticipant.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -595,7 +595,7 @@ export class BattlepassReward extends Model<
 BattlepassReward.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -613,16 +613,16 @@ BattlepassReward.init(
 			allowNull: true,
 		},
 		points: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		level: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		total: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		available: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 		},
 		syncStatus: {
 			type: DataTypes.ENUM,
@@ -648,7 +648,7 @@ export class BattlepassLevel extends Model<InferAttributes<BattlepassLevel>, Inf
 BattlepassLevel.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -656,15 +656,15 @@ BattlepassLevel.init(
 			type: DataTypes.STRING(100),
 		},
 		points: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
 		totalPoints: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
 		level: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: false,
 		},
 		syncStatus: {
@@ -687,7 +687,7 @@ export class TwitterSearch extends Model<InferAttributes<TwitterSearch>, InferCr
 TwitterSearch.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -710,7 +710,7 @@ export class TwitterUser extends Model<InferAttributes<TwitterUser>, InferCreati
 TwitterUser.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -735,7 +735,7 @@ export class Payment extends Model<InferAttributes<Payment>, InferCreationAttrib
 Payment.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
@@ -762,12 +762,12 @@ export class RewardClaim extends Model<InferAttributes<RewardClaim>, InferCreati
 RewardClaim.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
 		nftId: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			allowNull: true
 		},
 		syncStatus: {
@@ -793,7 +793,7 @@ export class UserToken extends Model<InferAttributes<UserToken>, InferCreationAt
 UserToken.init(
 	{
 		id: {
-			type: DataTypes.INTEGER.UNSIGNED,
+			type: DataTypes.INTEGER,
 			autoIncrement: true,
 			primaryKey: true,
 		},
