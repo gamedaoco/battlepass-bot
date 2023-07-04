@@ -1,5 +1,6 @@
 import express from 'express'
 import cors from 'cors'
+import pkg from '../../package.json'
 
 import { config, validateConfigs } from '../config'
 import { logger } from '../logger'
@@ -20,13 +21,15 @@ if (config.api.secretKey) {
 }
 
 async function main() {
+	logger.info(`${pkg.name} ${pkg.version}`)
+	logger.info('initializing...')
 	validateConfigs('api')
 	if (!(await initDB())) {
 		logger.error('Failed to connect to database.')
 		return -1
 	}
 	await sequelize.sync()
-	app.listen(config.api.port, () => logger.info('Listening on port %s', config.api.port))
+	app.listen(config.api.port, () => logger.info('listening on port %s', config.api.port))
 }
 
 main().catch((error) => logger.error(error)) // todo: make it work with tests
