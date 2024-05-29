@@ -105,5 +105,7 @@ dist
 .tern-port
 
 
-
+.tmp
 **.local
+
+lib

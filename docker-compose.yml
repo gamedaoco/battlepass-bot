@@ -1,0 +1,123 @@
+services:
+
+#
+# DATABASES
+#
+
+  db:
+    image: postgres:12-alpine
+    environment:
+      POSTGRES_USER: $POSTGRES_USER
+      POSTGRES_PASSWORD: $POSTGRES_PASS
+      POSTGRES_DB: $POSTGRES_DB
+    volumes:
+      - .tmp/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - 6379:6379
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - .tmp/redis:/data
+
+#
+# CORE SERVICES
+#
+
+  api:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - api
+    environment:
+      LOGGING_LEVEL: $LOGGING_LEVEL
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+      API_PORT: 8080
+    ports:
+      - 8080:8080
+    depends_on:
+      - db
+      - redis
+
+  chain:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - chain
+    environment:
+      LOGGING_LEVEL: $LOGGING_LEVEL
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+      GRAPH_URL: $GRAPH_URL
+      CHAIN_RPC_URL: $CHAIN_RPC_URL
+    depends_on:
+      - db
+      - api
+
+  service:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - service
+    environment:
+      LOGGING_LEVEL: $LOGGING_LEVEL
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+    depends_on:
+      - db
+      - api
+
+#
+# AGGREGATOR SERVICES
+#
+
+  discord:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - discord
+    environment:
+      LOGGING_LEVEL: info
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+      DISCORD_BOT_KEY: $DISCORD_BOT_KEY
+    depends_on:
+      - db
+      - api
+
+  twitter:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - twitter
+    environment:
+      LOGGING_LEVEL: $LOGGING_LEVEL
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+      TWITTER_BEARER_TOKEN: $TWITTER_BEARER_TOKEN
+    depends_on:
+      - db
+      - api
+
+  epic-games:
+    image: $DOCKER_IMAGE
+    command:
+      - npm
+      - run-script
+      - epicGames
+    environment:
+      LOGGING_LEVEL: $LOGGING_LEVEL
+      DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASS@db:5432/$POSTGRES_DB
+      EPIC_GAMES_DEPLOYMENT_ID: $EPIC_GAMES_DEPLOYMENT_ID
+      EPIC_GAMES_CLIENT_ID: $EPIC_GAMES_CLIENT_ID
+      EPIC_GAMES_CLIENT_SECRET: $EPIC_GAMES_CLIENT_SECRET
+    depends_on:
+      - db
+      - api
