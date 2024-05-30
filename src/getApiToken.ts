@@ -7,11 +7,11 @@ function getToken(secret: string): string {
 }
 
 function main() {
-	if (!config.api.secretKey) {
+	if (!config.graph.secretKey) {
 		console.error('API secret key not specified')
 		return
 	}
-	let token = getToken(config.api.secretKey)
+	let token = getToken(config.graph.secretKey)
 	console.log('Token is', token)
 }
 

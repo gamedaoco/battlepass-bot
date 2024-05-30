@@ -52,7 +52,7 @@ function getTimeQuery() {
 export async function getLastBlockTimestamp(): Promise<[number, Date] | null> {
 	let resp: any
 	try {
-		resp = await request(config.graph.url, getTimeQuery())
+		resp = await request(config.publicGraph.url, getTimeQuery())
 	} catch (error) {
 		logger.error('Failed to request events from graph %s', error)
 		return null
@@ -78,7 +78,7 @@ async function getBattlepasses(
 ): Promise<Map<string, any> | null> {
 	let resp: any
 	try {
-		resp = await request(config.graph.url, getBattlepassesQuery(fromBlock))
+		resp = await request(config.publicGraph.url, getBattlepassesQuery(fromBlock))
 	} catch (error) {
 		logger.error('Failed to request battlepasses from graph %s', error)
 		return null
@@ -101,10 +101,10 @@ async function getBattlepasses(
 	return res
 }
 
-export async function getBattlepassUsers(battlePassId: string): Promise<Map<string,string> | null> {
+export async function getBattlepassUsers(battlePassId: string): Promise<Map<string, string> | null> {
 	let resp: any
 	try {
-		resp = await request(config.graph.url, getUsersQuery(battlePassId))
+		resp = await request(config.publicGraph.url, getUsersQuery(battlePassId))
 	} catch (error) {
 		logger.error('Failed to request battlepass users from graph %s', error)
 		return null
@@ -170,7 +170,7 @@ async function processBattlepassParticipants(battlepass: Battlepass) {
 				battlepassId: battlepass.id,
 				identityId: identitiesMap.get(address)?.id,
 				premium: true,
-				passChainId: nftId
+				passChainId: nftId,
 			})
 		} else {
 			let participant = participantsMap.get(address)
@@ -231,7 +231,7 @@ export async function processBattlepasses(
 				cid: updatedBp.cid,
 				startDate: updatedBp.startDate,
 				endDate: updatedBp.endDate,
-				active: (updatedBp.startDate != null && updatedBp.endDate == null),
+				active: updatedBp.startDate != null && updatedBp.endDate == null,
 				finalized: false,
 			})
 			logger.debug('Found new battlepass %s', updatedId)

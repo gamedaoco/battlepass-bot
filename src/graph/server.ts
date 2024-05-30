@@ -12,7 +12,7 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cors())
 applyApolloServer(app)
-if (config.api.secretKey) {
+if (config.graph.secretKey) {
 	logger.debug('Securing API with bearer token')
 	app.use(auth)
 } else {
@@ -20,13 +20,13 @@ if (config.api.secretKey) {
 }
 
 async function main() {
-	validateConfigs('api')
+	validateConfigs('graph')
 	if (!(await initDB())) {
 		logger.error('Failed to connect to database.')
 		return -1
 	}
 	await sequelize.sync()
-	app.listen(config.api.port, () => logger.info('Listening on port %s', config.api.port))
+	app.listen(config.graph.port, () => logger.info('Listening on port %s', config.graph.port))
 }
 
 main().catch((error) => logger.error(error)) // todo: make it work with tests

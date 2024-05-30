@@ -11,7 +11,7 @@ export function auth(req: Request, res: Response, next: NextFunction) {
 			throw new Error()
 		}
 
-		jwt.verify(token, config.api.secretKey)
+		jwt.verify(token, config.graph.secretKey)
 
 		next()
 	} catch (err) {

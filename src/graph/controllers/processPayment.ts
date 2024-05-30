@@ -12,25 +12,28 @@ interface ProcessPaymentInterface {
 }
 
 export async function processPayment(data: ProcessPaymentInterface) {
-	if (data.securityToken != config.api.securityToken) {
+	if (data.securityToken != config.graph.securityToken) {
 		throw new GraphQLError('Invalid input', {
 			extensions: { code: 'BAD_USER_INPUT', description: 'Invalid security token' },
 		})
 	}
 	let p: any = await BattlepassParticipant.findOne({
-		include: [{
-			model: Battlepass,
-			required: true,
-			where: {
-				chainId: data.battlepass
-			}
-		}, {
-			model: Identity,
-			required: true,
-			where: {
-				uuid: data.identityUuid
-			}
-		}]
+		include: [
+			{
+				model: Battlepass,
+				required: true,
+				where: {
+					chainId: data.battlepass,
+				},
+			},
+			{
+				model: Identity,
+				required: true,
+				where: {
+					uuid: data.identityUuid,
+				},
+			},
+		],
 	})
 	if (!p) {
 		throw new GraphQLError('Invalid input', {
@@ -49,17 +52,18 @@ export async function processPayment(data: ProcessPaymentInterface) {
 		defaults: {
 			paymentToken: data.paymentToken,
 			participantId: p.id,
-		}
+		},
 	})
 	if (created) {
 		p.status = 'pending'
 		await p.save()
 		logger.info(
 			'Received payment for participant %s, battlepass %s, identity %s',
-			p.id, p.Battlepass.chainId, p.Identity.uuid
+			p.id,
+			p.Battlepass.chainId,
+			p.Identity.uuid,
 		)
-	}
-	else {
+	} else {
 		logger.info('Received multiple payments for participant %s with data %s', p.id, data)
 	}
 	let queue = getQueue('chain')
@@ -67,9 +71,9 @@ export async function processPayment(data: ProcessPaymentInterface) {
 		'claimBattlepass',
 		{
 			type: 'claimBattlepass',
-			participantId: p.id
+			participantId: p.id,
 		},
-		{ jobId: `claimBattlepass-${p.id}` }
+		{ jobId: `claimBattlepass-${p.id}` },
 	)
 	await queue.add(
 		'points',
@@ -80,6 +84,6 @@ export async function processPayment(data: ProcessPaymentInterface) {
 		battlepass: p.Battlepass.chainId,
 		identityUuid: p.Identity.uuid,
 		paymentToken: payment.paymentToken,
-		status: p.status
+		status: p.status,
 	}
 }

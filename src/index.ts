@@ -2,6 +2,7 @@ import { Op } from 'sequelize'
 
 import { config, validateConfigs } from './config'
 import { logger } from './logger'
+
 import { BattlepassParticipant, Identity } from './db'
 import { getActiveBattlePasses, processBattlepassQuests } from './chain/chain'
 
@@ -14,11 +15,13 @@ export async function iteration(again: boolean) {
 	}
 	for (let [bpId, battlepass] of battlepasses) {
 		const identities = await Identity.findAll({
-			include: [{
-				model: BattlepassParticipant,
-				where: { battlepassId: battlepass.id },
-				attributes: []
-			}]
+			include: [
+				{
+					model: BattlepassParticipant,
+					where: { battlepassId: battlepass.id },
+					attributes: [],
+				},
+			],
 		})
 		if (!identities.length) {
 			// means there are no participants in the battlepass

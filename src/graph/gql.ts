@@ -19,7 +19,7 @@ import {
 	PaymentSchema,
 	ClaimRewardSchema,
 	UpdateBattlepassSchema,
-	UserTokenSchema
+	UserTokenSchema,
 } from './validations'
 import {
 	getPoints,
@@ -68,7 +68,7 @@ const resolvers = {
 		BattlepassPoints: points,
 		BattlepassRewards: rewards,
 		BattlepassLevels: levels,
-		BattlepassRewardClaims: rewardClaims
+		BattlepassRewardClaims: rewardClaims,
 	},
 	Battlepass: {
 		quests: battlepassQuests,
@@ -77,7 +77,7 @@ const resolvers = {
 		startDate: formattedDate('startDate'),
 		endDate: formattedDate('endDate'),
 		price: formatPrice,
-		currency
+		currency,
 	},
 	BattlepassQuest: {
 		battlepass: questBattlepass,
@@ -106,7 +106,7 @@ const resolvers = {
 	},
 	BattlepassRewardClaim: {
 		reward: rewardClaimReward,
-		member: rewardClaimMember
+		member: rewardClaimMember,
 	},
 	BattlepassLevel: {
 		battlepass: levelBattlepass,
@@ -230,7 +230,7 @@ const resolvers = {
 
 function getServer(): ApolloServer {
 	let plugins = new Array<ApolloServerPlugin>()
-	if (config.api.gqlUi) {
+	if (config.graph.gqlUi) {
 		plugins.push(
 			ApolloServerPluginLandingPageLocalDefault({
 				embed: true,

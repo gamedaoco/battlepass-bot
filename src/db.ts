@@ -60,11 +60,11 @@ Battlepass.init(
 		},
 		season: {
 			type: DataTypes.INTEGER,
-			allowNull: true
+			allowNull: true,
 		},
 		price: {
 			type: DataTypes.INTEGER,
-			allowNull: true
+			allowNull: true,
 		},
 		startDate: {
 			type: DataTypes.DATE,
@@ -85,32 +85,32 @@ Battlepass.init(
 		joinable: {
 			type: DataTypes.BOOLEAN,
 			allowNull: false,
-			defaultValue: true
+			defaultValue: true,
 		},
 		totalJoined: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: 0,
 		},
 		freePasses: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: 0,
 		},
 		freeClaimed: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: 0,
 		},
 		premiumPasses: {
 			type: DataTypes.INTEGER,
 			allowNull: true,
-			defaultValue: null
+			defaultValue: null,
 		},
 		premiumClaimed: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: 0,
 		},
 	},
 	{
@@ -242,13 +242,13 @@ GenericActivity.init(
 		},
 		extra: {
 			type: DataTypes.JSON,
-			allowNull: true
+			allowNull: true,
 		},
 		createdAt: {
 			type: DataTypes.DATE,
 		},
 	},
-	{ sequelize }
+	{ sequelize },
 )
 
 export class ChainActivity extends Model<InferAttributes<ChainActivity>, InferCreationAttributes<ChainActivity>> {
@@ -271,7 +271,7 @@ ChainActivity.init(
 		activityType: {
 			type: DataTypes.ENUM,
 			values: ['connect', 'identity'],
-			allowNull: false
+			allowNull: false,
 		},
 		createdAt: {
 			type: DataTypes.DATE,
@@ -551,11 +551,11 @@ BattlepassParticipant.init(
 		points: {
 			type: DataTypes.INTEGER,
 			allowNull: false,
-			defaultValue: 0
+			defaultValue: 0,
 		},
 		premium: {
 			type: DataTypes.BOOLEAN,
-			defaultValue: false
+			defaultValue: false,
 		},
 		status: {
 			type: DataTypes.ENUM,
@@ -565,7 +565,7 @@ BattlepassParticipant.init(
 		},
 		passChainId: {
 			type: DataTypes.CHAR(66),
-			allowNull: true
+			allowNull: true,
 		},
 	},
 	{ sequelize },
@@ -627,8 +627,8 @@ BattlepassReward.init(
 		syncStatus: {
 			type: DataTypes.ENUM,
 			values: ['pending', 'synced', 'failed'],
-			defaultValue: 'pending'
-		}
+			defaultValue: 'pending',
+		},
 	},
 	{ sequelize },
 )
@@ -670,8 +670,8 @@ BattlepassLevel.init(
 		syncStatus: {
 			type: DataTypes.ENUM,
 			values: ['pending', 'synced', 'failed'],
-			defaultValue: 'pending'
-		}
+			defaultValue: 'pending',
+		},
 	},
 	{ sequelize },
 )
@@ -716,11 +716,11 @@ TwitterUser.init(
 		},
 		username: {
 			type: DataTypes.STRING(40),
-			allowNull: false
+			allowNull: false,
 		},
 		twitterId: {
 			type: DataTypes.STRING(40),
-			allowNull: false
+			allowNull: false,
 		},
 	},
 	{ sequelize },
@@ -741,13 +741,13 @@ Payment.init(
 		},
 		paymentToken: {
 			type: DataTypes.STRING(120),
-			allowNull: false
+			allowNull: false,
 		},
 		createdAt: {
 			type: DataTypes.DATE,
 		},
 	},
-	{ sequelize }
+	{ sequelize },
 )
 Payment.belongsTo(BattlepassParticipant, { foreignKey: 'participantId' })
 BattlepassParticipant.hasOne(Payment, { foreignKey: 'participantId' })
@@ -768,15 +768,15 @@ RewardClaim.init(
 		},
 		nftId: {
 			type: DataTypes.INTEGER.UNSIGNED,
-			allowNull: true
+			allowNull: true,
 		},
 		syncStatus: {
 			type: DataTypes.ENUM,
 			values: ['pending', 'synced', 'failed'],
-			defaultValue: 'pending'
-		}
+			defaultValue: 'pending',
+		},
 	},
-	{ sequelize }
+	{ sequelize },
 )
 RewardClaim.belongsTo(BattlepassReward, { foreignKey: 'rewardId' })
 BattlepassReward.hasMany(RewardClaim, { foreignKey: 'rewardId' })
@@ -800,18 +800,18 @@ UserToken.init(
 		source: {
 			type: DataTypes.ENUM,
 			values: ['twitter', 'epicGames'],
-			allowNull: false
+			allowNull: false,
 		},
 		token: {
 			type: DataTypes.STRING(3000),
-			allowNull: false
+			allowNull: false,
 		},
 		expiry: {
 			type: DataTypes.DATE,
-			allowNull: true
-		}
+			allowNull: true,
+		},
 	},
-	{ sequelize }
+	{ sequelize },
 )
 UserToken.belongsTo(Identity, { foreignKey: 'identityId' })
 Identity.hasMany(UserToken, { foreignKey: 'identityId' })
