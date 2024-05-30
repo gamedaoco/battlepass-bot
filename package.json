@@ -10,11 +10,9 @@
     "dev:service": "npx nodemon src/index.ts",
     "dev:chain": "npx nodemon src/chain/index.ts",
     "dev:graph": "npx nodemon src/graph/server.ts",
-
     "dev:discord": "npx nodemon src/discord/index.ts",
     "dev:twitter": "npx nodemon src/twitter/index.ts",
     "dev:epicGames": "npx nodemon src/epicgames/index.ts",
-
     "db": "docker run --name battlepass-dev -e POSTGRES_PASSWORD=postgres123 -d postgres",
     "service": "node lib/index.js",
     "discord": "node lib/discord/index.js",
@@ -23,7 +21,6 @@
     "chain": "node lib/chain/index.js",
     "graph": "node lib/graph/server.js",
     "generate-api-key": "node lib/getApiToken.js",
-
     "format": "prettier --parser babel-ts --write 'src/**/*.{ts,tsx}'",
     "format:verify": "prettier --parser babel-ts --check 'src/**/*.{ts,tsx}'",
     "format:staged": "pretty-quick --staged --pattern 'src/**/*.{ts,tsx}'",
@@ -32,6 +29,7 @@
   "dependencies": {
     "@polkadot/api": "^9.10.5",
     "@polkadot/api-augment": "^9.10.5",
+    "@prisma/client": "^5.14.0",
     "bullmq": "^3.7.1",
     "cors": "^2.8.5",
     "discord.js": "^14.7.1",

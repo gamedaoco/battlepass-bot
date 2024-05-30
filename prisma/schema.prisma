@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,4 +5,317 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+model BattlepassLevels {
+  id           Int                               @id @default(autoincrement())
+  name         String?                           @db.VarChar(100)
+  points       Int
+  totalPoints  Int
+  level        Int
+  syncStatus   enum_BattlepassLevels_syncStatus? @default(pending)
+  createdAt    DateTime                          @db.Timestamptz(6)
+  updatedAt    DateTime                          @db.Timestamptz(6)
+  battlepassId Int?
+  Battlepasses Battlepasses?                     @relation(fields: [battlepassId], references: [id])
+}
+
+model BattlepassParticipants {
+  id           Int                                @id @default(autoincrement())
+  points       Int                                @default(0)
+  premium      Boolean?                           @default(false)
+  status       enum_BattlepassParticipants_status @default(free)
+  passChainId  String?                            @db.Char(66)
+  createdAt    DateTime                           @db.Timestamptz(6)
+  updatedAt    DateTime                           @db.Timestamptz(6)
+  identityId   Int?
+  battlepassId Int?
+  Battlepasses Battlepasses?                      @relation(fields: [battlepassId], references: [id])
+  Identities   Identities?                        @relation(fields: [identityId], references: [id])
+  Payments     Payments[]
+  RewardClaims RewardClaims[]
+}
+
+model BattlepassRewards {
+  id           Int                                @id @default(autoincrement())
+  name         String?                            @db.VarChar(100)
+  description  String?                            @db.VarChar(512)
+  cid          String?                            @db.VarChar(50)
+  chainId      String?                            @db.Char(66)
+  points       Int?
+  level        Int?
+  total        Int?
+  available    Int?
+  syncStatus   enum_BattlepassRewards_syncStatus? @default(pending)
+  createdAt    DateTime                           @db.Timestamptz(6)
+  updatedAt    DateTime                           @db.Timestamptz(6)
+  battlepassId Int?
+  Battlepasses Battlepasses?                      @relation(fields: [battlepassId], references: [id])
+  RewardClaims RewardClaims[]
+}
+
+model Battlepasses {
+  id                     Int                      @id @default(autoincrement())
+  chainId                String                   @db.Char(66)
+  orgId                  String                   @db.Char(66)
+  name                   String?                  @db.VarChar(100)
+  cid                    String?                  @db.VarChar(50)
+  season                 Int?
+  price                  Int?
+  startDate              DateTime?                @db.Timestamptz(6)
+  endDate                DateTime?                @db.Timestamptz(6)
+  active                 Boolean
+  finalized              Boolean
+  joinable               Boolean                  @default(true)
+  totalJoined            Int                      @default(0)
+  freePasses             Int                      @default(0)
+  freeClaimed            Int                      @default(0)
+  premiumPasses          Int?
+  premiumClaimed         Int                      @default(0)
+  createdAt              DateTime                 @db.Timestamptz(6)
+  updatedAt              DateTime                 @db.Timestamptz(6)
+  BattlepassLevels       BattlepassLevels[]
+  BattlepassParticipants BattlepassParticipants[]
+  BattlepassRewards      BattlepassRewards[]
+  Quests                 Quests[]
+
+  @@index([chainId], map: "battlepasses_chain_id")
+}
+
+model ChainActivities {
+  id           Int                               @id @default(autoincrement())
+  address      String                            @db.Char(48)
+  activityType enum_ChainActivities_activityType
+  createdAt    DateTime?                         @db.Timestamptz(6)
+  updatedAt    DateTime                          @db.Timestamptz(6)
+}
+
+model ChainStatuses {
+  id          Int      @id @default(autoincrement())
+  blockNumber Int
+  createdAt   DateTime @db.Timestamptz(6)
+  updatedAt   DateTime @db.Timestamptz(6)
+}
+
+model CompletedQuests {
+  id         Int         @id @default(autoincrement())
+  guildId    String?     @db.VarChar(20)
+  createdAt  DateTime?   @db.Timestamptz(6)
+  updatedAt  DateTime?   @db.Timestamptz(6)
+  identityId Int?
+  questId    Int?
+  Identities Identities? @relation(fields: [identityId], references: [id])
+  Quests     Quests?     @relation(fields: [questId], references: [id])
+}
+
+model DiscordActivities {
+  id           Int                                  @id @default(autoincrement())
+  discordId    String                               @db.VarChar(20)
+  guildId      String                               @db.VarChar(20)
+  channelId    String?                              @db.VarChar(50)
+  activityId   String                               @db.VarChar(40)
+  activityType enum_DiscordActivities_activityType?
+  createdAt    DateTime?                            @db.Timestamptz(6)
+  updatedAt    DateTime                             @db.Timestamptz(6)
+}
+
+model GenericActivities {
+  id           Int                           @id @default(autoincrement())
+  source       enum_GenericActivities_source
+  authorId     String                        @db.VarChar(50)
+  activityType String                        @db.VarChar(20)
+  extra        Json?                         @db.Json
+  createdAt    DateTime?                     @db.Timestamptz(6)
+  updatedAt    DateTime                      @db.Timestamptz(6)
+}
+
+model Identities {
+  id                     Int                      @id @default(autoincrement())
+  uuid                   String                   @db.Uuid
+  address                String?                  @db.Char(48)
+  discord                String?                  @db.VarChar(20)
+  twitter                String?                  @db.VarChar(20)
+  epicGames              String?                  @db.VarChar(40)
+  cid                    String?                  @db.VarChar(50)
+  name                   String?                  @db.VarChar(50)
+  email                  String?                  @db.VarChar(50)
+  createdAt              DateTime                 @db.Timestamptz(6)
+  updatedAt              DateTime                 @db.Timestamptz(6)
+  BattlepassParticipants BattlepassParticipants[]
+  CompletedQuests        CompletedQuests[]
+  QuestProgresses        QuestProgresses[]
+  UserTokens             UserTokens[]
+
+  @@index([address], map: "identities_address")
+}
+
+model Payments {
+  id                     Int                     @id @default(autoincrement())
+  paymentToken           String                  @db.VarChar(120)
+  createdAt              DateTime?               @db.Timestamptz(6)
+  updatedAt              DateTime                @db.Timestamptz(6)
+  participantId          Int?
+  BattlepassParticipants BattlepassParticipants? @relation(fields: [participantId], references: [id])
+}
+
+model QuestProgresses {
+  id         Int         @id @default(autoincrement())
+  progress   Float       @default(0)
+  createdAt  DateTime    @db.Timestamptz(6)
+  updatedAt  DateTime    @db.Timestamptz(6)
+  questId    Int?
+  identityId Int?
+  Identities Identities? @relation(fields: [identityId], references: [id])
+  Quests     Quests?     @relation(fields: [questId], references: [id])
+}
+
+model Quests {
+  id              Int                 @id @default(autoincrement())
+  name            String?             @db.VarChar(100)
+  description     String?             @db.VarChar(512)
+  link            String?             @db.VarChar(150)
+  cid             String?             @db.VarChar(50)
+  repeat          Boolean?
+  source          enum_Quests_source?
+  type            enum_Quests_type?
+  guildId         String?             @db.VarChar(50)
+  channelId       String?             @db.VarChar(50)
+  hashtag         String?             @db.VarChar(50)
+  twitterId       String?             @db.VarChar(30)
+  quantity        Int?
+  points          Int?
+  max             Int?
+  maxDaily        Int?
+  createdAt       DateTime            @db.Timestamptz(6)
+  updatedAt       DateTime            @db.Timestamptz(6)
+  battlepassId    Int?
+  CompletedQuests CompletedQuests[]
+  QuestProgresses QuestProgresses[]
+  Battlepasses    Battlepasses?       @relation(fields: [battlepassId], references: [id])
+}
+
+model RewardClaims {
+  id                     Int                           @id @default(autoincrement())
+  nftId                  Int?
+  syncStatus             enum_RewardClaims_syncStatus? @default(pending)
+  createdAt              DateTime                      @db.Timestamptz(6)
+  updatedAt              DateTime                      @db.Timestamptz(6)
+  rewardId               Int?
+  participantId          Int?
+  BattlepassParticipants BattlepassParticipants?       @relation(fields: [participantId], references: [id])
+  BattlepassRewards      BattlepassRewards?            @relation(fields: [rewardId], references: [id])
+}
+
+model TwitterActivities {
+  id           Int                                  @id @default(autoincrement())
+  authorId     String?                              @db.VarChar(40)
+  activityId   String?                              @db.VarChar(40)
+  objectAuthor String?                              @db.VarChar(40)
+  objectId     String?                              @db.VarChar(40)
+  activityType enum_TwitterActivities_activityType?
+  createdAt    DateTime?                            @db.Timestamptz(6)
+  updatedAt    DateTime                             @db.Timestamptz(6)
+}
+
+model TwitterSearches {
+  id         Int      @id @default(autoincrement())
+  query      String?  @db.VarChar(100)
+  executedAt DateTime @db.Timestamptz(6)
+  createdAt  DateTime @db.Timestamptz(6)
+  updatedAt  DateTime @db.Timestamptz(6)
+}
+
+model TwitterUsers {
+  id        Int      @id @default(autoincrement())
+  username  String   @db.VarChar(40)
+  twitterId String   @db.VarChar(40)
+  createdAt DateTime @db.Timestamptz(6)
+  updatedAt DateTime @db.Timestamptz(6)
+}
+
+model UserTokens {
+  id         Int                    @id @default(autoincrement())
+  source     enum_UserTokens_source
+  token      String                 @db.VarChar(3000)
+  expiry     DateTime?              @db.Timestamptz(6)
+  createdAt  DateTime               @db.Timestamptz(6)
+  updatedAt  DateTime               @db.Timestamptz(6)
+  identityId Int?
+  Identities Identities?            @relation(fields: [identityId], references: [id])
+}
+
+enum enum_BattlepassLevels_syncStatus {
+  pending
+  synced
+  failed
+}
+
+enum enum_BattlepassParticipants_status {
+  free
+  pendingPayment
+  pending
+  synced
+}
+
+enum enum_BattlepassRewards_syncStatus {
+  pending
+  synced
+  failed
+}
+
+enum enum_ChainActivities_activityType {
+  connect
+  identity
+}
+
+enum enum_DiscordActivities_activityType {
+  connect
+  join
+  boost
+  post
+  react
+}
+
+enum enum_GenericActivities_source {
+  epicGames
+}
+
+enum enum_Quests_source {
+  discord
+  twitter
+  gamedao
+  epicGames
+}
+
+enum enum_Quests_type {
+  connect
+  join
+  post
+  reaction
+  tweet
+  like
+  retweet
+  comment
+  follow
+  identity
+}
+
+enum enum_RewardClaims_syncStatus {
+  pending
+  synced
+  failed
+}
+
+enum enum_TwitterActivities_activityType {
+  connect
+  tweet
+  retweet
+  follow
+  comment
+  like
+}
+
+enum enum_UserTokens_source {
+  twitter
+  epicGames
 }

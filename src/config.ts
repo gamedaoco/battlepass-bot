@@ -8,10 +8,10 @@ export function validateConfigs(service: 'aggregation' | 'graph' | 'chain' | 'di
 			break
 		case 'graph':
 			// no required variables
-			requiredEnvVariables.push('API_SECURITY_TOKEN')
+			requiredEnvVariables.push('GRAPH_API_SECURITY_TOKEN')
 			break
 		case 'chain':
-			requiredEnvVariables.push(...['GRAPH_URL', 'CHAIN_RPC_URL', 'CHAIN_ACCOUNT'])
+			requiredEnvVariables.push(...['PUBLIC_GRAPH_URL', 'CHAIN_RPC_URL', 'CHAIN_ACCOUNT'])
 			break
 		case 'discord':
 			requiredEnvVariables.push('DISCORD_BOT_KEY')
